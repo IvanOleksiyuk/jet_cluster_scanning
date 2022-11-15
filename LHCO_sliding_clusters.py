@@ -50,7 +50,7 @@ os.makedirs(save_path, exist_ok=True)
 
 random.seed(a=ID, version=2)
 start_time_glb = time.time()
-data_path="../../../hpcwork/rwth0934/LHCO_dataset/processed_io/"
+data_path="../../DATA/LHCO/"
 
 mjj_bg=np.load(data_path+"mjj_bkg_sort.npy")
 mjj_sg=np.load(data_path+"mjj_sig_sort.npy")
