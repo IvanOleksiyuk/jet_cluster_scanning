@@ -1,0 +1,13 @@
+Bump edges : [3.39e+03, 3.63e+03]  (loc=68, width=13)
+Bump mean | width : 3.51e+03 | 244
+Evaluated number of signal events : 1.55e+04
+Local p-value | test statistic : 0 | inf
+Local significance : inf
+Global p-value : 0
+Global significance : >2.33  (lower limit)Bump edges : [3.39e+03, 3.63e+03]  (loc=68, width=13)
+Bump mean | width : 3.51e+03 | 244
+Evaluated number of signal events : 1.55e+04
+Local p-value | test statistic : 0 | inf
+Local significance : inf
+Global p-value : 0
+Global significance : >2.33  (lower limit)

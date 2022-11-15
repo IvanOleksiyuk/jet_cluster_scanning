@@ -1,0 +1,2 @@
+. Investigate why tagging improves so much with preprocessing in our DM
+. Further investigation of density estimation
