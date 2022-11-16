@@ -1,2 +1,10 @@
+o refactoring 
+    . read the article about configs
+    . apply it to this work 
+    . try reproducing results from the thesis (but in a smarter way)
+
+
+
+
 . Investigate why tagging improves so much with preprocessing in our DM
 . Further investigation of density estimation
