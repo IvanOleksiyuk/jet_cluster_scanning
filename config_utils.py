@@ -61,3 +61,6 @@ class Config(object):
 
     def get_dotmap(self):
         return DotMap(self._data)
+
+    def get_dict(self):
+        return self._data

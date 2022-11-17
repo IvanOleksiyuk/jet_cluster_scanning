@@ -1,21 +1,28 @@
+"""
+A library of different preprocessings 
+"""
+
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
 
-def sum_1_norm(x):
-    if len(x.shape) == 4:
-        return x / (np.sum(x, (1, 2, 3))).reshape((-1, 1, 1, 1))
-    elif len(x.shape) == 3:
-        return x / (np.sum(x, (1, 2))).reshape((-1, 1, 1))
-    elif len(x.shape) == 2:
-        return x / (np.sum(x, (1))).reshape((-1, 1))
+def sum_1_norm(x, batch=True):
+    if batch:
+        if len(x.shape) == 4:  #
+            return x / (np.sum(x, (1, 2, 3))).reshape((-1, 1, 1, 1))
+        elif len(x.shape) == 3:
+            return x / (np.sum(x, (1, 2))).reshape((-1, 1, 1))
+        elif len(x.shape) == 2:
+            return x / (np.sum(x, (1))).reshape((-1, 1))
+        else:
+            print("strange data format!")  # TODO add exception here
+            return x
     else:
-        print("strange data format!")
-        return x
+        return x / (np.sum(x))
 
 
-def gaussian_smearing(x, SIGMA):
-    return gaussian_filter(x, sigma=[0, SIGMA, SIGMA, 0])
+def gaussian_smearing(x, sigma):
+    return gaussian_filter(x, sigma=[0, sigma, sigma, 0])
 
 
 def fft2_abs(x):
@@ -51,16 +58,12 @@ def boundMSE(x):
 
 
 def reproc_sin(x):
-    return np.sin(x * np.pi / 2) / (np.sum(np.sin(x * np.pi / 2), (1, 2, 3))).reshape(
-        (-1, 1, 1, 1)
-    )
+    return np.sin(x * np.pi / 2) / (
+        np.sum(np.sin(x * np.pi / 2), (1, 2, 3))
+    ).reshape((-1, 1, 1, 1))
 
 
 def reproc_sqrt(x):
-    return sum_1_norm(x**0.5)
-
-
-def reproc_sqrt_nonorm(x):
     return sum_1_norm(x**0.5)
 
 
@@ -119,7 +122,9 @@ def reproc_log1000_sqnorm(x):
 
 
 def reproc_4rt_sqnorm(x):
-    return (x) ** 0.25 / np.sqrt(np.sum(x**0.5, (1, 2, 3))).reshape((-1, 1, 1, 1))
+    return (x) ** 0.25 / np.sqrt(np.sum(x**0.5, (1, 2, 3))).reshape(
+        (-1, 1, 1, 1)
+    )
 
 
 def reproc_sqrt_sqnorm(x):
@@ -138,9 +143,9 @@ def xImageOfOnes(a):
 
 def leaveNbrightest(x, N):
     shape = x.shape
-    y = np.partition(x.reshape((shape[0], shape[1] * shape[2] * shape[3])), -N, axis=1)[
-        :, -N
-    ]
+    y = np.partition(
+        x.reshape((shape[0], shape[1] * shape[2] * shape[3])), -N, axis=1
+    )[:, -N]
     # print(np.expand_dims(y, 1))
     # print(np.apply_along_axis(xImageOfOnes, -1, np.expand_dims(y, 1)))
     # print((x>=np.apply_along_axis(xImageOfOnes, -1, np.expand_dims(y, 1))))
@@ -151,9 +156,9 @@ def leaveNbrightest(x, N):
 
 def leaveMtoNbrightest(x, N, M=1):
     shape = x.shape
-    y = np.partition(x.reshape((shape[0], shape[1] * shape[2] * shape[3])), -N, axis=1)[
-        :, -N
-    ]
+    y = np.partition(
+        x.reshape((shape[0], shape[1] * shape[2] * shape[3])), -N, axis=1
+    )[:, -N]
     y2 = np.partition(
         x.reshape((shape[0], shape[1] * shape[2] * shape[3])), -M, axis=1
     )[:, -M]
@@ -192,3 +197,19 @@ def postpr_names(reproc):
         return ""
     if reproc == boundMSE:
         return "None"
+
+def get_reproc_by_name(reproc_name):
+    if reproc_name == "none":
+        return lambda x: x 
+    elif reproc_name == "sqrt":
+        return lambda x: reproc_sqrt(x)
+    elif reproc_name == "4rt":
+        return lambda x: reproc_4rt(x)
+
+"""
+class Reprocessing():
+
+def __init__(self, b):
+    self.name=""
+    self.function=lambda x : x
+"""

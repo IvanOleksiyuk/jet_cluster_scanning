@@ -1,80 +1,63 @@
+# imports
 import copy
 import os
 import pickle
 import random
 import time
-
-
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from sklearn.cluster import KMeans, MiniBatchKMeans
-
 import reprocessing
+from config_utils import Config
 
-# Hyperparameters
-ID = 0
-W = 250
-k = 20
-retrain = 1
-steps = 201
-reproc = None  # reprocessing.reproc_sqrt
-reproc_name = reprocessing.reproc_names(reproc)
-MiniBatch = ""
-smearing = 0
-signal_fraction = 0
-Mjjmin_arr = np.linspace(2000, 6000 - W, steps)
-Mjjmax_arr = Mjjmin_arr + W
+# Loading configuration
+config_file = "config/test.yml"
+config = Config(config_file)
+cfg = config.get_dotmap()
 
-
+# Creating a path to save results
 save_path = (
     "char/0kmeans_scan/k{:}{:}ret{:}con{:}"
     "W{:}ste{:}rew{:}sme{:}ID{:}/".format(
-        k,
-        MiniBatch,
-        retrain,
-        signal_fraction,
-        W,
-        steps,
-        reproc_name,
-        smearing,
-        ID,
+        cfg.k,
+        cfg.MiniBatch,
+        cfg.retrain,
+        cfg.signal_fraction,
+        cfg.W,
+        cfg.steps,
+        cfg.reproc_name,
+        cfg.smearing,
+        cfg.ID,
     )
 )
-
-HP = {
-    "k": k,
-    "MiniBatch": MiniBatch,
-    "retrain": retrain,
-    "signal_fraction": signal_fraction,
-    "W": W,
-    "steps": steps,
-    "reproc_name": reproc_name,
-    "smearing": smearing,
-    "ID": ID,
-    "Mjjmin_arr": Mjjmin_arr,
-    "Mjjmax_arr": Mjjmax_arr,
-}
-
-
 os.makedirs(save_path, exist_ok=True)
 
-random.seed(a=ID, version=2)
+# Transform some config arguments into useful stuff
+reproc = reprocessing.get_reproc_by_name(cfg.reproc)
+Mjjmin_arr = np.linspace(
+    cfg.eval_interval[0], cfg.eval_interval[1] - cfg.W, cfg.steps
+)
+Mjjmax_arr = Mjjmin_arr + cfg.W
+HP = config.get_dict()
+random.seed(a=cfg.ID, version=2)
+
+###timer
 start_time_glb = time.time()
-data_path = "../../DATA/LHCO/"
 
-mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
-mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
+# Loading data
+mjj_bg = np.load(cfg.data_path + "mjj_bkg_sort.npy")
+mjj_sg = np.load(cfg.data_path + "mjj_sig_sort.npy")
 
-im_bg_f = h5py.File(data_path + "v2JetImSort_bkg.h5", "r")
-im_sg_f = h5py.File(data_path + "v2JetImSort_sig.h5", "r")
+im_bg_f = h5py.File(cfg.data_path + "v2JetImSort_bkg.h5", "r")
+im_sg_f = h5py.File(cfg.data_path + "v2JetImSort_sig.h5", "r")
 
 im_bg = im_bg_f["data"]
 im_sg = im_sg_f["data"]
 
 
-num_true = int(np.rint(signal_fraction * len(im_sg)))
+num_true = int(np.rint(cfg.signal_fraction * len(im_sg)))
 print(num_true)
 allowed = np.concatenate(
     (
@@ -108,7 +91,7 @@ def Mjj_slise(Mjjmin, Mjjmax):
     start_time = time.time()
     if reproc is None:
         data = reproc(data)
-    if smearing != 0:
+    if cfg.smearing != 0:
         data = gaussian_filter(data, sigma=[0, smearing, smearing])
     data = data.reshape((len(data), 40 * 40))
     print("reproc --- %s seconds ---" % (time.time() - start_time))
@@ -118,13 +101,13 @@ def Mjj_slise(Mjjmin, Mjjmax):
 print("load data --- %s seconds ---" % (time.time() - start_time_glb))
 
 
-if MiniBatch:
-    kmeans = MiniBatchKMeans(k)
+if cfg.MiniBatch:
+    kmeans = MiniBatchKMeans(cfg.k)
 else:
-    kmeans = KMeans(k)
+    kmeans = KMeans(cfg.k)
 
 
-if not retrain:
+if not cfg.retrain:
     first_tr_data = Mjj_slise(Mjjmin_arr[0], Mjjmax_arr[0])
     print("first_tr_data", first_tr_data.shape)
     kmeans.fit(first_tr_data)
@@ -135,26 +118,26 @@ if not retrain:
     plt.savefig("plots/test/cluster_0.png")
 
 counts_windows = []
-if retrain:
+if cfg.retrain:
     kmeans_all = []
 
 init = "k-means++"
 for i in range(len(Mjjmin_arr)):
     data = Mjj_slise(Mjjmin_arr[i], Mjjmax_arr[i])
-    if retrain:
+    if cfg.retrain:
         kmeans.fit(data)
         kmeans_all.append(copy.deepcopy(kmeans))
     predictions = kmeans.predict(data)
-    counts_windows.append([np.sum(predictions == j) for j in range(k)])
-    if retrain:
-        if retrain == 2:
+    counts_windows.append([np.sum(predictions == j) for j in range(cfg.k)])
+    if cfg.retrain:
+        if cfg.retrain == 2:
             init = kmeans.cluster_centers_
         else:
             init = kmeans_all[0].cluster_centers_
-        if MiniBatch:
-            kmeans = MiniBatchKMeans(k, init=init)
+        if cfg.MiniBatch:
+            kmeans = cfg.MiniBatchKMeans(cfg.k, init=init)
         else:
-            kmeans = KMeans(k, init=init)
+            kmeans = KMeans(cfg.k, init=init)
     print(
         "window {:.2f}-{:.2f}, N={:}".format(
             Mjjmin_arr[i], Mjjmax_arr[i], len(data)
@@ -168,7 +151,7 @@ window_centers = (Mjjmin_arr + Mjjmax_arr) / 2
 counts_windows = np.array(counts_windows)
 plt.figure()
 plt.grid()
-for j in range(k):
+for j in range(cfg.k):
     plt.plot(window_centers, counts_windows[:, j])
 plt.xlabel("m_jj")
 plt.ylabel("n points from window")
@@ -191,21 +174,21 @@ for i in range(len(Mjjmin_arr)):
 
 plt.figure()
 plt.grid()
-for j in range(k):
+for j in range(cfg.k):
     plt.plot((Mjjmin_arr + Mjjmax_arr) / 2, partials_windows[:, j])
 plt.xlabel("m_jj")
 plt.ylabel("fraction of points in window")
 plt.savefig(save_path + "kmeans_xi_mjj_total.png")
 
 countmax_windows = np.zeros(counts_windows.shape)
-for i in range(k):
+for i in range(cfg.k):
     countmax_windows[:, i] = counts_windows[:, i] / np.max(
         counts_windows[:, i]
     )
 
 plt.figure()
 plt.grid()
-for j in range(k):
+for j in range(cfg.k):
     plt.plot((Mjjmin_arr + Mjjmax_arr) / 2, countmax_windows[:, j])
 
 conts_bg = []
@@ -240,7 +223,7 @@ res = {}
 res["counts_windows"] = counts_windows
 res["partials_windows"] = partials_windows
 res["HP"] = HP
-if retrain:
+if cfg.retrain:
     res["kmeans_all"] = kmeans_all
 else:
     res["kmeans"] = kmeans
@@ -253,9 +236,9 @@ im_sg_f.close()
 res = pickle.load(open(save_path + "res.pickle", "rb"))
 kmeans_all = res["kmeans_all"]
 
-if retrain:
+if cfg.retrain:
     diffs = []
-    for i in range(steps - 1):
+    for i in range(cfg.steps - 1):
         diffs.append(
             np.sum(
                 (
@@ -273,15 +256,15 @@ if retrain:
     mjj_arr = (Mjjmin_arr[:-1] + Mjjmax_arr[:-1]) / 4 + (
         Mjjmin_arr[1:] + Mjjmax_arr[1:]
     ) / 4
-    for j in range(k):
+    for j in range(cfg.k):
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|mean-mean_0|")
     plt.savefig(save_path + "kmeans_cluster_abs_init_change.png")
 
-if retrain:
+if cfg.retrain:
     diffs = []
-    for i in range(steps - 1):
+    for i in range(cfg.steps - 1):
         diffs.append(
             np.sum(
                 (
@@ -299,15 +282,15 @@ if retrain:
     mjj_arr = (Mjjmin_arr[:-1] + Mjjmax_arr[:-1]) / 4 + (
         Mjjmin_arr[1:] + Mjjmax_arr[1:]
     ) / 4
-    for j in range(k):
+    for j in range(cfg.k):
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|d mean/d mjj|")
     plt.savefig(save_path + "kmeans_cluster_abs_deriv.png")
 
-if retrain:
+if cfg.retrain:
     diffs = []
-    for i in range(steps - 2):
+    for i in range(cfg.steps - 2):
         diffs.append(
             np.sum(
                 (
@@ -324,7 +307,7 @@ if retrain:
     plt.figure()
     plt.grid()
     mjj_arr = (Mjjmin_arr[1:-1] + Mjjmax_arr[1:-1]) / 2
-    for j in range(k):
+    for j in range(cfg.k):
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|d^2 mean/d mjj^2|")

@@ -1,0 +1,10 @@
+ID: 0
+W: 250
+k: 20
+retrain: 1
+steps: 201
+reproc: "none"
+MiniBatch: False
+smearing: 0
+signal_fraction: 0
+training_int: [2000, 6000]
