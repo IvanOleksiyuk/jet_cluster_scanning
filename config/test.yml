@@ -1,16 +1,17 @@
 data_path: "../../DATA/LHCO/"
+jet_per_event: 2
 ID: 0
 W: 100
 k: 2
-retrain: 1
+retrain: 0
 steps: 4
 reproc: "none"
 MiniBatch: False
 smearing: 0
 signal_fraction: 0
 train_interval:
-  - 2700
-  - 2800
+  - 2000
+  - 2100
 eval_interval: 
   - 2000
   - 6000

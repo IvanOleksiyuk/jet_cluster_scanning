@@ -1,62 +1,77 @@
-# imports
-import copy
-import os
-import pickle
+import numpy as np
 import random
-import time
 import h5py
 import matplotlib.pyplot as plt
-import numpy as np
-from scipy.ndimage import gaussian_filter
 from sklearn.cluster import KMeans, MiniBatchKMeans
+import time
+import os
 import reprocessing
-from config_utils import Config
+import pickle
+from scipy.ndimage import gaussian_filter
+import copy
 
-# Loading configuration
-config_file = "config/test.yml"
-config = Config(config_file)
-cfg = config.get_dotmap()
+# Hyperparameters
+ID = 0
+W = 100
+k = 2
+retrain = 0
+steps = 4
+reproc = None  # reprocessing.reproc_sqrt
+reproc_name = reprocessing.reproc_names(reproc)
+MiniBatch = False
+smearing = 0
+signal_fraction = 0
+Mjjmin_arr = np.linspace(2000, 6000 - W, steps)
+Mjjmax_arr = Mjjmin_arr + W
 
-# Creating a path to save results
+print(Mjjmin_arr[0], Mjjmax_arr[0])
+
 save_path = (
-    "char/0kmeans_scan/k{:}{:}ret{:}con{:}"
-    "W{:}ste{:}rew{:}sme{:}ID{:}/".format(
-        cfg.k,
-        cfg.MiniBatch,
-        cfg.retrain,
-        cfg.signal_fraction,
-        cfg.W,
-        cfg.steps,
-        cfg.reproc_name,
-        cfg.smearing,
-        cfg.ID,
+    "char/0kmeans_scan/k{:}{:}ret{:}con{:}W{:}ste{:}rew{:}sme{:}ID{:}/".format(
+        k,
+        MiniBatch,
+        retrain,
+        signal_fraction,
+        W,
+        steps,
+        reproc_name,
+        smearing,
+        ID,
     )
 )
+
+HP = {
+    "k": k,
+    "MiniBatch": MiniBatch,
+    "retrain": retrain,
+    "signal_fraction": signal_fraction,
+    "W": W,
+    "steps": steps,
+    "reproc_name": reproc_name,
+    "smearing": smearing,
+    "ID": ID,
+    "Mjjmin_arr": Mjjmin_arr,
+    "Mjjmax_arr": Mjjmax_arr,
+}
+
+
 os.makedirs(save_path, exist_ok=True)
 
-# Transform some config arguments into useful stuff
-reproc = reprocessing.get_reproc_by_name(cfg.reproc)
-Mjjmin_arr = np.linspace(
-    cfg.eval_interval[0], cfg.eval_interval[1] - cfg.W, cfg.steps
-)
-Mjjmax_arr = Mjjmin_arr + cfg.W
-HP = config.get_dict()
-random.seed(a=cfg.ID, version=2)  # set a seed corresponding to the ID
+random.seed(a=ID, version=2)
+start_time_glb = time.time()
+data_path = "../../DATA/LHCO/"
 
-# Loading data
-start_time = time.time()  # TEST
-mjj_bg = np.load(cfg.data_path + "mjj_bkg_sort.npy")
-mjj_sg = np.load(cfg.data_path + "mjj_sig_sort.npy")
+mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
+mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
 
-im_bg_file = h5py.File(cfg.data_path + "v2JetImSort_bkg.h5", "r")
-im_sg_file = h5py.File(cfg.data_path + "v2JetImSort_sig.h5", "r")
+im_bg_f = h5py.File(data_path + "v2JetImSort_bkg.h5", "r")
+im_sg_f = h5py.File(data_path + "v2JetImSort_sig.h5", "r")
 
-im_bg = im_bg_file["data"]
-im_sg = im_sg_file["data"]
-print("load data --- %s seconds ---" % (time.time() - start_time))  # TEST
+im_bg = im_bg_f["data"]
+im_sg = im_sg_f["data"]
 
-# create flags for the signal data taken in this run
-num_true = int(np.rint(cfg.signal_fraction * len(im_sg)))
+
+num_true = int(np.rint(signal_fraction * len(im_sg)))
 print(num_true)
 allowed = np.concatenate(
     (
@@ -67,20 +82,7 @@ allowed = np.concatenate(
 np.random.shuffle(allowed)
 
 
-def Mjj_slise(Mjjmin, Mjjmax, allowed, bootstrap_bg=None):
-    """Returns the background an signal jets in a given Mjj window
-
-    Args:
-        Mjjmin (float): lower Mjj interval limit
-        Mjjmax (float): upper Mjj interval limit
-        allowed (list/array of integers or bool of size len(im_sg)):
-            Indicates which and how any times each signal image is chosen for the dataset
-        bootstrap_bg (list/array of integers of size len(im_bg)):
-            Indicates which and how any times each background image is chosen for the dataset
-
-    Returns:
-        _type_: _description_
-    """
+def Mjj_slise(Mjjmin, Mjjmax):
     print("loading window", Mjjmin, Mjjmax)
     indexing_bg = np.logical_and(mjj_bg >= Mjjmin, mjj_bg <= Mjjmax)
     indexing_bg = np.where(indexing_bg)[0]
@@ -90,29 +92,11 @@ def Mjj_slise(Mjjmin, Mjjmax, allowed, bootstrap_bg=None):
 
     print(len(indexing_bg), "bg events found")
     print(len(indexing_sg), "sg events found")
-
     start_time = time.time()
-    print("timer set")
-    if bootstrap_bg is None:
-        bg = im_bg[indexing_bg[0] : indexing_bg[-1]]
-    else:
-        print(len(im_bg[indexing_bg[0] : indexing_bg[-1]]))
-        print(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
-        bg = np.repeat(
-            im_bg[indexing_bg[0] : indexing_bg[-1]],
-            bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
-            axis=0,
-        )
-    sg = np.repeat(
-        im_sg[indexing_bg[0] : indexing_bg[-1]],
-        allowed[indexing_bg[0] : indexing_bg[-1]],
-        axis=0,
-    )
-    # test if chnaging to this spares some time
-    # sg=im_sg[indexing_sg[0]:indexing_sg[-1]]
-    # sg=sg[allowed[indexing_sg[0]:indexing_sg[-1]]]
+    bg = im_bg[indexing_bg[0] : indexing_bg[-1]]
+    sg = im_sg[indexing_sg[0] : indexing_sg[-1]]
+    sg = sg[allowed[indexing_sg[0] : indexing_sg[-1]]]
     print("only", len(sg), "sg events taken")
-    print("only", len(bg), "bg events taken")
     print("load --- %s seconds ---" % (time.time() - start_time))
     start_time = time.time()
     data = np.concatenate((bg, sg))
@@ -128,14 +112,16 @@ def Mjj_slise(Mjjmin, Mjjmax, allowed, bootstrap_bg=None):
     return data
 
 
-# Initiate k-means or MB k-means
-if cfg.MiniBatch:
-    kmeans = MiniBatchKMeans(cfg.k)
-else:
-    kmeans = KMeans(cfg.k)
+print("load data --- %s seconds ---" % (time.time() - start_time_glb))
 
-#
-if not cfg.retrain:
+
+if MiniBatch:
+    kmeans = MiniBatchKMeans(k)
+else:
+    kmeans = KMeans(k)
+
+
+if not retrain:
     first_tr_data = Mjj_slise(Mjjmin_arr[0], Mjjmax_arr[0])
     print("first_tr_data", first_tr_data.shape)
     kmeans.fit(first_tr_data)
@@ -146,26 +132,26 @@ if not cfg.retrain:
     plt.savefig("plots/test/cluster_0.png")
 
 counts_windows = []
-if cfg.retrain:
+if retrain:
     kmeans_all = []
 
 init = "k-means++"
 for i in range(len(Mjjmin_arr)):
-    data = Mjj_slise(Mjjmin_arr[i], Mjjmax_arr[i], allowed=allowed)
-    if cfg.retrain:
+    data = Mjj_slise(Mjjmin_arr[i], Mjjmax_arr[i])
+    if retrain:
         kmeans.fit(data)
         kmeans_all.append(copy.deepcopy(kmeans))
     predictions = kmeans.predict(data)
-    counts_windows.append([np.sum(predictions == j) for j in range(cfg.k)])
-    if cfg.retrain:
-        if cfg.retrain == 2:
+    counts_windows.append([np.sum(predictions == j) for j in range(k)])
+    if retrain:
+        if retrain == 2:
             init = kmeans.cluster_centers_
         else:
             init = kmeans_all[0].cluster_centers_
-        if cfg.MiniBatch:
-            kmeans = cfg.MiniBatchKMeans(cfg.k, init=init)
+        if MiniBatch:
+            kmeans = MiniBatchKMeans(k, init=init)
         else:
-            kmeans = KMeans(cfg.k, init=init)
+            kmeans = KMeans(k, init=init)
     print(
         "window {:.2f}-{:.2f}, N={:}".format(
             Mjjmin_arr[i], Mjjmax_arr[i], len(data)
@@ -179,7 +165,7 @@ window_centers = (Mjjmin_arr + Mjjmax_arr) / 2
 counts_windows = np.array(counts_windows)
 plt.figure()
 plt.grid()
-for j in range(cfg.k):
+for j in range(k):
     plt.plot(window_centers, counts_windows[:, j])
 plt.xlabel("m_jj")
 plt.ylabel("n points from window")
@@ -202,21 +188,21 @@ for i in range(len(Mjjmin_arr)):
 
 plt.figure()
 plt.grid()
-for j in range(cfg.k):
+for j in range(k):
     plt.plot((Mjjmin_arr + Mjjmax_arr) / 2, partials_windows[:, j])
 plt.xlabel("m_jj")
 plt.ylabel("fraction of points in window")
 plt.savefig(save_path + "kmeans_xi_mjj_total.png")
 
 countmax_windows = np.zeros(counts_windows.shape)
-for i in range(cfg.k):
+for i in range(k):
     countmax_windows[:, i] = counts_windows[:, i] / np.max(
         counts_windows[:, i]
     )
 
 plt.figure()
 plt.grid()
-for j in range(cfg.k):
+for j in range(k):
     plt.plot((Mjjmin_arr + Mjjmax_arr) / 2, countmax_windows[:, j])
 
 conts_bg = []
@@ -251,7 +237,7 @@ res = {}
 res["counts_windows"] = counts_windows
 res["partials_windows"] = partials_windows
 res["HP"] = HP
-if cfg.retrain:
+if retrain:
     res["kmeans_all"] = kmeans_all
 else:
     res["kmeans"] = kmeans
@@ -264,9 +250,9 @@ im_sg_f.close()
 res = pickle.load(open(save_path + "res.pickle", "rb"))
 kmeans_all = res["kmeans_all"]
 
-if cfg.retrain:
+if retrain:
     diffs = []
-    for i in range(cfg.steps - 1):
+    for i in range(steps - 1):
         diffs.append(
             np.sum(
                 (
@@ -284,15 +270,15 @@ if cfg.retrain:
     mjj_arr = (Mjjmin_arr[:-1] + Mjjmax_arr[:-1]) / 4 + (
         Mjjmin_arr[1:] + Mjjmax_arr[1:]
     ) / 4
-    for j in range(cfg.k):
+    for j in range(k):
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|mean-mean_0|")
     plt.savefig(save_path + "kmeans_cluster_abs_init_change.png")
 
-if cfg.retrain:
+if retrain:
     diffs = []
-    for i in range(cfg.steps - 1):
+    for i in range(steps - 1):
         diffs.append(
             np.sum(
                 (
@@ -310,15 +296,15 @@ if cfg.retrain:
     mjj_arr = (Mjjmin_arr[:-1] + Mjjmax_arr[:-1]) / 4 + (
         Mjjmin_arr[1:] + Mjjmax_arr[1:]
     ) / 4
-    for j in range(cfg.k):
+    for j in range(k):
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|d mean/d mjj|")
     plt.savefig(save_path + "kmeans_cluster_abs_deriv.png")
 
-if cfg.retrain:
+if retrain:
     diffs = []
-    for i in range(cfg.steps - 2):
+    for i in range(steps - 2):
         diffs.append(
             np.sum(
                 (
@@ -335,7 +321,7 @@ if cfg.retrain:
     plt.figure()
     plt.grid()
     mjj_arr = (Mjjmin_arr[1:-1] + Mjjmax_arr[1:-1]) / 2
-    for j in range(cfg.k):
+    for j in range(k):
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|d^2 mean/d mjj^2|")

@@ -1,3 +1,4 @@
+"""
 from dotmap import DotMap
 
 a = {"a": [1, 2], "b": 2}
@@ -14,3 +15,8 @@ print(config.get("eval_interval"))
 print(config.get_dict()["W"])
 cfg = config.get_dotmap()
 print(cfg.eval_interval)
+"""
+
+import numpy as np
+
+print(np.repeat([2, 6], [True, False]))
