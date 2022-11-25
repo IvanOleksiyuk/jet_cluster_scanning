@@ -17,10 +17,14 @@ config_file = "config/test.yml"
 config = Config(config_file)
 cfg = config.get_dotmap()
 
+# parsing connected to preprocessing
+reproc = reprocessing.Reprocessing(cfg.reproc_arg_string)
+cfg.reproc_name = reproc.name
+
 # Creating a path to save results
 save_path = (
     "char/0kmeans_scan/k{:}{:}ret{:}con{:}"
-    "W{:}ste{:}rew{:}sme{:}ID{:}/".format(
+    "W{:}ste{:}_{:}_ID{:}/".format(
         cfg.k,
         cfg.MiniBatch,
         cfg.retrain,
@@ -28,7 +32,6 @@ save_path = (
         cfg.W,
         cfg.steps,
         cfg.reproc_name,
-        cfg.smearing,
         cfg.ID,
     )
 )
@@ -36,7 +39,6 @@ os.makedirs(save_path, exist_ok=True)
 
 
 # Transform some config arguments into useful stuff
-reproc = reprocessing.get_reproc_by_name(cfg.reproc)
 Mjjmin_arr = np.linspace(
     cfg.eval_interval[0], cfg.eval_interval[1] - cfg.W, cfg.steps
 )
@@ -44,17 +46,16 @@ Mjjmax_arr = Mjjmin_arr + cfg.W
 HP = config.get_dict()
 random.seed(a=cfg.ID, version=2)  # set a seed corresponding to the ID
 
-
 # Loading data
-start_time = time.time()  # TEST
 mjj_bg = np.load(cfg.data_path + "mjj_bkg_sort.npy")
 mjj_sg = np.load(cfg.data_path + "mjj_sig_sort.npy")
 im_bg_file = h5py.File(cfg.data_path + "v2JetImSort_bkg.h5", "r")
 im_sg_file = h5py.File(cfg.data_path + "v2JetImSort_sig.h5", "r")
 im_bg = im_bg_file["data"]
 im_sg = im_sg_file["data"]
-print("load data --- %s seconds ---" % (time.time() - start_time))  # TEST
 
+plt.imshow(reproc(im_bg[1:3].reshape((-1, 40, 40)))[0])
+plt.show()
 
 # Create flags for the signal data taken in this run
 num_true = int(np.rint(cfg.signal_fraction * len(im_sg)))
@@ -127,10 +128,7 @@ def Mjj_slise(Mjjmin, Mjjmax, allowed=None, bootstrap_bg=None):
     data = data.reshape((len(data) * cfg.jet_per_event, 40, 40))
     print("concat --- %s seconds ---" % (time.time() - start_time))
     start_time = time.time()
-    if reproc != None:
-        data = reproc(data)
-    if cfg.smearing != 0:
-        data = gaussian_filter(data, sigma=[0, cfg.smearing, cfg.smearing])
+    data = reproc(data)
     data = data.reshape((len(data), 40 * 40))
     print("reproc --- %s seconds ---" % (time.time() - start_time))
     return data
@@ -145,19 +143,18 @@ else:
 
 # Train k-means in the training window
 start_time = time.time()
-print("start training")
 data = Mjj_slise(cfg.train_interval[0], cfg.train_interval[1])
 kmeans.fit(data)
 print("trained --- %s seconds ---" % (time.time() - start_time))
 
 
 # Evaluate lables for the whole dataset
-bg_lab = kmeans.predict(im_bg[:].reshape((-1, 1600))).reshape(
-    (-1, cfg.jet_per_event)
-)
-sg_lab = kmeans.predict(im_sg[:].reshape((-1, 1600))).reshape(
-    (-1, cfg.jet_per_event)
-)
+bg_lab = kmeans.predict(
+    reproc(im_bg[:].reshape((-1, 40, 40))).reshape((-1, 1600))
+).reshape((-1, cfg.jet_per_event))
+sg_lab = kmeans.predict(
+    reproc(im_sg[:].reshape((-1, 40, 40))).reshape((-1, 1600))
+).reshape((-1, cfg.jet_per_event))
 
 
 # Function to count entries in one bin
@@ -200,9 +197,7 @@ def count_bin(mjjmin, mjjmax, allowed, bootstrap_bg=None):
             allowed[indexing_sg[0] : indexing_sg[-1]],
             axis=0,
         )
-        print(sg)
         all_lab = np.concatenate((bg, sg))
-        print("SIGNAL ACTIVE")
     else:
         all_lab = bg
     return np.array([np.sum(all_lab == j) for j in range(cfg.k)])
@@ -247,7 +242,7 @@ for i in range(len(Mjjmin_arr)):
 plt.figure()
 plt.grid()
 for j in range(cfg.k):
-    plt.plot((Mjjmin_arr + Mjjmax_arr) / 2, partials_windows[:, j])
+    plt.plot(window_centers, partials_windows[:, j])
 plt.xlabel("m_jj")
 plt.ylabel("fraction of points in window")
 plt.savefig(save_path + "kmeans_xi_mjj_total.png")
@@ -261,7 +256,7 @@ for i in range(cfg.k):
 plt.figure()
 plt.grid()
 for j in range(cfg.k):
-    plt.plot((Mjjmin_arr + Mjjmax_arr) / 2, countmax_windows[:, j])
+    plt.plot(window_centers, countmax_windows[:, j])
 
 conts_bg = []
 conts_sg = []
@@ -277,7 +272,7 @@ for Mjjmin, Mjjmax in zip(Mjjmin_arr, Mjjmax_arr):
 conts_bg = np.array(conts_bg)
 conts_sg = np.array(conts_sg)
 conts = conts_bg + conts_sg
-plt.plot((Mjjmin_arr + Mjjmax_arr) / 2, conts / np.max(conts), "--")
+plt.plot(window_centers, conts / np.max(conts), "--")
 plt.xlabel("m_jj")
 plt.ylabel("n points from window/max(...)")
 plt.savefig(save_path + "kmeans_xi_mjj_maxn.png")
@@ -291,7 +286,8 @@ for i in range(len(window_centers)):
 
 plt.savefig(save_path + "kmeans_xi_mjj_maxn_statAllowed.png")
 
-# TODO some output
+# Save results
+# Save all labels
 
 
 # close files

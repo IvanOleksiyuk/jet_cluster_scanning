@@ -5,7 +5,7 @@ W: 100
 k: 2
 retrain: 0
 steps: 4
-reproc: "none"
+reproc_arg_string: "w 0.5 s 1 N"
 MiniBatch: False
 smearing: 0
 signal_fraction: 0
