@@ -7,6 +7,16 @@ from scipy.ndimage import gaussian_filter
 
 
 def sum_1_norm(x, batch=True):
+    """Normalise each image in a batch to sum 1 (summing over chanels as well!!!)
+    or a single image
+
+    Args:
+        x (numpy.array): batch of images of formats (N, W, H, C), (N, W, H) or (N, W*H) or a single image
+        batch (bool, optional): Specify if a given array is a batch or a single image (not clear from the dimensionality). Defaults to True.
+
+    Returns:
+        numpy.array: normalised images/image
+    """
     if batch:
         if len(x.shape) == 4:  #
             return x / (np.sum(x, (1, 2, 3))).reshape((-1, 1, 1, 1))
@@ -22,6 +32,16 @@ def sum_1_norm(x, batch=True):
 
 
 def gaussian_smearing(x, sigma, batch=True):
+    """Smear images wiht a gaussian kernel
+
+    Args:
+        x (numpy.array): batch of images of formats (N, W, H, C), (N, W, H) or a single image of formats (W, H, C), (W, H)
+        sigma (float): standard deviation of a gaussian
+        batch (bool, optional): Specify if a given array is a batch or a single image (not clear from the dimensionality). Defaults to True.
+
+    Returns:
+        numpy.array: smeared images/image
+    """
     if batch:
         if len(x.shape) == 4:  #
             return gaussian_filter(x, sigma=[0, sigma, sigma, 0])

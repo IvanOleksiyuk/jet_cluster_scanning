@@ -1,8 +1,12 @@
 data_path: "../../DATA/LHCO/"
 jet_per_event: 2
+image_size: 40
+image_w: 40
+image_h: 40
 ID: 0
 W: 100
 k: 2
+memory_intensive: False
 retrain: 0
 steps: 4
 reproc_arg_string: "w 0.5 s 1 N"
