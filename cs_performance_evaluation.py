@@ -79,11 +79,6 @@ def sliding_cluster_performance_evaluation(
     verbous=True,
 ):
 
-    # /home/ivan/mnt/cluster/k_means_anomaly_jet/char/0kmeans_scan/
-    if counts_windows is None:
-        res = pickle.load(open(save_path + "res.pickle", "rb"))
-        counts_windows = res["counts_windows"]
-
     plt.rcParams["lines.linewidth"] = 1
 
     steps = counts_windows.shape[0]

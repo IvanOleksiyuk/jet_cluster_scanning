@@ -1,5 +1,4 @@
 # imports
-import copy
 import os
 import pickle
 import random
@@ -11,6 +10,8 @@ from scipy.ndimage import gaussian_filter
 from sklearn.cluster import KMeans, MiniBatchKMeans
 import reprocessing
 from config_utils import Config
+import shutil
+
 
 class ClusterScanning:
     def __init__(self, config_file):
@@ -20,7 +21,7 @@ class ClusterScanning:
         self.cfg.reproc_name = self.reproc.name
         self.save_path = (
             "char/0kmeans_scan/k{:}{:}ret{:}con{:}"
-            "W{:}_{:}ste{:}_{:}_ID{:}/".format(
+            "W{:}_{:}ste{:}_{:}".format(
                 self.cfg.k,
                 self.cfg.MiniBatch,
                 self.cfg.retrain,
@@ -32,6 +33,13 @@ class ClusterScanning:
                 self.cfg.ID,
             )
         )
+        if self.cfg.bootstrap:
+            self.save_path += "boot/"
+        else:
+            self.ID = self.cfg.ID
+            self.save_path += "_ID{:}/".format(self.cfg.ID)
+            self.seed()
+
         os.makedirs(self.save_path, exist_ok=True)
         self.Mjjmin_arr = np.linspace(
             self.cfg.eval_interval[0],
@@ -40,10 +48,10 @@ class ClusterScanning:
         )
         self.Mjjmax_arr = self.Mjjmin_arr + self.cfg.W
         HP = self.config.get_dict()
-        random.seed(
-            a=self.cfg.ID, version=2
-        )  # set a seed corresponding to the ID
+        shutil.copy2(config_file_path, self.save_path + "config.yaml")
 
+    def seed(self):
+        random.seed(a=self.ID, version=2)  # set a seed corresponding to the ID
 
     def load_mjj(self):
         self.mjj_bg = np.load(self.cfg.data_path + "mjj_bkg_sort.npy")
@@ -183,10 +191,10 @@ class ClusterScanning:
         )
         self.kmeans.fit(data)
         print("trained --- %s seconds ---" % (time.time() - start_time))
-        print(self.kmeans.cluster_centers_)
 
     def bootstrap_resample(self):
-        np.sort(np.random.randint(0, len(self.mjj_bg), (len(self.mjj_bg),)))
+        n = len(self.mjj_bg)
+        np.sort(np.random.randint(0, n, (n,)))
         a = np.arange(n)
         self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
 
@@ -256,8 +264,6 @@ class ClusterScanning:
         if save:
             np.save(self.save_path + "bg_lab", self.bg_lab)
             np.save(self.save_path + "sg_lab", self.sg_lab)
-            print(self.bg_lab)
-            print(self.sg_lab)
 
     def count_bin(self, mjjmin, mjjmax, allowed, bootstrap_bg):
         """Counts a number of events for all classes in a given Mjj window
@@ -408,28 +414,51 @@ class ClusterScanning:
         plt.savefig(self.save_path + "kmeans_xi_mjj_maxn_statAllowed.png")
 
     def run(self):
-        if self.cfg.boostrap:
+        if self.cfg.bootstrap:
             self.bootstrap_run()
         else:
             self.single_run()
 
-    def single_run():
+    def single_run(self):
         start_time = time.time()
-        cs = ClusterScanning(config_file_path)
-        cs.load_mjj()
-        cs.load_data()
-        cs.sample_signal_events()
-        # cs.bootstrap_resample()
-        cs.train_k_means()
-        cs.evaluate_whole_dataset(save=True)
-        cs.perform_binning(save=True)
-        cs.make_plots()
+        self.load_mjj()
+        self.load_data()
+        self.sample_signal_events()
+        self.train_k_means()
+        self.evaluate_whole_dataset(save=True)
+        self.perform_binning(save=True)
+        self.make_plots()
         plt.show()
         print("All done ### %s seconds ###" % (time.time() - start_time))
 
-    def bootstrap_run():
+    def bootstrap_run(self):
+        start_time = time.time()
+        self.load_mjj()
+        self.load_data()
+        self.sample_signal_events()
+        for IDb in range(
+            self.cfg.bootstrap_ID_start,
+            self.cfg.bootstrap_ID_finish,
+            self.cfg.bootstrap_batch,
+        ):
+            bg_lab_list = []
+            sg_lab_list = []
+            for ID in range(self.cfg.bootstrap_batch):
+                self.ID = ID + IDb
+                self.seed()
+                self.bootstrap_resample()
+                self.train_k_means()
+                self.evaluate_whole_dataset()
+                bg_lab_list.append(self.bg_lab)
+                sg_lab_list.append(self.sg_lab)
+
+            with open(
+                f"lab{IDb}_{IDb+self.cfg.bootstrap_batch}.pickle", "wb"
+            ) as file:
+                pickle.dump({"bg": [1, 2, 3], "sg": [4, 5, 6]}, file)
+
 
 if __name__ == "__main__":
-    config_file_path = "config/test.yml"
-    cs=ClusterScanning(config_file_path)
-    
+    config_file_path = "config/default.yml"
+    cs = ClusterScanning(config_file_path)
+    cs.run()

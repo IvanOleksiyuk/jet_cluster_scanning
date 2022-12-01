@@ -14,13 +14,13 @@ image_w: 40
 image_h: 40
 
 #Either specifie an ID if a single trainng is required
-ID: 100
+ID: 0
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
 bootstrap: True
 bootstrap_ID_start: 0
-bootstrap_ID_finish: 3
-bootstrap_batch: 3
+bootstrap_ID_finish: 1000
+bootstrap_batch: 100
 
 #Parameters of the training
 memory_intensive: False
@@ -34,9 +34,9 @@ MiniBatch: False #recommended to enable when doing bootstrapping
 
 #Parameters for binning
 W: 100 #Bin width 
-steps: 4 #Number of bins
+steps: 200 #Number of bins
 eval_interval: #Histogram window
-  - 2000
+  - 2600
   - 6000
 
 #Retraining option not yet implemented - requires binning to be specified
