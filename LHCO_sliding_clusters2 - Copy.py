@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, MiniBatchKMeans
 import time
 import os
-import reprocessing
+import reprocessing_old as reprocessing
 import pickle
 from scipy.ndimage import gaussian_filter
 import copy
@@ -16,10 +16,10 @@ W = 100
 k = 2
 retrain = 0
 steps = 4
-reproc = None  # reprocessing.reproc_sqrt
+reproc = reprocessing.reproc_sqrt
 reproc_name = reprocessing.reproc_names(reproc)
 MiniBatch = False
-smearing = 0
+smearing = 1
 signal_fraction = 0
 Mjjmin_arr = np.linspace(2000, 6000 - W, steps)
 Mjjmax_arr = Mjjmin_arr + W
@@ -240,6 +240,7 @@ res["HP"] = HP
 if retrain:
     res["kmeans_all"] = kmeans_all
 else:
+    res["kmeans_all"] = kmeans
     res["kmeans"] = kmeans
 
 pickle.dump(res, open(save_path + "res.pickle", "wb"))

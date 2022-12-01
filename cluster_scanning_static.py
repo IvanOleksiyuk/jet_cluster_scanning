@@ -140,13 +140,13 @@ if cfg.MiniBatch:
 else:
     kmeans = KMeans(cfg.k)
 
-
 # Train k-means in the training window
 start_time = time.time()
 data = Mjj_slise(cfg.train_interval[0], cfg.train_interval[1])
 kmeans.fit(data)
 print("trained --- %s seconds ---" % (time.time() - start_time))
 
+print(kmeans.cluster_centers_)
 
 # Evaluate lables for the whole dataset
 bg_lab = kmeans.predict(
@@ -156,10 +156,14 @@ sg_lab = kmeans.predict(
     reproc(im_sg[:].reshape((-1, 40, 40))).reshape((-1, 1600))
 ).reshape((-1, cfg.jet_per_event))
 
+print(bg_lab)
+print(sg_lab)
+
 
 # Function to count entries in one bin
 def count_bin(mjjmin, mjjmax, allowed, bootstrap_bg=None):
-    """Counts a number of events for all classes in a given Mjj window
+    """
+    Counts a number of events for all classes in a given Mjj window
 
     Args:
         mjjmin (float): lower Mjj interval limit

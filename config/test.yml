@@ -1,21 +1,42 @@
+# Location of the data
+# Algorithm requires files with all mJJ and images of the events 
+# sorted in increasing order of mJJ for both training and evaluation
+# "mjj_bkg_sort.npy"
+# "mjj_sig_sort.npy"
+#
+#
 data_path: "../../DATA/LHCO/"
+
+# Some general properties of the datasets provided
 jet_per_event: 2
 image_size: 40
 image_w: 40
 image_h: 40
-ID: 0
-W: 100
-k: 2
+
+#Either specifie an ID if a single trainng is required
+ID: 100
+#OR
+#Enable batched bootstrap training and evaluation for a range of ID's
+bootstrap: False
+bootstrap_ID_start: 0
+bootstrap_ID_finish: 1000
+
+#Parameters of the training
 memory_intensive: False
-retrain: 0
-steps: 4
-reproc_arg_string: "w 0.5 s 1 N"
-MiniBatch: False
-smearing: 0
-signal_fraction: 0
 train_interval:
   - 2000
   - 2100
-eval_interval: 
+signal_fraction: 0
+k: 2 #number of clusters to train
+reproc_arg_string: "w 0.5 s 1 N"
+MiniBatch: False #recommended to enable when doing bootstrapping
+
+#Parameters for binning
+W: 100 #Bin width 
+steps: 4 #Number of bins
+eval_interval: #Histogram window
   - 2000
   - 6000
+
+#Retraining option not yet implemented - requires binning to be specified
+retrain: 0
