@@ -17,7 +17,7 @@ image_h: 40
 ID: 100
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
-bootstrap: True
+bootstrap: False
 bootstrap_ID_start: 0
 bootstrap_ID_finish: 3
 bootstrap_batch: 3
@@ -41,3 +41,4 @@ eval_interval: #Histogram window
 
 #Retraining option not yet implemented - requires binning to be specified
 retrain: 0
+git@github.com:IvanOleksiyuk/jet_cluster_scanning.git
