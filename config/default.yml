@@ -1,10 +1,20 @@
-ID: 0
-W: 250
-k: 20
-retrain: 1
-steps: 201
-reproc: "none"
+data_path: "../../DATA/LHCO/"
+jet_per_event: 2
+image_size: 40
+image_w: 40
+image_h: 40
+ID: 100
+W: 100
+k: 50
+memory_intensive: False
+retrain: 0
+steps: 100
+reproc_arg_string: "w 0.5 s 1 N"
 MiniBatch: False
-smearing: 0
 signal_fraction: 0
-training_int: [2000, 6000]
+train_interval:
+  - 2600
+  - 2700
+eval_interval: 
+  - 2600
+  - 6000

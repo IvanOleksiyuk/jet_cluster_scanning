@@ -12,7 +12,6 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 import reprocessing
 from config_utils import Config
 
-# current implementatiom is very memory intensiv please waint for a more memory sparing but more CPU heavy implementation
 class ClusterScanning:
     def __init__(self, config_file):
         self.config = Config(config_file_path)
@@ -21,12 +20,13 @@ class ClusterScanning:
         self.cfg.reproc_name = self.reproc.name
         self.save_path = (
             "char/0kmeans_scan/k{:}{:}ret{:}con{:}"
-            "W{:}ste{:}_{:}_ID{:}/".format(
+            "W{:}_{:}ste{:}_{:}_ID{:}/".format(
                 self.cfg.k,
                 self.cfg.MiniBatch,
                 self.cfg.retrain,
                 self.cfg.signal_fraction,
-                self.cfg.W,
+                self.cfg.train_interval[0],
+                self.cfg.train_interval[1],
                 self.cfg.steps,
                 self.cfg.reproc_name,
                 self.cfg.ID,
@@ -44,9 +44,22 @@ class ClusterScanning:
             a=self.cfg.ID, version=2
         )  # set a seed corresponding to the ID
 
+
     def load_mjj(self):
         self.mjj_bg = np.load(self.cfg.data_path + "mjj_bkg_sort.npy")
         self.mjj_sg = np.load(self.cfg.data_path + "mjj_sig_sort.npy")
+
+    def stack_event(self, x):
+        return
+
+    def flatten_event(self, x):
+        return x.reshape()
+
+    def flatten_image():
+        pass
+
+    def de_flatten_image():
+        pass
 
     def load_data(self, show_example=True):
         im_bg_file = h5py.File(self.cfg.data_path + "v2JetImSort_bkg.h5", "r")
@@ -56,18 +69,18 @@ class ClusterScanning:
         if self.cfg.memory_intensive:
             self.im_bg = self.reproc(
                 im_bg_file["data"][:].reshape(
-                    (-1, self.cfg.image_size, self.cfg.image_size)
+                    (-1, self.cfg.image_w, self.cfg.image_h)
                 )
             ).reshape(
                 (
                     -1,
                     self.cfg.jet_per_event,
-                    self.cfg.image_size * self.cfg.image_size,
+                    self.cfg.image_w * self.cfg.image_h,
                 )
             )
             self.im_sg = self.reproc(
                 im_sg_file["data"][:].reshape(
-                    (-1, self.cfg.image_size, self.cfg.image_size)
+                    (-1, self.cfg.image_w, self.cfg.image_h)
                 )
             ).reshape(
                 (
@@ -170,9 +183,12 @@ class ClusterScanning:
         )
         self.kmeans.fit(data)
         print("trained --- %s seconds ---" % (time.time() - start_time))
+        print(self.kmeans.cluster_centers_)
 
     def bootstrap_resample(self):
-        pass  # Todo add bootstrapping
+        np.sort(np.random.randint(0, len(self.mjj_bg), (len(self.mjj_bg),)))
+        a = np.arange(n)
+        self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
 
     def cancel_bootstrap_resampling(self):
         self.bg_bootstrap = None
@@ -243,6 +259,54 @@ class ClusterScanning:
             print(self.bg_lab)
             print(self.sg_lab)
 
+    def count_bin(self, mjjmin, mjjmax, allowed, bootstrap_bg):
+        """Counts a number of events for all classes in a given Mjj window
+
+        Args:
+            mjjmin (float): lower Mjj interval limit
+            mjjmax (float): upper Mjj interval limit
+            allowed (list/array of integers or bool of size len(im_sg)):
+                Indicates which and how any times each signal image is chosen for the dataset
+            bootstrap_bg (list/array of integers of size len(im_bg)):
+                Indicates which and how any times each background image is chosen for the dataset
+
+        Returns:
+            np.array(dtype=int): number of jets in each cluster in this bin.
+        """
+        indexing_bg = np.logical_and(
+            self.mjj_bg >= mjjmin, self.mjj_bg <= mjjmax
+        )
+        indexing_bg = np.where(indexing_bg)[0]
+        indexing_sg = np.logical_and(
+            self.mjj_sg >= mjjmin, self.mjj_sg <= mjjmax
+        )
+        indexing_sg = np.where(indexing_sg)[0]
+
+        print(len(indexing_bg), "bg events found in interval")
+        print(len(indexing_sg), "sg events found in interval")
+
+        if bootstrap_bg is None:
+            bg = self.bg_lab[indexing_bg[0] : indexing_bg[-1]]
+        else:
+            print(len(self.bg_lab[indexing_bg[0] : indexing_bg[-1]]))
+            print(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
+            bg = np.repeat(
+                self.bg_lab[indexing_bg[0] : indexing_bg[-1]],
+                bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
+                axis=0,
+            )
+
+        if allowed is not None:
+            sg = np.repeat(
+                self.sg_lab[indexing_sg[0] : indexing_sg[-1]],
+                allowed[indexing_sg[0] : indexing_sg[-1]],
+                axis=0,
+            )
+            all_lab = np.concatenate((bg, sg))
+        else:
+            all_lab = bg
+        return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
+
     def perform_binning(self, save=False):
         counts_windows = []
         for i in range(self.cfg.steps):
@@ -256,12 +320,12 @@ class ClusterScanning:
             )
 
         # print(len(counts_windows))
-        counts_windows = np.stack(counts_windows)
-        return counts_windows
+        self.counts_windows = np.stack(counts_windows)
+        return self.counts_windows
 
     def make_plots(self):
         # Some plotting
-        window_centers = (Mjjmin_arr + Mjjmax_arr) / 2
+        window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
         min_allowed_count = 100
         min_min_allowed_count = 10
         plt.figure()
@@ -281,7 +345,7 @@ class ClusterScanning:
 
         plt.savefig(self.save_path + "kmeans_ni_mjj_total_statAllowed.png")
 
-        partials_windows = np.zeros(self.ounts_windows.shape)
+        partials_windows = np.zeros(self.counts_windows.shape)
         for i in range(len(self.Mjjmin_arr)):
             partials_windows[i, :] = self.counts_windows[i, :] / np.sum(
                 self.counts_windows[i, :]
@@ -289,34 +353,40 @@ class ClusterScanning:
 
         plt.figure()
         plt.grid()
-        for j in range(cfg.k):
+        for j in range(self.cfg.k):
             plt.plot(window_centers, partials_windows[:, j])
         plt.xlabel("m_jj")
         plt.ylabel("fraction of points in window")
         plt.savefig(self.save_path + "kmeans_xi_mjj_total.png")
 
         countmax_windows = np.zeros(self.counts_windows.shape)
-        for i in range(cfg.k):
+        for i in range(self.cfg.k):
             countmax_windows[:, i] = self.counts_windows[:, i] / np.max(
                 self.counts_windows[:, i]
             )
 
         plt.figure()
         plt.grid()
-        for j in range(cfg.k):
+        for j in range(self.cfg.k):
             plt.plot(window_centers, countmax_windows[:, j])
-        """
+
         conts_bg = []
         conts_sg = []
-        for Mjjmin, Mjjmax in zip(Mjjmin_arr, Mjjmax_arr):
+        for Mjjmin, Mjjmax in zip(self.Mjjmin_arr, self.Mjjmax_arr):
             conts_bg.append(
-                np.sum(np.logical_and(mjj_bg >= Mjjmin, mjj_bg <= Mjjmax))
+                np.sum(
+                    np.logical_and(
+                        self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax
+                    )
+                )
             )
             conts_sg.append(
                 np.sum(
                     np.logical_and(
-                        np.logical_and(mjj_sg >= Mjjmin, mjj_sg <= Mjjmax),
-                        allowed,
+                        np.logical_and(
+                            self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax
+                        ),
+                        self.allowed,
                     )
                 )
             )
@@ -326,7 +396,7 @@ class ClusterScanning:
         plt.plot(window_centers, conts / np.max(conts), "--")
         plt.xlabel("m_jj")
         plt.ylabel("n points from window/max(...)")
-        plt.savefig(save_path + "kmeans_xi_mjj_maxn.png")
+        plt.savefig(self.save_path + "kmeans_xi_mjj_maxn.png")
 
         for i in range(len(window_centers)):
             if smallest_cluster_count_window[i] < min_allowed_count:
@@ -335,65 +405,31 @@ class ClusterScanning:
                 else:
                     plt.axvline(window_centers[i], color="black", alpha=0.3)
 
-        plt.savefig(save_path + "kmeans_xi_mjj_maxn_statAllowed.png")
-        """
+        plt.savefig(self.save_path + "kmeans_xi_mjj_maxn_statAllowed.png")
 
-    def count_bin(self, mjjmin, mjjmax, allowed, bootstrap_bg):
-        """Counts a number of events for all classes in a given Mjj window
-
-        Args:
-            mjjmin (float): lower Mjj interval limit
-            mjjmax (float): upper Mjj interval limit
-            allowed (list/array of integers or bool of size len(im_sg)):
-                Indicates which and how any times each signal image is chosen for the dataset
-            bootstrap_bg (list/array of integers of size len(im_bg)):
-                Indicates which and how any times each background image is chosen for the dataset
-
-        Returns:
-            _type_: _description_
-        """
-        indexing_bg = np.logical_and(mjj_bg >= mjjmin, mjj_bg <= mjjmax)
-        indexing_bg = np.where(indexing_bg)[0]
-        indexing_sg = np.logical_and(mjj_sg >= mjjmin, mjj_sg <= mjjmax)
-        indexing_sg = np.where(indexing_sg)[0]
-
-        print(len(indexing_bg), "bg events found in interval")
-        print(len(indexing_sg), "sg events found in interval")
-
-        if bootstrap_bg is None:
-            bg = bg_lab[indexing_bg[0] : indexing_bg[-1]]
+    def run(self):
+        if self.cfg.boostrap:
+            self.bootstrap_run()
         else:
-            print(len(bg_lab[indexing_bg[0] : indexing_bg[-1]]))
-            print(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
-            bg = np.repeat(
-                bg_lab[indexing_bg[0] : indexing_bg[-1]],
-                bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
-                axis=0,
-            )
+            self.single_run()
 
-        if allowed is not None:
-            sg = np.repeat(
-                sg_lab[indexing_sg[0] : indexing_sg[-1]],
-                allowed[indexing_sg[0] : indexing_sg[-1]],
-                axis=0,
-            )
-            all_lab = np.concatenate((bg, sg))
-        else:
-            all_lab = bg
-        return np.array([np.sum(all_lab == j) for j in range(cfg.k)])
+    def single_run():
+        start_time = time.time()
+        cs = ClusterScanning(config_file_path)
+        cs.load_mjj()
+        cs.load_data()
+        cs.sample_signal_events()
+        # cs.bootstrap_resample()
+        cs.train_k_means()
+        cs.evaluate_whole_dataset(save=True)
+        cs.perform_binning(save=True)
+        cs.make_plots()
+        plt.show()
+        print("All done ### %s seconds ###" % (time.time() - start_time))
 
+    def bootstrap_run():
 
 if __name__ == "__main__":
     config_file_path = "config/test.yml"
-    start_time = time.time()
-    cs = ClusterScanning(config_file_path)
-    cs.load_mjj()
-    cs.load_data()
-    cs.sample_signal_events()
-    # cs.bootstrap_resample()
-    cs.train_k_means()
-    cs.evaluate_whole_dataset(save=True)
-    print("All done ### %s seconds ###" % (time.time() - start_time))
-    cs.perform_binning(save=True)
-    cs.make_plots()
-    plt.show()
+    cs=ClusterScanning(config_file_path)
+    
