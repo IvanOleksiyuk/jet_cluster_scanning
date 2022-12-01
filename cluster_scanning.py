@@ -437,28 +437,18 @@ class ClusterScanning:
         self.load_data()
         self.sample_signal_events()
         for IDb in range(
-            self.cfg.bootstrap_ID_start,
-            self.cfg.bootstrap_ID_finish,
-            self.cfg.bootstrap_batch,
+            self.cfg.bootstrap_ID_start, self.cfg.bootstrap_ID_finish
         ):
-            bg_lab_list = []
-            sg_lab_list = []
-            for ID in range(self.cfg.bootstrap_batch):
-                self.ID = ID + IDb
-                self.seed()
-                self.bootstrap_resample()
-                self.train_k_means()
-                self.evaluate_whole_dataset()
-                bg_lab_list.append(self.bg_lab)
-                sg_lab_list.append(self.sg_lab)
-
-            with open(
-                f"lab{IDb}_{IDb+self.cfg.bootstrap_batch}.pickle", "wb"
-            ) as file:
-                pickle.dump({"bg": [1, 2, 3], "sg": [4, 5, 6]}, file)
+            self.ID = IDb
+            self.seed()
+            self.bootstrap_resample()
+            self.train_k_means()
+            self.evaluate_whole_dataset()
+            with open(self.save_path + f"lab{IDb}.pickle", "wb") as file:
+                pickle.dump({"bg": self.bg_lab, "sg": self.bg_lab}, file)
 
 
 if __name__ == "__main__":
-    config_file_path = "config/default.yml"
+    config_file_path = "config/test_bootstrap.yml"
     cs = ClusterScanning(config_file_path)
     cs.run()

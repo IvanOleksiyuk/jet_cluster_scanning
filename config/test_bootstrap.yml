@@ -14,28 +14,29 @@ image_w: 40
 image_h: 40
 
 #Either specifie an ID if a single trainng is required
-ID: 0
+ID: 100
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
-bootstrap: False
+bootstrap: True
 bootstrap_ID_start: 0
-bootstrap_ID_finish: 300
+bootstrap_ID_finish: 3
+bootstrap_batch: 3
 
 #Parameters of the training
 memory_intensive: False
 train_interval:
-  - 2600
-  - 2700
-signal_fraction: 0.05 #THIS IS THE SIGNAL FRACTION OF THE SIGNAL DATASET TO USE DURING TRAINING
-k: 50 #number of clusters to train
+  - 2000
+  - 2100
+signal_fraction: 0
+k: 2 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
-MiniBatch: True #recommended to enable when doing bootstrapping
+MiniBatch: False #recommended to enable when doing bootstrapping
 
 #Parameters for binning
 W: 100 #Bin width 
-steps: 200 #Number of bins
+steps: 4 #Number of bins
 eval_interval: #Histogram window
-  - 2600
+  - 2000
   - 6000
 
 #Retraining option not yet implemented - requires binning to be specified
