@@ -1,4 +1,5 @@
 # imports
+import sys
 import os
 import pickle
 import random
@@ -449,6 +450,9 @@ class ClusterScanning:
 
 
 if __name__ == "__main__":
-    config_file_path = "config/test_bootstrap.yml"
+    if len(sys.argv) == 1:
+        config_file_path = "config/test.yml"
+    else:
+        config_file_path = sys.argv[1]
     cs = ClusterScanning(config_file_path)
     cs.run()

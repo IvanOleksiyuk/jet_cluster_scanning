@@ -41,4 +41,3 @@ eval_interval: #Histogram window
 
 #Retraining option not yet implemented - requires binning to be specified
 retrain: 0
-git@github.com:IvanOleksiyuk/jet_cluster_scanning.git
