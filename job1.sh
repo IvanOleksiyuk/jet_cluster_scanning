@@ -1,4 +1,5 @@
 #!/home/users/o/oleksiyu/jet_cluster_scanning/
+#SBATCH --partition=shared-cpu
 
 ### Job name
 #SBATCH --job-name=job1
