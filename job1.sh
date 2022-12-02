@@ -17,7 +17,9 @@
 #SBATCH --mem-per-cpu=32G
  
 ### Load modules
-module load python
- 
+
+module load GCC/10.2.0 CUDA/11.1.1 OpenMPI/4.0.5
+module load scikit-learn/0.23.2
+
 ### Execute your application
 python3 cluster_scanning.py "config/default_bootstrap.yml"
