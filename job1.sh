@@ -1,4 +1,4 @@
-#!/usr/local_rwth/bin/zsh
+#!/home/users/o/oleksiyu/jet_cluster_scanning/
 
 ### Job name
 #SBATCH --job-name=job1
