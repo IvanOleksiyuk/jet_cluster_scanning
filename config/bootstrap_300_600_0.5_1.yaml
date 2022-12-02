@@ -17,7 +17,7 @@ image_h: 40
 ID: 0
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
-bootstrap: False
+bootstrap: True
 bootstrap_ID_start: 300
 bootstrap_ID_finish: 600
 
