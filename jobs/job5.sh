@@ -6,7 +6,7 @@
  
 ### Output path for stdout and stderr
 ### %J is the job ID, %I is the array ID
-#SBATCH --output=output_job1_%J.txt
+#SBATCH --output=jobs/outputs/output_job1_%J.txt
  
 ### Request the time you need for execution. The full format is D-HH:MM:SS
 ### You must at least specify minutes OR days and hours and may add or
