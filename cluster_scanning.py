@@ -454,6 +454,6 @@ if __name__ == "__main__":
         config_file_path = "config/test.yml"
     else:
         config_file_path = sys.argv[1]
-    pritn("sarting", config_file_path)
+    print("sarting", config_file_path)
     cs = ClusterScanning(config_file_path)
     cs.run()
