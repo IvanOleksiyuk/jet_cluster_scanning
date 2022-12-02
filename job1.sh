@@ -1,4 +1,4 @@
-#!/home/users/o/oleksiyu/jet_cluster_scanning/
+#!/bin/bash
 #SBATCH --partition=shared-cpu
 
 ### Job name
