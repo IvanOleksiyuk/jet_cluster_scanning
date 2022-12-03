@@ -31,7 +31,6 @@ class ClusterScanning:
                 self.cfg.train_interval[1],
                 self.cfg.steps,
                 self.cfg.reproc_name,
-                self.cfg.ID,
             )
         )
         if self.cfg.restart:
@@ -67,10 +66,10 @@ class ClusterScanning:
     def flatten_event(self, x):
         return x.reshape()
 
-    def flatten_image():
+    def flatten_image(self):
         pass
 
-    def de_flatten_image():
+    def de_flatten_image(self):
         pass
 
     def load_data(self, show_example=True):
@@ -248,9 +247,11 @@ class ClusterScanning:
             self.sg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_sg) / batch_size))):
-                print(
-                    i * batch_size, min((i + 1) * batch_size, len(self.im_bg))
-                )
+                if self.cfg.verbous:
+                    print(
+                        i * batch_size,
+                        min((i + 1) * batch_size, len(self.im_bg)),
+                    )
                 self.sg_lab.append(
                     self.kmeans.predict(
                         self.reproc(
@@ -443,6 +444,9 @@ class ClusterScanning:
         for IDb in range(
             self.cfg.restart_ID_start, self.cfg.restart_ID_finish
         ):
+            if os.path.exists(self.save_path + f"lab{IDb}.pickle"):
+                print(f"IDb {IDb} already exists")
+                continue
             self.ID = IDb
             self.seed()
             if self.cfg.bootstrap:

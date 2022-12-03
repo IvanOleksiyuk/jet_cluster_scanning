@@ -5,6 +5,7 @@
 # "mjj_sig_sort.npy"
 #
 #
+verbous: True
 data_path: "../../DATA/LHCO/"
 
 # Some general properties of the datasets provided

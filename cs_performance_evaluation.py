@@ -14,7 +14,7 @@ from lowpasfilter import butter_lowpass_filter
 import datetime
 import scipy.signal
 import set_matplotlib_default as smd
-
+import cs_performance_plotting as csp
 plt.close("all")
 
 
@@ -628,24 +628,7 @@ def sliding_cluster_performance_evaluation(
         )
 
         # TSNE
-        X_embedded = TSNE().fit_transform(num_der_counts_windows)
-        plt.figure()
-        plt.grid()
-        plt.plot(
-            X_embedded[:, 0][labels == 1],
-            X_embedded[:, 1][labels == 1],
-            ".",
-            color="red",
-        )
-        plt.plot(
-            X_embedded[:, 0][labels == 0],
-            X_embedded[:, 1][labels == 0],
-            ".",
-            color="blue",
-        )
-        plt.xlabel("embedding dim 0")
-        plt.ylabel("embedding dim 1")
-        plt.savefig(save_path + "eval/TSNE.png")
+        csp.CS_TSNE(num_der_counts_windows)
 
         # combinations
         plt.figure(figsize=figsize)
@@ -726,39 +709,6 @@ def sliding_cluster_performance_evaluation(
 
     return res
 
-
-"""
-#bump-hunting!
-import pyBumpHunter as BH
-
-hunter = BH.BumpHunter1D(
-    rang=[2125-delta, 6000-125+delta],
-    bins=201, 
-    width_min=5,
-    width_max=19,
-    width_step=2,
-    scan_step=1,
-    npe=100,
-    nworker=7,
-    seed=666,
-)
-
-def dehist(hist):
-    data=np.array([])
-    for k, n in enumerate(anomaly_rich):
-        data=np.append(data, window_centers[k]+(np.random.rand(n)-0.5)*delta)
-    return data
-
-print('####bump_scan call####')
-hunter.bump_scan(anomaly_rich, anomaly_poor, is_hist=True)
-print('')
-
-bump_str=hunter.bump_info(dehist(anomaly_rich))
-print(bump_str)
-
-with open(save_path+"eval/perak_info.txt", "a") as f:
-    f.write(bump_str)
-"""
 
 if __name__ == "__main__":
     sliding_cluster_performance_evaluation()
