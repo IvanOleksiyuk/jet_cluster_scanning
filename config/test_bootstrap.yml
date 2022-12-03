@@ -17,10 +17,10 @@ image_h: 40
 ID: 100
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
+restart: True 
 bootstrap: True
-bootstrap_ID_start: 0
-bootstrap_ID_finish: 3
-bootstrap_batch: 3
+restart_ID_start: 0
+restart_ID_finish: 3
 
 #Parameters of the training
 memory_intensive: False
@@ -30,7 +30,7 @@ train_interval:
 signal_fraction: 0
 k: 2 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
-MiniBatch: False #recommended to enable when doing bootstrapping
+MiniBatch: True #recommended to enable when doing bootstrapping
 
 #Parameters for binning
 W: 100 #Bin width 

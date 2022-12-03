@@ -34,8 +34,11 @@ class ClusterScanning:
                 self.cfg.ID,
             )
         )
-        if self.cfg.bootstrap:
-            self.save_path += "boot/"
+        if self.cfg.restart:
+            if self.cfg.bootstrap:
+                self.save_path += "rest/"
+            else:
+                self.save_path += "boot/"
         else:
             self.ID = self.cfg.ID
             self.save_path += "_ID{:}/".format(self.cfg.ID)
@@ -415,8 +418,8 @@ class ClusterScanning:
         plt.savefig(self.save_path + "kmeans_xi_mjj_maxn_statAllowed.png")
 
     def run(self):
-        if self.cfg.bootstrap:
-            self.bootstrap_run()
+        if self.cfg.restart:
+            self.multi_run()
         else:
             self.single_run()
 
@@ -432,26 +435,28 @@ class ClusterScanning:
         plt.show()
         print("All done ### %s seconds ###" % (time.time() - start_time))
 
-    def bootstrap_run(self):
+    def multi_run(self):
         start_time = time.time()
         self.load_mjj()
         self.load_data()
         self.sample_signal_events()
         for IDb in range(
-            self.cfg.bootstrap_ID_start, self.cfg.bootstrap_ID_finish
+            self.cfg.restart_ID_start, self.cfg.restart_ID_finish
         ):
             self.ID = IDb
             self.seed()
-            self.bootstrap_resample()
+            if self.cfg.bootstrap:
+                self.bootstrap_resample()
             self.train_k_means()
             self.evaluate_whole_dataset()
             with open(self.save_path + f"lab{IDb}.pickle", "wb") as file:
                 pickle.dump({"bg": self.bg_lab, "sg": self.bg_lab}, file)
+            print("Done IDb ### %s seconds ###" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        config_file_path = "config/test.yml"
+        config_file_path = "config/test_bootstrap.yml"
     else:
         config_file_path = sys.argv[1]
     print("sarting", config_file_path)

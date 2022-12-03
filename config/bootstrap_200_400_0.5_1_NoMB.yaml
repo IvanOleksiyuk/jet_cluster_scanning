@@ -17,9 +17,10 @@ image_h: 40
 ID: 0
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
+restart: True 
 bootstrap: True
-bootstrap_ID_start: 200
-bootstrap_ID_finish: 400
+restart_ID_start: 200
+restart_ID_finish: 400 
 
 #Parameters of the training
 memory_intensive: False

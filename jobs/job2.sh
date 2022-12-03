@@ -2,11 +2,11 @@
 #SBATCH --partition=shared-cpu
 
 ### Job name
-#SBATCH --job-name=job1
+#SBATCH --job-name=job2
  
 ### Output path for stdout and stderr
 ### %J is the job ID, %I is the array ID
-#SBATCH --output=jobs/outputs/output_job1_%J.txt
+#SBATCH --output=jobs/outputs/output_job2_%J.txt
  
 ### Request the time you need for execution. The full format is D-HH:MM:SS
 ### You must at least specify minutes OR days and hours and may add or
