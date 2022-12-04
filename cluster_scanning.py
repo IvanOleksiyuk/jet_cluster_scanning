@@ -482,7 +482,6 @@ class ClusterScanning:
         start_time = time.time()
         self.load_mjj()
         self.load_data()
-        self.sample_signal_events()
         for IDb in range(
             self.cfg.restart_ID_start, self.cfg.restart_ID_finish
         ):
@@ -490,6 +489,7 @@ class ClusterScanning:
                 print(f"IDb {IDb} already exists")
                 continue
             self.ID = IDb
+            self.sample_signal_events()
             self.seed()
             if self.cfg.bootstrap:
                 self.bootstrap_resample()
@@ -501,7 +501,7 @@ class ClusterScanning:
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        config_file_path = "config/default_MB_signal_region.yml"
+        config_file_path = "config/s0.05_0.5_1_MB.yml"
     else:
         config_file_path = sys.argv[1]
     print("sarting", config_file_path)

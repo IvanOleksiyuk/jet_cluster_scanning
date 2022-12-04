@@ -17,7 +17,7 @@ import set_matplotlib_default as smd
 import cs_performance_plotting as csp
 import cluster_scanning
 from robust_estimators import std_ignore_outliers, mean_ignore_outliers
-from spectrum import Spectrum, Spectra_simple
+from spectrum import Spectra
 import matplotlib as mpl
 
 mpl.rcParams.update(mpl.rcParamsDefault)
@@ -48,7 +48,7 @@ def squeeze(x, f):
     return x
 
 
-def sliding_cluster_performance_evaluation(
+def cs_performance_evaluation(
     counts_windows=None,
     plotting=True,
     filterr="med",
@@ -61,26 +61,30 @@ def sliding_cluster_performance_evaluation(
     verbous=True,
 ):
     os.makedirs(save_path, exist_ok=True)
-    steps = counts_windows.shape[0]
+
     figsize = (6, 4.5)
+
+    steps = counts_windows.shape[0]
+    k = counts_windows.shape[1]
 
     Mjjmin_arr = np.linspace(lb, rb - W, steps)
     Mjjmax_arr = Mjjmin_arr + W
     window_centers = (Mjjmin_arr + Mjjmax_arr) / 2
 
-    k = counts_windows.shape[1]
-
     counts_windows = counts_windows.T
+
+    sp_original = Spectra(window_centers, counts_windows)
 
     if verbous:
         print("minimal in training window:", np.min(counts_windows[:, 0]))
 
     # produce maxnormed and normed versions of counts_windows
-    countmax_windows = np.zeros(counts_windows.shape)
-    countnrm_windows = np.zeros(counts_windows.shape)
-    for i in range(k):
-        countmax_windows[i] = max_norm(counts_windows[i])
-        countnrm_windows[i] = norm(counts_windows[i])
+
+    sp_maxnorm = sp_original.max_norm()
+    sp_sumnorm = sp_original.norm()
+
+    countmax_windows = sp_maxnorm.y
+    countnrm_windows = sp_sumnorm.y
 
     # total signal+background in windows
     count_sum = np.sum(counts_windows, axis=0)
@@ -124,6 +128,7 @@ def sliding_cluster_performance_evaluation(
         elif filterr == "med11":
             for i in range(k):
                 sp[i] = scipy.signal.medfilt(sp[i], [11])
+
     filter_spectra(num_der_counts_windows, filterr)
 
     if labeling == "kmeans_der":
@@ -641,7 +646,7 @@ if __name__ == "__main__":
     counts_windows = cs.perform_binning()
     cs.make_plots()
 
-    sliding_cluster_performance_evaluation(
+    cs_performance_evaluation(
         counts_windows=counts_windows,
         plotting=True,
         filterr="med",
@@ -654,7 +659,7 @@ if __name__ == "__main__":
         verbous=True,
     )
 
-    sliding_cluster_performance_evaluation(
+    cs_performance_evaluation(
         counts_windows=counts_windows,
         plotting=True,
         filterr="med",
