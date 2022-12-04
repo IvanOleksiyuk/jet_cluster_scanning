@@ -501,7 +501,7 @@ class ClusterScanning:
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        config_file_path = "config/default_MB.yml"
+        config_file_path = "config/default_MB_signal_region.yml"
     else:
         config_file_path = sys.argv[1]
     print("sarting", config_file_path)
