@@ -15,7 +15,7 @@ import shutil
 
 
 class ClusterScanning:
-    def __init__(self, config_file):
+    def __init__(self, config_file_path):
         self.config = Config(config_file_path)
         self.cfg = self.config.get_dotmap()
         self.reproc = reprocessing.Reprocessing(self.cfg.reproc_arg_string)
@@ -52,6 +52,7 @@ class ClusterScanning:
         self.Mjjmax_arr = self.Mjjmin_arr + self.cfg.W
         HP = self.config.get_dict()
         shutil.copy2(config_file_path, self.save_path + "config.yaml")
+        self.bootstrap_bg = None  # by default when bootstrap resampling is needed a corresponding function will be called
 
     def seed(self):
         random.seed(a=self.ID, version=2)  # set a seed corresponding to the ID
@@ -196,6 +197,7 @@ class ClusterScanning:
         print("trained --- %s seconds ---" % (time.time() - start_time))
 
     def bootstrap_resample(self):
+        self.seed()
         n = len(self.mjj_bg)
         np.sort(np.random.randint(0, n, (n,)))
         a = np.arange(n)
@@ -205,11 +207,12 @@ class ClusterScanning:
         self.bg_bootstrap = None
 
     def sample_signal_events(self):
-        num_true = int(np.rint(self.cfg.signal_fraction * len(self.im_sg)))
+        self.seed()
+        num_true = int(np.rint(self.cfg.signal_fraction * len(self.mjj_sg)))
         print(num_true)
         self.allowed = np.concatenate(
             (
-                np.zeros(len(self.im_sg) - num_true, dtype=bool),
+                np.zeros(len(self.mjj_sg) - num_true, dtype=bool),
                 np.ones(num_true, dtype=bool),
             )
         )
@@ -265,10 +268,6 @@ class ClusterScanning:
                     ).reshape((-1, self.cfg.jet_per_event))
                 )
             self.sg_lab = np.concatenate(self.sg_lab)
-
-        if save:
-            np.save(self.save_path + "bg_lab", self.bg_lab)
-            np.save(self.save_path + "sg_lab", self.sg_lab)
 
     def count_bin(self, mjjmin, mjjmax, allowed, bootstrap_bg):
         """Counts a number of events for all classes in a given Mjj window
@@ -418,11 +417,52 @@ class ClusterScanning:
 
         plt.savefig(self.save_path + "kmeans_xi_mjj_maxn_statAllowed.png")
 
+        countnrm_windows = np.zeros(self.counts_windows.shape)
+        for i in range(self.cfg.k):
+            countnrm_windows[:, i] = self.counts_windows[:, i] / np.sum(
+                self.counts_windows[:, i]
+            )
+
+        plt.figure()
+        plt.grid()
+        for j in range(self.cfg.k):
+            plt.plot(window_centers, countnrm_windows[:, j])
+        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
+        plt.savefig(
+            self.save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight"
+        )
+        for i in range(len(window_centers)):
+            if smallest_cluster_count_window[i] < min_allowed_count:
+                if smallest_cluster_count_window[i] < min_min_allowed_count:
+                    plt.axvline(window_centers[i], color="black", alpha=0.6)
+                else:
+                    plt.axvline(window_centers[i], color="black", alpha=0.3)
+
+        plt.savefig(
+            self.save_path + "kmeans_ni_mjj_norm_statAllowed.png",
+            bbox_inches="tight",
+        )
+
     def run(self):
         if self.cfg.restart:
             self.multi_run()
         else:
             self.single_run()
+
+    def save_results(self, IDb=""):
+        with open(self.save_path + f"lab{IDb}.pickle", "wb") as file:
+            pickle.dump(
+                {"bg": self.bg_lab, "sg": self.sg_lab, "k_means": self.kmeans},
+                file,
+            )
+
+    def load_results(self, IDb=""):
+        with open(self.save_path + f"lab{IDb}.pickle", "rb") as file:
+            res = pickle.load(file)
+        self.bg_lab = res["bg"]
+        self.sg_lab = res["sg"]
+        # TODO add loading of trained k-means
 
     def single_run(self):
         start_time = time.time()
@@ -430,7 +470,8 @@ class ClusterScanning:
         self.load_data()
         self.sample_signal_events()
         self.train_k_means()
-        self.evaluate_whole_dataset(save=True)
+        self.evaluate_whole_dataset()
+        self.save_results()
         self.perform_binning(save=True)
         self.make_plots()
         plt.show()
@@ -453,14 +494,13 @@ class ClusterScanning:
                 self.bootstrap_resample()
             self.train_k_means()
             self.evaluate_whole_dataset()
-            with open(self.save_path + f"lab{IDb}.pickle", "wb") as file:
-                pickle.dump({"bg": self.bg_lab, "sg": self.bg_lab}, file)
+            self.save_results(IDb)
             print("Done IDb ### %s seconds ###" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        config_file_path = "config/test_bootstrap.yml"
+        config_file_path = "config/default_MB.yml"
     else:
         config_file_path = sys.argv[1]
     print("sarting", config_file_path)

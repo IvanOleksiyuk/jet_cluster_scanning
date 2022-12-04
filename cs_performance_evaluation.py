@@ -15,6 +15,13 @@ import datetime
 import scipy.signal
 import set_matplotlib_default as smd
 import cs_performance_plotting as csp
+import cluster_scanning
+from robust_estimators import std_ignore_outliers, mean_ignore_outliers
+from spectrum import Spectrum, Spectra_simple
+import matplotlib as mpl
+
+mpl.rcParams.update(mpl.rcParamsDefault)
+
 plt.close("all")
 
 
@@ -34,36 +41,11 @@ def norm(x):
     return x / np.sum(x)
 
 
-def std_ignore_outliers(x, oulier_fraction=0.2, corerecting_factor=1.51):
-    med = np.median(x, axis=0)
-    x1 = np.abs(x - med)
-    x2 = np.copy(x)
-    q = np.quantile(x1, 1 - oulier_fraction, axis=0)
-    x2[x1 > q] = np.nan
-    return np.nanstd(x2, axis=0) * corerecting_factor
-
-
-def mean_ignore_outliers(x, oulier_fraction=0.2):
-    med = np.median(x, axis=0)
-    x1 = np.abs(x - med)
-    x2 = np.copy(x)
-    q = np.quantile(x1, 1 - oulier_fraction, axis=0)
-    x2[x1 > q] = np.nan
-    return np.nanmean(x2, axis=0)
-
-
 def squeeze(x, f):
     x = x[: (len(x) // f) * f]
     x = x.reshape((-1, f))
     x = np.mean(x, axis=1)
     return x
-
-
-# just a little test to see what factor is needed to compensate for 20% of outliers
-# a=np.random.normal(size=(50, 10000))
-# std1=np.mean(np.std(a, axis=0))
-# std2=np.mean(std_ignore_outliers(a))
-# print(std1/std2)
 
 
 def sliding_cluster_performance_evaluation(
@@ -78,16 +60,13 @@ def sliding_cluster_performance_evaluation(
     save_load=True,
     verbous=True,
 ):
-
-    plt.rcParams["lines.linewidth"] = 1
-
+    os.makedirs(save_path, exist_ok=True)
     steps = counts_windows.shape[0]
     figsize = (6, 4.5)
 
     Mjjmin_arr = np.linspace(lb, rb - W, steps)
     Mjjmax_arr = Mjjmin_arr + W
     window_centers = (Mjjmin_arr + Mjjmax_arr) / 2
-    delta = (window_centers[1] - window_centers[0]) / 2
 
     k = counts_windows.shape[1]
 
@@ -126,35 +105,26 @@ def sliding_cluster_performance_evaluation(
     num_der_counts_windows = num_der(countmax_windows.T).T
     num_der_countmax_sum = num_der(countmax_sum)
 
-    if filterr == "lowpass":
-        order = 6
-        fs = 1  # sample rate, Hz
-        cutoff = 0.05  # desired cutoff frequency of the filter, Hz
-        for i in range(k):
-            num_der_counts_windows[i] = butter_lowpass_filter(
-                num_der_counts_windows[i], cutoff, fs, order
-            )
+    def filter_spectra(sp, filterr):
+        if filterr == "lowpass":
+            order = 6
+            fs = 1  # sample rate, Hz
+            cutoff = 0.05  # desired cutoff frequency of the filter, Hz
+            for i in range(k):
+                sp[i] = butter_lowpass_filter(sp[i], cutoff, fs, order)
 
-    elif filterr == "med5":
-        for i in range(k):
-            num_der_counts_windows[i] = scipy.signal.medfilt(
-                num_der_counts_windows[i], [5]
-            )
+        elif filterr == "med5":
+            for i in range(k):
+                sp[i] = scipy.signal.medfilt(sp[i], [5])
 
-    elif filterr == "med":
-        for i in range(k):
-            num_der_counts_windows[i] = scipy.signal.medfilt(
-                num_der_counts_windows[i], [7]
-            )
+        elif filterr == "med":
+            for i in range(k):
+                sp[i] = scipy.signal.medfilt(sp[i], [7])
 
-    elif filterr == "med11":
-        for i in range(k):
-            num_der_counts_windows[i] = scipy.signal.medfilt(
-                num_der_counts_windows[i], [11]
-            )
-
-    ###
-    ###
+        elif filterr == "med11":
+            for i in range(k):
+                sp[i] = scipy.signal.medfilt(sp[i], [11])
+    filter_spectra(num_der_counts_windows, filterr)
 
     if labeling == "kmeans_der":
         kmeans = KMeans(2)
@@ -181,33 +151,46 @@ def sliding_cluster_performance_evaluation(
                 labels[j] = 1
             else:
                 labels[j] = 0
+
     elif labeling == "random":
         labels = np.random.uniform(size=k) < 0.5
 
+    # Estimate trial factor depending on the bin overlap
     tf = ((rb - lb) / W) / steps
 
+    # Combine curves and
     anomaly_poor = np.sum(counts_windows[labels == 0], axis=0) * tf
     if np.any(labels):
         anomaly_rich = np.sum(counts_windows[labels == 1], axis=0) * tf
     else:
-        anomaly_rich = anomaly_poor
+        anomaly_rich = anomaly_poor  # to give a 0 test_statistic
 
     if verbous:
         print("trial_factor", tf)
+
+    #
     anomaly_poor_sigma = np.sqrt(anomaly_poor)
     anomaly_rich_sigma = np.sqrt(
         anomaly_poor / sum(anomaly_poor) * sum(anomaly_rich)
     )
-
     anomaly_poor_sigma = anomaly_poor_sigma * (
         np.sum(anomaly_rich) / np.sum(anomaly_poor)
     )
     anomaly_poor = anomaly_poor * (np.sum(anomaly_rich) / np.sum(anomaly_poor))
 
-    chisq = np.mean(
-        (anomaly_rich - anomaly_poor) ** 2
-        / (anomaly_rich_sigma**2 + anomaly_poor_sigma**2)
+    def chi_square_ndof(
+        anomaly_rich, anomaly_poor, anomaly_rich_sigma, anomaly_poor_sigma
+    ):
+        # calculate the test statistic (chi_square/degrees of freedom)
+        return np.mean(
+            (anomaly_rich - anomaly_poor) ** 2
+            / (anomaly_rich_sigma**2 + anomaly_poor_sigma**2)
+        )
+
+    chisq_ndof = chi_square_ndof(
+        anomaly_rich, anomaly_poor, anomaly_rich_sigma, anomaly_poor_sigma
     )
+
     n_dof = len(window_centers) / (
         W * steps / (Mjjmin_arr[-1] - Mjjmin_arr[0])
     )
@@ -216,74 +199,12 @@ def sliding_cluster_performance_evaluation(
         print("n_dof=", n_dof)
 
     res = {}
-    res["chisq_ndof"] = chisq
+    res["chisq_ndof"] = chisq_ndof
     res["ndof"] = n_dof
-    res["deviation"] = (chisq - 1) * n_dof / np.sqrt(2 * n_dof)
+    res["deviation"] = (chisq_ndof - 1) * n_dof / np.sqrt(2 * n_dof)
 
     if plotting:
-
-        min_allowed_count = 100
-        min_min_allowed_count = 10
-
-        plt.figure(figsize=figsize)
-        plt.grid()
-        for j in range(k):
-            plt.plot(window_centers, counts_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("$N_i(m_{jj})$")
-        plt.savefig(save_path + "kmeans_ni_mjj_total.png", bbox_inches="tight")
-        smallest_cluster_count_window = np.min(counts_windows, axis=0)
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(
-            save_path + "kmeans_ni_mjj_total_statAllowed.png",
-            bbox_inches="tight",
-        )
-
-        plt.figure(figsize=figsize)
-        plt.grid()
-        for j in range(k):
-            plt.plot(window_centers, countmax_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("$N_i(m_{jj})/max(N_i(m_{jj}))$")
-        plt.savefig(save_path + "kmeans_ni_mjj_max.png", bbox_inches="tight")
-        smallest_cluster_count_window = np.min(counts_windows, axis=0)
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(
-            save_path + "kmeans_ni_mjj_max_statAllowed.png",
-            bbox_inches="tight",
-        )
-
-        plt.figure(figsize=figsize)
-        plt.grid()
-        for j in range(k):
-            plt.plot(window_centers, countnrm_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
-        plt.savefig(save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
-        smallest_cluster_count_window = np.min(counts_windows, axis=0)
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(
-            save_path + "kmeans_ni_mjj_norm_statAllowed.png",
-            bbox_inches="tight",
-        )
+        plt.rcParams["lines.linewidth"] = 1
 
         os.makedirs(save_path + "eval/", exist_ok=True)
 
@@ -628,7 +549,7 @@ def sliding_cluster_performance_evaluation(
         )
 
         # TSNE
-        csp.CS_TSNE(num_der_counts_windows)
+        csp.CS_TSNE(num_der_counts_windows, labels, save_path)
 
         # combinations
         plt.figure(figsize=figsize)
@@ -711,5 +632,39 @@ def sliding_cluster_performance_evaluation(
 
 
 if __name__ == "__main__":
-    sliding_cluster_performance_evaluation()
+
+    config_file_path = "config/default_MB.yml"
+    cs = cluster_scanning.ClusterScanning(config_file_path)
+    cs.load_mjj()
+    cs.load_results()
+    cs.sample_signal_events()
+    counts_windows = cs.perform_binning()
+    cs.make_plots()
+
+    sliding_cluster_performance_evaluation(
+        counts_windows=counts_windows,
+        plotting=True,
+        filterr="med",
+        labeling=">5sigma",
+        W=100,
+        lb=2600,
+        rb=6000,
+        save_path="char/0kmeans_scan/example1/",
+        save_load=True,
+        verbous=True,
+    )
+
+    sliding_cluster_performance_evaluation(
+        counts_windows=counts_windows,
+        plotting=True,
+        filterr="med",
+        labeling="kmeans_der",  # , #,">5sigma"
+        W=100,
+        lb=2600,
+        rb=6000,
+        save_path="char/0kmeans_scan/example2/",
+        save_load=True,
+        verbous=True,
+    )
+
     print("Executed when invoked directly")

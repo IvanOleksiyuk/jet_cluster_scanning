@@ -4,7 +4,7 @@ from sklearn.manifold import TSNE
 import set_matplotlib_default as smd
 
 
-def CS_TSNE(num_der_counts_windows):
+def CS_TSNE(num_der_counts_windows, labels, save_path):
     X_embedded = TSNE().fit_transform(num_der_counts_windows)
     plt.figure()
     plt.grid()
