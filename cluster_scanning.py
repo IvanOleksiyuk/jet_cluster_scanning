@@ -56,6 +56,7 @@ class ClusterScanning:
 
     def seed(self):
         random.seed(a=self.ID, version=2)  # set a seed corresponding to the ID
+        np.random.seed(self.ID)
 
     def load_mjj(self):
         self.mjj_bg = np.load(self.cfg.data_path + "mjj_bkg_sort.npy")
@@ -218,7 +219,7 @@ class ClusterScanning:
         )
         np.random.shuffle(self.allowed)
 
-    def evaluate_whole_dataset(self, save=False):
+    def evaluate_whole_dataset(self):
         if self.cfg.memory_intensive:
             self.bg_lab = self.kmeans.predict(
                 self.im_bg.reshape((-1, self.cfg.image_w * self.cfg.image_h))
@@ -317,7 +318,7 @@ class ClusterScanning:
             all_lab = bg
         return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
 
-    def perform_binning(self, save=False):
+    def perform_binning(self):
         counts_windows = []
         for i in range(self.cfg.steps):
             counts_windows.append(
@@ -472,7 +473,7 @@ class ClusterScanning:
         self.train_k_means()
         self.evaluate_whole_dataset()
         self.save_results()
-        self.perform_binning(save=True)
+        self.perform_binning()
         self.make_plots()
         plt.show()
         print("All done ### %s seconds ###" % (time.time() - start_time))
