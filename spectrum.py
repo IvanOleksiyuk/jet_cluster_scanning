@@ -43,10 +43,18 @@ class Spectra:
         else:
             raise Exception("Why would you summ up non-poisson spectra?")
 
+    def mean_sp(self):
+        y = np.mean(self.y, axis=0, keepdims=True)
+        x = self.x
+        err=np.sqrt(np.mean(self.err**2, axis=0, keepdims=True))
+        if self.poisson:
+            return Spectra(x, y, err)
+
     def subtract_bg(self, background):
         y = self.y
         x = self.x
         err = np.sqrt(self.err**2 + background.err**2)
         return Spectra(x, y, err)
+
 
     

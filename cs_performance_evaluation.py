@@ -57,7 +57,6 @@ def cs_performance_evaluation(
     lb=2600,
     rb=6000,
     save_path="char/0kmeans_scan/26w60wk50ret0con0.05W100ste200rewsqrtsme1ID0/",
-    save_load=True,
     verbous=True,
 ):
     os.makedirs(save_path, exist_ok=True)
@@ -79,32 +78,26 @@ def cs_performance_evaluation(
         print("minimal in training window:", np.min(sp_original.y[:, 0]))
 
     # produce maxnormed and normed versions of counts_windows
+    sp_max = sp_original.max_norm()
+    sp_nrm = sp_original.norm()
 
-    sp_maxnorm = sp_original.max_norm()
-    sp_sumnorm = sp_original.norm()
-
-    countmax_windows = sp_maxnorm.y
-    countnrm_windows = sp_sumnorm.y
-
-    # total signal+background in windows
-    count_sum = np.sum(sp_original.y, axis=0)
-    count_sum_sigma = np.sqrt(count_sum)
-
-    # normed vesions
-    countmax_sum = count_sum / np.max(count_sum)
-    countnrm_sum = norm(count_sum)
+    # total signal+background in windows and normed versions
+    sp_sum = sp_original.sum_sp()
+    sp_sumnrm = sp_sum.norm()
+    sp_summax = sp_sum.max_norm()
 
     # versions without respective background
-    countnrm_windows_s = countnrm_windows - countnrm_sum
-
-    baselinenrm = mean_ignore_outliers(countnrm_windows - countnrm_sum)
-    countnrm_windows_sigma = std_ignore_outliers(countnrm_windows)
+    sp_nrm_s = sp_nrm.subtract_bg(sp_sumnrm)
+    sp_max_s = sp_nrm.subtract_bg(sp_summax)
+    
+    baselinenrm = mean_ignore_outliers(sp_nrm_s.y)
+    countnrm_windows_sigma = std_ignore_outliers(sp_nrm.y)
     countnrm_windows_std = (
-        countnrm_windows - countnrm_sum - baselinenrm
+        sp_nrm.y - sp_sumnrm.y[0] - baselinenrm
     ) / countnrm_windows_sigma
 
-    num_der_counts_windows = num_der(countmax_windows.T).T
-    num_der_countmax_sum = num_der(countmax_sum)
+    num_der_counts_windows = num_der(sp_max.y.T).T
+    num_der_countmax_sum = num_der(sp_summax.y[0])
 
     def filter_spectra(sp, filterr):
         if filterr == "lowpass":
@@ -139,7 +132,7 @@ def cs_performance_evaluation(
 
     elif labeling == "kmeans_cur":
         kmeans = KMeans(2)
-        kmeans.fit(countmax_windows)
+        kmeans.fit(sp_max.y)
         as_vectors = "curves"
         if np.sum(kmeans.labels_) < len(kmeans.labels_) // 2:
             labels = kmeans.labels_
@@ -212,7 +205,7 @@ def cs_performance_evaluation(
 
         plt.figure()
         plt.grid()
-        plt.hist(np.sum(countmax_windows, axis=0), bins=20)
+        plt.hist(np.sum(sp_max.y, axis=0), bins=20)
         plt.xlabel("integral under the curve")
         plt.ylabel("cluster n")
         plt.savefig(
@@ -228,7 +221,7 @@ def cs_performance_evaluation(
             if labels[j]:
                 plt.plot(
                     window_centers,
-                    countnrm_windows_s[j],
+                    sp_nrm_s.y[j],
                     color="red",
                     label=lab1,
                 )
@@ -236,7 +229,7 @@ def cs_performance_evaluation(
             else:
                 plt.plot(
                     window_centers,
-                    countnrm_windows_s[j],
+                    sp_nrm_s.y[j],
                     color="blue",
                     label=lab2,
                 )
@@ -246,22 +239,20 @@ def cs_performance_evaluation(
         lwd = 1.5
         plt.plot(
             window_centers,
-            np.mean(countnrm_windows_s, axis=0),
+            np.mean(sp_nrm_s.y, axis=0),
             color=ccccc,
             label="mean and SD",
             linewidth=lwd,
         )
         plt.plot(
             window_centers,
-            np.mean(countnrm_windows_s, axis=0)
-            - np.std(countnrm_windows, axis=0),
+            np.mean(sp_nrm_s.y, axis=0) - np.std(sp_nrm.y, axis=0),
             color=ccccc,
             linewidth=lwd,
         )
         plt.plot(
             window_centers,
-            np.mean(countnrm_windows_s, axis=0)
-            + np.std(countnrm_windows, axis=0),
+            np.mean(sp_nrm_s.y, axis=0) + np.std(sp_nrm.y, axis=0),
             color=ccccc,
             linewidth=lwd,
         )
@@ -276,20 +267,20 @@ def cs_performance_evaluation(
         )
         plt.plot(
             window_centers,
-            baselinenrm - std_ignore_outliers(countnrm_windows),
+            baselinenrm - std_ignore_outliers(sp_nrm.y),
             color=ccccc2,
             linewidth=lwd,
         )
         plt.plot(
             window_centers,
-            baselinenrm + std_ignore_outliers(countnrm_windows),
+            baselinenrm + std_ignore_outliers(sp_nrm.y),
             color=ccccc2,
             linewidth=lwd,
         )
         plt.fill_between(
             window_centers,
-            baselinenrm - std_ignore_outliers(countnrm_windows),
-            baselinenrm + std_ignore_outliers(countnrm_windows),
+            baselinenrm - std_ignore_outliers(sp_nrm.y),
+            baselinenrm + std_ignore_outliers(sp_nrm.y),
             alpha=0.4,
             color="lime",
         )
@@ -337,13 +328,13 @@ def cs_performance_evaluation(
             if labels[j]:
                 plt.plot(
                     window_centers,
-                    countnrm_windows_std[j] * np.sqrt(countnrm_windows[j]),
+                    countnrm_windows_std[j] * np.sqrt(sp_nrm.y[j]),
                     color="red",
                 )
             else:
                 plt.plot(
                     window_centers,
-                    countnrm_windows_std[j] * np.sqrt(countnrm_windows[j]),
+                    countnrm_windows_std[j] * np.sqrt(sp_nrm.y[j]),
                     color="blue",
                 )
 
@@ -447,36 +438,34 @@ def cs_performance_evaluation(
             if labels[j]:
                 plt.plot(
                     window_centers,
-                    countmax_windows[j] - countmax_sum,
+                    sp_max.y[j] - sp_summax.y[0],
                     color="red",
                 )
             else:
                 plt.plot(
                     window_centers,
-                    countmax_windows[j] - countmax_sum,
+                    sp_max.y[j] - sp_summax.y[0],
                     color="blue",
                 )
 
         plt.plot(
             window_centers,
-            np.mean(countmax_windows - countmax_sum, axis=0),
+            np.mean(sp_max.y - sp_summax.y[0], axis=0),
             color="lime",
         )
         plt.plot(
             window_centers,
-            -std_ignore_outliers(countmax_windows),
+            -std_ignore_outliers(sp_max.y),
             color="lime",
         )
-        plt.plot(
-            window_centers, std_ignore_outliers(countmax_windows), color="lime"
-        )
-        # plt.fill_between(window_centers, -np.std(countmax_windows, axis=0), np.std(countmax_windows, axis=0), alpha=0.2, color="lime")
+        plt.plot(window_centers, std_ignore_outliers(sp_max.y), color="lime")
+        # plt.fill_between(window_centers, -np.std(sp_max.y, axis=0), np.std(sp_max.y, axis=0), alpha=0.2, color="lime")
         plt.fill_between(
             window_centers,
-            np.mean(countmax_windows - countmax_sum, axis=0)
-            - np.std(countmax_windows, axis=0),
-            np.mean(countmax_windows - countmax_sum, axis=0)
-            + np.std(countmax_windows, axis=0),
+            np.mean(sp_max.y - sp_summax.y[0], axis=0)
+            - np.std(sp_max.y, axis=0),
+            np.mean(sp_max.y - sp_summax.y[0], axis=0)
+            + np.std(sp_max.y, axis=0),
             alpha=0.4,
             color="lime",
         )
@@ -489,9 +478,9 @@ def cs_performance_evaluation(
         plt.grid()
         for j in range(k):
             if labels[j]:
-                plt.plot(window_centers, countmax_windows[j], color="red")
+                plt.plot(window_centers, sp_max.y[j], color="red")
             else:
-                plt.plot(window_centers, countmax_windows[j], color="blue")
+                plt.plot(window_centers, sp_max.y[j], color="blue")
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("n_clusater/max(n_cluster)")
         plt.savefig(
@@ -652,7 +641,6 @@ if __name__ == "__main__":
         lb=2600,
         rb=6000,
         save_path="char/0kmeans_scan/example1/",
-        save_load=True,
         verbous=True,
     )
 
@@ -665,7 +653,6 @@ if __name__ == "__main__":
         lb=2600,
         rb=6000,
         save_path="char/0kmeans_scan/example2/",
-        save_load=True,
         verbous=True,
     )
 
