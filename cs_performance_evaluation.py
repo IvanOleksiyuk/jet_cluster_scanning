@@ -76,7 +76,7 @@ def cs_performance_evaluation(
     sp_original = Spectra(window_centers, counts_windows)
 
     if verbous:
-        print("minimal in training window:", np.min(counts_windows[:, 0]))
+        print("minimal in training window:", np.min(sp_original.y[:, 0]))
 
     # produce maxnormed and normed versions of counts_windows
 
@@ -87,18 +87,15 @@ def cs_performance_evaluation(
     countnrm_windows = sp_sumnorm.y
 
     # total signal+background in windows
-    count_sum = np.sum(counts_windows, axis=0)
+    count_sum = np.sum(sp_original.y, axis=0)
     count_sum_sigma = np.sqrt(count_sum)
 
     # normed vesions
     countmax_sum = count_sum / np.max(count_sum)
-    countmax_sum_sigma = count_sum_sigma / np.max(count_sum)
     countnrm_sum = norm(count_sum)
-    countnrm_sum_sigma = count_sum_sigma / np.sum(count_sum)
 
     # versions without respective background
     countnrm_windows_s = countnrm_windows - countnrm_sum
-    countmax_windows_s = countmax_windows - countmax_sum
 
     baselinenrm = mean_ignore_outliers(countnrm_windows - countnrm_sum)
     countnrm_windows_sigma = std_ignore_outliers(countnrm_windows)

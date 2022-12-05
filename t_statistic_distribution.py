@@ -4,6 +4,7 @@ from cs_performance_evaluation import cs_performance_evaluation
 import numpy as np
 import random
 from matplotlib.ticker import MaxNLocator
+import cluster_scanning
 
 random.seed(a=2, version=2)
 plt.close("all")
@@ -166,6 +167,58 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
         color=col,
         alpha=0.15,
     )
+
+cont_paths_MB = [
+    "config/s0.1_0.5_1_MB.yml"
+    "config/s0.05_0.5_1_MB.yml"
+    "config/s0.025_0.5_1_MB.yml"
+]
+colors = ["darkgreen", "green", "lime"]
+for c, path, col in zip(contamiantions, cont_paths_MB, colors):
+    arr = []
+    ps = []
+    for jj in range(10):
+        config_file_path = cont_paths_MB
+        cs = cluster_scanning.ClusterScanning(config_file_path)
+        cs.load_mjj()
+        cs.load_results(jj)
+        cs.sample_signal_events()
+        counts_windows = cs.perform_binning()
+
+        res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
+        counts_windows = np.array(res["counts_windows"][0])
+        res = cs_performance_evaluation(
+            counts_windows=counts_windows,
+            save_path=path,
+            filterr=filterr,
+            plotting=False,
+            labeling=labeling,
+            verbous=False,
+        )
+        print(res["chisq_ndof"])
+        arr.append(res["chisq_ndof"])
+        ps.append(
+            (
+                np.sum(chisq_list >= res["chisq_ndof"])
+                + np.sum(chisq_list > res["chisq_ndof"])
+            )
+            / 2
+            / len(chisq_list)
+        )
+    if np.mean(ps) == 0:
+        label = "$\epsilon$={:.4f}, $<p><${:.4f} MB".format(
+            c, 1 / len(chisq_list)
+        )
+    else:
+        label = "$\epsilon$={:.4f}, $<p>=${:.4f} MB".format(c, np.mean(ps))
+    plt.axvline(np.mean(arr), color=col, label=label)
+    plt.axvspan(
+        np.mean(arr) - np.std(arr),
+        np.mean(arr) + np.std(arr),
+        color=col,
+        alpha=0.15,
+    )
+
 plt.legend(loc=1)
 plt.yscale("log")
 # plt.xlim((0, 30))
@@ -272,6 +325,7 @@ cont_paths = [
     "char/old_char/BS26w60wk50ret0con0.05W100ste200rewnonesme0ID10/",
     "char/old_char/BS26w60wk50ret0con0.025W100ste200rewnonesme0ID10/",
 ]
+
 plt.plot([1], [1], alpha=0, label=r"$n=0,\sigma=0$, method {:}".format(mehtod))
 colors = ["red", "orange", "gold"]
 for c, path, col in zip(contamiantions, cont_paths, colors):
@@ -311,6 +365,58 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
         color=col,
         alpha=0.15,
     )
+
+cont_paths_MB = [
+    "config/s0.1_0.5_1_MB.yml"
+    "config/s0.05_0.5_1_MB.yml"
+    "config/s0.025_0.5_1_MB.yml"
+]
+colors = ["darkgreen", "green", "lime"]
+for c, path, col in zip(contamiantions, cont_paths_MB, colors):
+    arr = []
+    ps = []
+    for jj in range(10):
+        config_file_path = cont_paths_MB
+        cs = cluster_scanning.ClusterScanning(config_file_path)
+        cs.load_mjj()
+        cs.load_results(jj)
+        cs.sample_signal_events()
+        counts_windows = cs.perform_binning()
+
+        res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
+        counts_windows = np.array(res["counts_windows"][0])
+        res = cs_performance_evaluation(
+            counts_windows=counts_windows,
+            save_path=path,
+            filterr=filterr,
+            plotting=False,
+            labeling=labeling,
+            verbous=False,
+        )
+        print(res["chisq_ndof"])
+        arr.append(res["chisq_ndof"])
+        ps.append(
+            (
+                np.sum(chisq_list >= res["chisq_ndof"])
+                + np.sum(chisq_list > res["chisq_ndof"])
+            )
+            / 2
+            / len(chisq_list)
+        )
+    if np.mean(ps) == 0:
+        label = "$\epsilon$={:.4f}, $<p><${:.4f} MB".format(
+            c, 1 / len(chisq_list)
+        )
+    else:
+        label = "$\epsilon$={:.4f}, $<p>=${:.4f} MB".format(c, np.mean(ps))
+    plt.axvline(np.mean(arr), color=col, label=label)
+    plt.axvspan(
+        np.mean(arr) - np.std(arr),
+        np.mean(arr) + np.std(arr),
+        color=col,
+        alpha=0.15,
+    )
+
 plt.legend(loc=1)
 plt.yscale("log")
 # plt.xlim((0, 30))

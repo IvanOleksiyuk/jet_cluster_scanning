@@ -30,7 +30,7 @@ class Spectra:
         return self.scale(1 / np.max(self.y, axis=1, keepdims=True))
 
     def num_der(self):
-        y = (self.y[1:] - self.y[:-1]) / 2
+        y = (self.y[:, 1:] - self.y[:, :-1]) / 2
         x = (self.x[1:] + self.x[:-1]) / 2
         err = 0  # correct this
         return Spectra(x, y, err)
@@ -42,3 +42,11 @@ class Spectra:
             return Spectra(x, y)
         else:
             raise Exception("Why would you summ up non-poisson spectra?")
+
+    def subtract_bg(self, background):
+        y = self.y
+        x = self.x
+        err = np.sqrt(self.err**2 + background.err**2)
+        return Spectra(x, y, err)
+
+    

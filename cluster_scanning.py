@@ -496,12 +496,15 @@ class ClusterScanning:
             self.train_k_means()
             self.evaluate_whole_dataset()
             self.save_results(IDb)
-            print("Done IDb ### %s seconds ###" % (time.time() - start_time))
+            print(
+                f"Done IDb {IDb} ### %s seconds ###"
+                % (time.time() - start_time)
+            )
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        config_file_path = "config/s0.05_0.5_1_MB.yml"
+        config_file_path = "config/s0.025_0.5_1_MB.yml"
     else:
         config_file_path = sys.argv[1]
     print("sarting", config_file_path)
