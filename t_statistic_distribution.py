@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
 import pickle
-from cs_performance_evaluation import (
-    sliding_cluster_performance_evaluation,
-)
+from cs_performance_evaluation import cs_performance_evaluation
 import numpy as np
 import random
 from matplotlib.ticker import MaxNLocator
@@ -11,8 +9,6 @@ import cluster_scanning
 import matplotlib as mpl
 
 mpl.rcParams.update(mpl.rcParamsDefault)  # TODO: DETELE THIS
-
-cs_performance_evaluation = sliding_cluster_performance_evaluation
 
 random.seed(a=2, version=2)
 plt.close("all")

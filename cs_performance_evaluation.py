@@ -66,7 +66,7 @@ def squeeze(x, f):
 # print(std1/std2)
 
 
-def sliding_cluster_performance_evaluation(
+def cs_performance_evaluation(
     counts_windows=None,
     plotting=True,
     filterr="med",
@@ -222,6 +222,7 @@ def sliding_cluster_performance_evaluation(
     ###
 
     if labeling == "kmeans_der":
+        np.random.seed(0)
         kmeans = KMeans(2)
         kmeans.fit(num_der_counts_windows)
         as_vectors = "derivatives"
@@ -231,6 +232,7 @@ def sliding_cluster_performance_evaluation(
             labels = 1 - kmeans.labels_
 
     elif labeling == "kmeans_cur":
+        np.random.seed(0)
         kmeans = KMeans(2)
         kmeans.fit(countmax_windows)
         as_vectors = "curves"
