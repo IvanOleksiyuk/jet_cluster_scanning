@@ -53,4 +53,4 @@ class TestCSPerformance(unittest.TestCase):
 
 TT = TestCSPerformance()
 TT.setUp()
-TT.test_m5sigma()
+TT.test_m5sigma_with_plotting()

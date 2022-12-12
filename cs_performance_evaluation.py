@@ -1,15 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, Birch
-from sklearn.manifold import TSNE
 import time
 import os
-import reprocessing
 import pickle
-from scipy.ndimage import gaussian_filter
-import copy
 from lowpasfilter import butter_lowpass_filter
-import datetime
 import scipy.signal
 import set_matplotlib_default as smd
 import cs_performance_plotting as csp
@@ -39,10 +34,23 @@ def norm(x):
     return x / np.sum(x)
 
 
-def squeeze(x, f):
+def squeeze_1d(x, f):
     x = x[: (len(x) // f) * f]
     x = x.reshape((-1, f))
     x = np.mean(x, axis=1)
+    return x
+
+
+def squeeze(x, f):
+    if len(x.shape) == 1:
+        x = x[: (len(x) // f) * f]
+        x = x.reshape((-1, f))
+        x = np.mean(x, axis=1)
+    elif len(x.shape) == 2:
+        xs = []
+        for line in x:
+            xs.append(squeeze_1d(line, f))
+        x = np.stack(xs)
     return x
 
 
@@ -67,30 +75,26 @@ def cs_performance_evaluation(
     labeling="kmeans_der",  # , #,">5sigma"
     binning=default_binning(),
     save_path="cs_performance_evaluation/",
-    save_load=True,
     verbous=True,
     sid=0,
 ):
-    os.makedirs(save_path, exist_ok=True)
-
-    # /home/ivan/mnt/cluster/k_means_anomaly_jet/char/0kmeans_scan/
-    if counts_windows is None:
-        res = pickle.load(open(save_path + "res.pickle", "rb"))
-        counts_windows = res["counts_windows"]
-
-    plt.rcParams["lines.linewidth"] = 1
-
-    steps = counts_windows.shape[0]
-    figsize = (6, 4.5)
-
-    window_centers = (binning.T[1] + binning.T[0]) / 2
-    bin_widths = binning.T[1] - binning.T[0]
-    k = counts_windows.shape[1]
-
+    # Usuallly oriented incorrectly #TODO correct this
     counts_windows = counts_windows.T
 
-    if verbous:
-        print("minimal in training window:", np.min(counts_windows[:, 0]))
+    # Create folder if not yet exists
+    os.makedirs(save_path, exist_ok=True)
+
+    # Useful shortcuts and variables
+    window_centers = (binning.T[1] + binning.T[0]) / 2
+    bin_widths = binning.T[1] - binning.T[0]
+    k = counts_windows.shape[0]
+
+    # Original spectra
+    sp_original = Spectra(window_centers, counts_windows)
+
+    # produce maxnormed and normed versions of counts_windows
+    sp_max = sp_original.max_norm()
+    sp_nrm = sp_original.norm()
 
     # produce maxnormed and normed versions of counts_windows
     countmax_windows = np.zeros(counts_windows.shape)
@@ -223,6 +227,11 @@ def cs_performance_evaluation(
     res["deviation"] = (chisq - 1) * n_dof / np.sqrt(2 * n_dof)
 
     if plotting:
+        # Some matplotlib stuff
+        plt.rcParams["lines.linewidth"] = 1
+        figsize = (6, 4.5)
+
+        # Duplicate plots from the cluster scanning OBSOLETE
         csp.plot_all_scalings(
             window_centers,
             counts_windows,
@@ -232,90 +241,33 @@ def cs_performance_evaluation(
             figsize,
         )
 
+        # Make a directory for evaluation
         os.makedirs(save_path + "eval/", exist_ok=True)
 
-        plt.figure()
-        plt.grid()
-        plt.hist(np.sum(countmax_windows, axis=0), bins=20)
-        plt.xlabel("integral under the curve")
-        plt.ylabel("cluster n")
-        plt.savefig(
-            save_path + "eval/curves_integrals.png", bbox_inches="tight"
+        # Distribution of spectra integrals after max normalisation
+        csp.plot_sum_over_bins_dist(
+            countmax_windows, bin_widths, labels, save_path
         )
 
-        # subtracted curves max
-        plt.figure(figsize=figsize)
-        plt.grid()
-        lab1 = "anomalous clusters \n method 1"
-        lab2 = "non-anomalous clusters \n method 1"
-        for j in range(k):
-            if labels[j]:
-                plt.plot(
-                    window_centers,
-                    countnrm_windows_s[j],
-                    color="red",
-                    label=lab1,
-                )
-                lab1 = None
-            else:
-                plt.plot(
-                    window_centers,
-                    countnrm_windows_s[j],
-                    color="blue",
-                    label=lab2,
-                )
-                lab2 = None
-
-        ccccc = "lime"
-        lwd = 1.5
-        plt.plot(
+        # subtracted curves norm
+        csp.two_class_curves(
+            window_centers,
+            countnrm_windows_s,
+            labels,
+            figsize,
+        )
+        csp.plot_mean_deviat(
             window_centers,
             np.mean(countnrm_windows_s, axis=0),
-            color=ccccc,
-            label="mean and SD",
-            linewidth=lwd,
+            np.std(countnrm_windows, axis=0),
+            fillb=True,
         )
-        plt.plot(
-            window_centers,
-            np.mean(countnrm_windows_s, axis=0)
-            - np.std(countnrm_windows, axis=0),
-            color=ccccc,
-            linewidth=lwd,
-        )
-        plt.plot(
-            window_centers,
-            np.mean(countnrm_windows_s, axis=0)
-            + np.std(countnrm_windows, axis=0),
-            color=ccccc,
-            linewidth=lwd,
-        )
-
-        ccccc2 = "orange"
-        plt.plot(
+        csp.plot_mean_deviat(
             window_centers,
             baselinenrm,
-            color=ccccc2,
-            label="outlier robust\n mean and SD",
-            linewidth=lwd,
-        )
-        plt.plot(
-            window_centers,
-            baselinenrm - std_ignore_outliers(countnrm_windows),
-            color=ccccc2,
-            linewidth=lwd,
-        )
-        plt.plot(
-            window_centers,
-            baselinenrm + std_ignore_outliers(countnrm_windows),
-            color=ccccc2,
-            linewidth=lwd,
-        )
-        plt.fill_between(
-            window_centers,
-            baselinenrm - std_ignore_outliers(countnrm_windows),
-            baselinenrm + std_ignore_outliers(countnrm_windows),
-            alpha=0.4,
-            color="lime",
+            std_ignore_outliers(countnrm_windows),
+            color="orange",
+            fillb=True,
         )
         plt.legend()
         plt.xlabel("window centre $m_{jj}$ [GeV]")
@@ -323,28 +275,12 @@ def cs_performance_evaluation(
         plt.savefig(save_path + "eval/norm-toatal.png", bbox_inches="tight")
 
         # all curves standardized
-        plt.figure(figsize=figsize)
-        plt.grid()
-        lab1 = "anomalous clusters \n method 1"
-        lab2 = "non-anomalous clusters \n method 1"
-        for j in range(k):
-            if labels[j]:
-                plt.plot(
-                    window_centers,
-                    countnrm_windows_std[j],
-                    color="red",
-                    label=lab1,
-                )
-                lab1 = None
-            else:
-                plt.plot(
-                    window_centers,
-                    countnrm_windows_std[j],
-                    color="blue",
-                    label=lab2,
-                )
-                lab2 = None
-
+        csp.two_class_curves(
+            window_centers,
+            countnrm_windows_std,
+            labels,
+            figsize,
+        )
         plt.axhline(5, color="red", alpha=0.2)
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("deviation in SD")
@@ -354,91 +290,46 @@ def cs_performance_evaluation(
         )
 
         # all curves standardized
-        plt.figure(figsize=figsize)
-        plt.grid()
-
-        for j in range(k):
-            if labels[j]:
-                plt.plot(
-                    window_centers,
-                    countnrm_windows_std[j] * np.sqrt(countnrm_windows[j]),
-                    color="red",
-                )
-            else:
-                plt.plot(
-                    window_centers,
-                    countnrm_windows_std[j] * np.sqrt(countnrm_windows[j]),
-                    color="blue",
-                )
-
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("deviation in SD")
-        plt.savefig(
-            save_path + "eval/norm-toatal-sigmas-special.png",
-            bbox_inches="tight",
+        csp.two_class_curves(
+            window_centers,
+            countnrm_windows_std * np.sqrt(countnrm_windows),
+            labels,
+            figsize,
+            ylabel="deviation in SD",
+            save_file=save_path + "eval/norm-toatal-sigmas-special.png",
         )
 
         # all curves standardized squeezed
-        plt.figure(figsize=figsize)
-        plt.grid()
         sqf = 20
-        for j in range(k):
-            if labels[j]:
-                plt.plot(
-                    squeeze(window_centers, sqf),
-                    squeeze(countnrm_windows_std[j], sqf),
-                    color="red",
-                )
-            else:
-                plt.plot(
-                    squeeze(window_centers, sqf),
-                    squeeze(countnrm_windows_std[j], sqf),
-                    color="blue",
-                )
-
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("deviation in SD")
-        plt.savefig(
-            save_path + "eval/norm-toatal-sigmas-squeezed.png",
-            bbox_inches="tight",
+        csp.two_class_curves(
+            squeeze(window_centers, sqf),
+            squeeze(countnrm_windows_std, sqf),
+            labels,
+            figsize,
+            ylabel="deviation in SD",
+            save_file=save_path + "eval/norm-toatal-sigmas-squeezed.png",
         )
 
-        plt.figure(figsize=figsize)
-        plt.grid()
-        for j in range(k):
-            if labels[j]:
-                plt.plot(
-                    np.mean(countnrm_windows_std[j] ** 2),
-                    np.random.normal(),
-                    "r.",
-                )
-            else:
-                plt.plot(
-                    np.mean(countnrm_windows_std[j] ** 2),
-                    np.random.normal(),
-                    "b.",
-                )
-        plt.xlabel("npd")
-        plt.ylabel("random_variable")
-        plt.savefig(save_path + "eval/npd_each.png", bbox_inches="tight")
+        # distribution of total MSE after standartisation
+        csp.two_class_curves(
+            window_centers,
+            countnrm_windows_std,
+            labels,
+            figsize,
+            ylabel="deviation in SD",
+            save_file=save_path + "eval/norm-toatal-sigmas-special.png",
+            marker=".",
+            linestyle="",
+        )
 
         # all curves standardized points
-        plt.figure()
-        plt.grid()
-        ys = []
-        for j in range(k):
-            if labels[j]:
-                plt.plot(window_centers, countnrm_windows_std[j], "r.")
-                ys.append(list(countnrm_windows_std[j]))
-            else:
-                plt.plot(window_centers, countnrm_windows_std[j], "b.")
-                ys.append(list(countnrm_windows_std[j]))
-
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("n_clusater/sum(n_cluster)-bg")
-        plt.savefig(
-            save_path + "eval/norm-toatal-sigmas-points.png",
-            bbox_inches="tight",
+        csp.two_class_curves(
+            window_centers,
+            countnrm_windows_std * np.sqrt(countnrm_windows),
+            labels,
+            figsize,
+            ylabel="deviation in SD",
+            save_file=save_path + "eval/norm-toatal-sigmas-special.png",
         )
 
         # all curves standardized distribution
@@ -446,6 +337,9 @@ def cs_performance_evaluation(
             1, 2, figsize=(9, 3), gridspec_kw={"width_ratios": [2, 1]}
         )
         plt.sca(axs[0])
+        ys = []
+        for j in range(k):
+            ys.append(list(countnrm_windows_std[j]))
         ys = np.array(ys)
         ys = ys.reshape((-1,))
         xs = np.tile(window_centers, k)

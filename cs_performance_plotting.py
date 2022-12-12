@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.manifold import TSNE
 import set_matplotlib_default as smd
+from robust_estimators import std_ignore_outliers, mean_ignore_outliers
 
 
 def CS_TSNE(num_der_counts_windows, labels, save_path):
@@ -23,6 +24,98 @@ def CS_TSNE(num_der_counts_windows, labels, save_path):
     plt.xlabel("embedding dim 0")
     plt.ylabel("embedding dim 1")
     plt.savefig(save_path + "eval/TSNE.png")
+
+
+def plot_sum_over_bins_dist(counts, bin_widths, labels, save_path):
+    plt.figure()
+    plt.grid()
+    plt.hist(
+        [
+            np.sum(counts * bin_widths, axis=1)[labels == 0],
+            np.sum(counts * bin_widths, axis=1)[labels == 1],
+        ],
+        bins=20,
+        histtype="bar",
+        stacked=True,
+    )
+    plt.xlabel("integral under the curve")
+    plt.ylabel("cluster n")
+    plt.savefig(save_path + "eval/curves_integrals.png", bbox_inches="tight")
+
+
+def two_class_curves(
+    bin_centers,
+    counts,
+    labels,
+    figsize,
+    suffix="",
+    xlabel="window centre $m_{jj}$ [GeV]",
+    ylabel="",
+    save_file="",
+    marker="",
+    linestyle="-",
+):
+    plt.figure(figsize=figsize)
+    plt.grid()
+    lab1 = "anomalous clusters" + suffix
+    lab2 = "non-anomalous clusters" + suffix
+    for j in range(len(counts)):
+        if labels[j]:
+            plt.plot(
+                bin_centers,
+                counts[j],
+                color="red",
+                marker=marker,
+                linestyle=linestyle,
+                label=lab1,
+            )
+            lab1 = None
+        else:
+            plt.plot(
+                bin_centers,
+                counts[j],
+                color="blue",
+                marker=marker,
+                linestyle=linestyle,
+                label=lab2,
+            )
+            lab2 = None
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig(
+        save_file,
+        bbox_inches="tight",
+    )
+
+
+def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
+    plt.plot(
+        x,
+        middle,
+        color=color,
+        label="mean and SD",
+        linewidth=lwd,
+    )
+    plt.plot(
+        x,
+        middle - deviat,
+        color=color,
+        linewidth=lwd,
+    )
+    plt.plot(
+        x,
+        middle + deviat,
+        color=color,
+        linewidth=lwd,
+    )
+    if fillb:
+        plt.fill_between(
+            x,
+            middle - deviat,
+            middle + deviat,
+            alpha=0.4,
+            color=color,
+        )
 
 
 ###OBSOLETE CODE BELOW !!!!!!!!!
