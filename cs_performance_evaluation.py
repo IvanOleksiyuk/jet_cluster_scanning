@@ -100,10 +100,8 @@ def cs_performance_evaluation(
     countmax_windows = sp_maxn.y
     countnrm_windows = sp_sumn.y
 
-    # total signal+background in windows
+    # total signal+background spectrum in windows
     sum_sp = sp_original.sum_sp()
-    count_sum = sum_sp.y[0]
-    count_sum_sigma = sum_sp.err[0]
 
     # normed vesions
     countmax_sum = sum_sp.max_norm().y[0]

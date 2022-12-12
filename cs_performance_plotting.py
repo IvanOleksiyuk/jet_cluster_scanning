@@ -82,10 +82,11 @@ def two_class_curves(
             lab2 = None
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.savefig(
-        save_file,
-        bbox_inches="tight",
-    )
+    if save_file != "":
+        plt.savefig(
+            save_file,
+            bbox_inches="tight",
+        )
 
 
 def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
