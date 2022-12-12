@@ -1,6 +1,4 @@
 import numpy as np
-import random
-import h5py
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, Birch
 from sklearn.manifold import TSNE
@@ -14,6 +12,13 @@ from lowpasfilter import butter_lowpass_filter
 import datetime
 import scipy.signal
 import set_matplotlib_default as smd
+import cs_performance_plotting as csp
+import cluster_scanning
+from robust_estimators import std_ignore_outliers, mean_ignore_outliers
+from spectrum import Spectra
+import matplotlib as mpl
+
+mpl.rcParams.update(mpl.rcParamsDefault)
 
 plt.close("all")
 
@@ -34,24 +39,6 @@ def norm(x):
     return x / np.sum(x)
 
 
-def std_ignore_outliers(x, oulier_fraction=0.2, corerecting_factor=1.51):
-    med = np.median(x, axis=0)
-    x1 = np.abs(x - med)
-    x2 = np.copy(x)
-    q = np.quantile(x1, 1 - oulier_fraction, axis=0)
-    x2[x1 > q] = np.nan
-    return np.nanstd(x2, axis=0) * corerecting_factor
-
-
-def mean_ignore_outliers(x, oulier_fraction=0.2):
-    med = np.median(x, axis=0)
-    x1 = np.abs(x - med)
-    x2 = np.copy(x)
-    q = np.quantile(x1, 1 - oulier_fraction, axis=0)
-    x2[x1 > q] = np.nan
-    return np.nanmean(x2, axis=0)
-
-
 def squeeze(x, f):
     x = x[: (len(x) // f) * f]
     x = x.reshape((-1, f))
@@ -66,18 +53,26 @@ def squeeze(x, f):
 # print(std1/std2)
 
 
+def default_binning(W=100, lb=2600, rb=6000, steps=200):
+    mjjmin_arr = np.linspace(lb, rb - W, steps)
+    mjjmax_arr = mjjmin_arr + W
+    binning = np.stack([mjjmin_arr, mjjmax_arr]).T
+    return binning
+
+
 def cs_performance_evaluation(
     counts_windows=None,
     plotting=True,
     filterr="med",
     labeling="kmeans_der",  # , #,">5sigma"
-    W=100,
-    lb=2600,
-    rb=6000,
-    save_path="char/0kmeans_scan/26w60wk50ret0con0.05W100ste200rewsqrtsme1ID0/",
+    binning=default_binning(),
+    save_path="cs_performance_evaluation/",
     save_load=True,
     verbous=True,
+    sid=0,
 ):
+    os.makedirs(save_path, exist_ok=True)
+
     # /home/ivan/mnt/cluster/k_means_anomaly_jet/char/0kmeans_scan/
     if counts_windows is None:
         res = pickle.load(open(save_path + "res.pickle", "rb"))
@@ -88,73 +83,9 @@ def cs_performance_evaluation(
     steps = counts_windows.shape[0]
     figsize = (6, 4.5)
 
-    Mjjmin_arr = np.linspace(lb, rb - W, steps)
-    Mjjmax_arr = Mjjmin_arr + W
-    window_centers = (Mjjmin_arr + Mjjmax_arr) / 2
-    delta = (window_centers[1] - window_centers[0]) / 2
-
+    window_centers = (binning.T[1] + binning.T[0]) / 2
+    bin_widths = binning.T[1] - binning.T[0]
     k = counts_windows.shape[1]
-
-    """
-    #update all the plots in the folder if needed
-    min_allowed_count=100
-    min_min_allowed_count=10
-    window_centers=(Mjjmin_arr+Mjjmax_arr)/2
-    counts_windows=np.array(counts_windows)
-    plt.figure()
-    plt.grid()
-    for j in range(k):
-        plt.plot(window_centers, counts_windows[:, j])
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("$N_i(m_{jj})$")
-    plt.savefig(save_path+"kmeans_ni_mjj_total.png")
-    smallest_cluster_count_window=np.min(counts_windows, axis=1)
-    for i in range(len(window_centers)):
-        if smallest_cluster_count_window[i]<min_allowed_count:
-            if smallest_cluster_count_window[i]<min_min_allowed_count:
-                plt.axvline(window_centers[i], color="black", alpha=0.6)
-            else:
-                plt.axvline(window_centers[i], color="black", alpha=0.3)
-            
-    plt.savefig(save_path+"kmeans_ni_mjj_total_statAllowed.png")
-        
-    partials_windows=np.zeros(counts_windows.shape)
-    for i in range(len(Mjjmin_arr)):
-        partials_windows[i, :]=counts_windows[i, :]/np.sum(counts_windows[i, :])
-
-    plt.figure()
-    plt.grid()
-    for j in range(k):
-        plt.plot((Mjjmin_arr+Mjjmax_arr)/2, partials_windows[:, j])
-    plt.xlabel("m_jj")
-    plt.ylabel("fraction of points in window")
-    plt.savefig(save_path+"kmeans_xi_mjj_total.png")
-
-    countmax_windows=np.zeros(counts_windows.shape)
-    for i in range(k):
-        countmax_windows[:, i]=counts_windows[:, i]/np.max(counts_windows[:, i])
-
-    plt.figure()
-    plt.grid()
-    for j in range(k):
-        plt.plot((Mjjmin_arr+Mjjmax_arr)/2, countmax_windows[:, j])
-    
-
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("$N_i(m_{jj})/max(N_i(m_{jj}))$")
-    plt.savefig(save_path+"kmeans_xi_mjj_maxn.png")
-    
-    for i in range(len(window_centers)):
-        if smallest_cluster_count_window[i]<min_allowed_count:
-            if smallest_cluster_count_window[i]<min_min_allowed_count:
-                plt.axvspan((window_centers[i]+window_centers[i-1])/2, (3*window_centers[i]-window_centers[i-1])/2, color="black", alpha=0.6)
-                #plt.axvline(window_centers[i], color="black", alpha=0.6)
-            else:
-                plt.axvspan((window_centers[i]+window_centers[i-1])/2, (3*window_centers[i]-window_centers[i-1])/2, color="black", alpha=0.3)
-                #plt.axvline(window_centers[i], color="black", alpha=0.3)
-            
-    plt.savefig(save_path+"kmeans_xi_mjj_maxn_statAllowed.png")
-    """
 
     counts_windows = counts_windows.T
 
@@ -222,7 +153,7 @@ def cs_performance_evaluation(
     ###
 
     if labeling == "kmeans_der":
-        np.random.seed(0)
+        np.random.seed(sid)
         kmeans = KMeans(2)
         kmeans.fit(num_der_counts_windows)
         as_vectors = "derivatives"
@@ -232,7 +163,7 @@ def cs_performance_evaluation(
             labels = 1 - kmeans.labels_
 
     elif labeling == "kmeans_cur":
-        np.random.seed(0)
+        np.random.seed(sid)
         kmeans = KMeans(2)
         kmeans.fit(countmax_windows)
         as_vectors = "curves"
@@ -251,7 +182,8 @@ def cs_performance_evaluation(
     elif labeling == "random":
         labels = np.random.uniform(size=k) < 0.5
 
-    tf = ((rb - lb) / W) / steps
+    # total width of all (overlaing) bins devided by width of the covered area (approximation for number of time each point is counted)
+    tf = (binning.T[1][-1] - binning.T[0][0]) / np.sum(bin_widths)
 
     anomaly_poor = np.sum(counts_windows[labels == 0], axis=0) * tf
     if np.any(labels):
@@ -275,9 +207,12 @@ def cs_performance_evaluation(
         (anomaly_rich - anomaly_poor) ** 2
         / (anomaly_rich_sigma**2 + anomaly_poor_sigma**2)
     )
-    n_dof = len(window_centers) / (
-        W * steps / (Mjjmin_arr[-1] - Mjjmin_arr[0])
-    )
+    mean_repetition = np.sum(bin_widths) / (binning.T[0][-1] - binning.T[0][0])
+    # total width of all (overlaing) bins devided by width of the covered area (approximation for number of time each point is counted)
+    # Assuming all windows have equal width we take the covered region from min of the firs to min of the last (not to max of the last) to compencete for the points close to edges not being counted sevral times
+    # Most likely a totaly false formula but actualy obsolete
+
+    n_dof = len(window_centers) / mean_repetition
 
     if verbous:
         print("n_dof=", n_dof)
@@ -288,68 +223,13 @@ def cs_performance_evaluation(
     res["deviation"] = (chisq - 1) * n_dof / np.sqrt(2 * n_dof)
 
     if plotting:
-
-        min_allowed_count = 100
-        min_min_allowed_count = 10
-
-        plt.figure(figsize=figsize)
-        plt.grid()
-        for j in range(k):
-            plt.plot(window_centers, counts_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("$N_i(m_{jj})$")
-        plt.savefig(save_path + "kmeans_ni_mjj_total.png", bbox_inches="tight")
-        smallest_cluster_count_window = np.min(counts_windows, axis=0)
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(
-            save_path + "kmeans_ni_mjj_total_statAllowed.png",
-            bbox_inches="tight",
-        )
-
-        plt.figure(figsize=figsize)
-        plt.grid()
-        for j in range(k):
-            plt.plot(window_centers, countmax_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("$N_i(m_{jj})/max(N_i(m_{jj}))$")
-        plt.savefig(save_path + "kmeans_ni_mjj_max.png", bbox_inches="tight")
-        smallest_cluster_count_window = np.min(counts_windows, axis=0)
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(
-            save_path + "kmeans_ni_mjj_max_statAllowed.png",
-            bbox_inches="tight",
-        )
-
-        plt.figure(figsize=figsize)
-        plt.grid()
-        for j in range(k):
-            plt.plot(window_centers, countnrm_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
-        plt.savefig(save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
-        smallest_cluster_count_window = np.min(counts_windows, axis=0)
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(
-            save_path + "kmeans_ni_mjj_norm_statAllowed.png",
-            bbox_inches="tight",
+        csp.plot_all_scalings(
+            window_centers,
+            counts_windows,
+            countmax_windows,
+            countnrm_windows,
+            save_path,
+            figsize,
         )
 
         os.makedirs(save_path + "eval/", exist_ok=True)
@@ -695,24 +575,7 @@ def cs_performance_evaluation(
         )
 
         # TSNE
-        X_embedded = TSNE().fit_transform(num_der_counts_windows)
-        plt.figure()
-        plt.grid()
-        plt.plot(
-            X_embedded[:, 0][labels == 1],
-            X_embedded[:, 1][labels == 1],
-            ".",
-            color="red",
-        )
-        plt.plot(
-            X_embedded[:, 0][labels == 0],
-            X_embedded[:, 1][labels == 0],
-            ".",
-            color="blue",
-        )
-        plt.xlabel("embedding dim 0")
-        plt.ylabel("embedding dim 1")
-        plt.savefig(save_path + "eval/TSNE.png")
+        csp.CS_TSNE(num_der_counts_windows, labels, save_path)
 
         # combinations
         plt.figure(figsize=figsize)
@@ -757,9 +620,9 @@ def cs_performance_evaluation(
         p0_mu = window_centers[np.argmax(anomaly_rich - anomaly_poor)]
 
         def f(x, w, n, mu, sig):
-            return w * bg(x) + n * W * tf / np.sqrt(2 * np.pi) / sig * np.exp(
-                -((x - mu) ** 2) / 2 / sig**2
-            )
+            return w * bg(x) + n * (bin_widths) * tf / np.sqrt(
+                2 * np.pi
+            ) / sig * np.exp(-((x - mu) ** 2) / 2 / sig**2)
 
         p0 = (1, 0, p0_mu, 20)
         print("p0_mu", p0_mu)
@@ -769,7 +632,10 @@ def cs_performance_evaluation(
             anomaly_rich,
             sigma=np.sqrt(anomaly_rich_sigma**2 + anomaly_poor_sigma**2),
             p0=p0,
-            bounds=([0, 0, lb, 10], [2, 10000, rb, (rb - lb) / 2]),
+            bounds=(
+                [0, 0, binning.min(), 10],
+                [2, 10000, binning.max(), (binning.max() - binning.min()) / 2],
+            ),
         )
         print(rrr[0])
         # likelyhood spectrum
@@ -793,39 +659,6 @@ def cs_performance_evaluation(
 
     return res
 
-
-"""
-#bump-hunting!
-import pyBumpHunter as BH
-
-hunter = BH.BumpHunter1D(
-    rang=[2125-delta, 6000-125+delta],
-    bins=201, 
-    width_min=5,
-    width_max=19,
-    width_step=2,
-    scan_step=1,
-    npe=100,
-    nworker=7,
-    seed=666,
-)
-
-def dehist(hist):
-    data=np.array([])
-    for k, n in enumerate(anomaly_rich):
-        data=np.append(data, window_centers[k]+(np.random.rand(n)-0.5)*delta)
-    return data
-
-print('####bump_scan call####')
-hunter.bump_scan(anomaly_rich, anomaly_poor, is_hist=True)
-print('')
-
-bump_str=hunter.bump_info(dehist(anomaly_rich))
-print(bump_str)
-
-with open(save_path+"eval/perak_info.txt", "a") as f:
-    f.write(bump_str)
-"""
 
 if __name__ == "__main__":
     sliding_cluster_performance_evaluation()

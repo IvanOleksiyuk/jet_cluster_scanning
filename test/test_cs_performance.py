@@ -18,7 +18,7 @@ class TestCSPerformance(unittest.TestCase):
         """Test evluation of >5sigma method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
-            save_path="",
+            save_path="test_results/test_m5sigma/",
             filterr="med",
             plotting=False,
             labeling=">5sigma",
@@ -30,7 +30,7 @@ class TestCSPerformance(unittest.TestCase):
         """Test evluation of  method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
-            save_path="",
+            save_path="test_results/test_other/",
             filterr="med",
             plotting=False,
             labeling="kmeans_der",
@@ -39,25 +39,18 @@ class TestCSPerformance(unittest.TestCase):
         self.assertEqual(3.5990916567517726, res["chisq_ndof"])
         pass
 
+    def test_m5sigma_with_plotting(self):
+        """Test evluation of >5sigma method"""
+        res = cs_performance_evaluation(
+            counts_windows=self.counts_windows,
+            save_path="test_results/test_m5sigma_with_plotting/",
+            filterr="med",
+            plotting=True,
+            labeling=">5sigma",
+            verbous=False,
+        )
 
-# counts_windows = np.load(sys.path[0] + "/test_materials/count_windows.npy")
-# res = cs_performance_evaluation(
-#     counts_windows=counts_windows,
-#     save_path="",
-#     filterr="med",
-#     plotting=False,
-#     labeling=">5sigma",
-#     verbous=False,
-# )
-# print(res["chisq_ndof"])
 
-# counts_windows = np.load(sys.path[0] + "/test_materials/count_windows.npy")
-# res = cs_performance_evaluation(
-#     counts_windows=counts_windows,
-#     save_path="",
-#     filterr="med",
-#     plotting=False,
-#     labeling="kmeans_der",
-#     verbous=False,
-# )
-# print(res["chisq_ndof"])
+TT = TestCSPerformance()
+TT.setUp()
+TT.test_m5sigma()
