@@ -23,7 +23,7 @@ class Spectra:
         x = self.x
         return Spectra(x, y, err)
 
-    def norm(self):
+    def sum_norm(self):
         return self.scale(1 / np.sum(self.y, axis=1, keepdims=True))
 
     def max_norm(self):

@@ -1,6 +1,7 @@
 plots/**
 char/**
 __pycache__/**
+**/__pycache__/**
 models/**
 test_results/**
 image_data_sets_path.txt

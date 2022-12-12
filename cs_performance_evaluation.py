@@ -93,25 +93,21 @@ def cs_performance_evaluation(
     sp_original = Spectra(window_centers, counts_windows)
 
     # produce maxnormed and normed versions of counts_windows
-    sp_max = sp_original.max_norm()
-    sp_nrm = sp_original.norm()
+    sp_maxn = sp_original.max_norm()
+    sp_sumn = sp_original.sum_norm()
 
     # produce maxnormed and normed versions of counts_windows
-    countmax_windows = np.zeros(counts_windows.shape)
-    countnrm_windows = np.zeros(counts_windows.shape)
-    for i in range(k):
-        countmax_windows[i] = max_norm(counts_windows[i])
-        countnrm_windows[i] = norm(counts_windows[i])
+    countmax_windows = sp_maxn.y
+    countnrm_windows = sp_sumn.y
 
     # total signal+background in windows
-    count_sum = np.sum(counts_windows, axis=0)
-    count_sum_sigma = np.sqrt(count_sum)
+    sum_sp = sp_original.sum_sp()
+    count_sum = sum_sp.y[0]
+    count_sum_sigma = sum_sp.err[0]
 
     # normed vesions
-    countmax_sum = count_sum / np.max(count_sum)
-    countmax_sum_sigma = count_sum_sigma / np.max(count_sum)
-    countnrm_sum = norm(count_sum)
-    countnrm_sum_sigma = count_sum_sigma / np.sum(count_sum)
+    countmax_sum = sum_sp.max_norm().y[0]
+    countnrm_sum = sum_sp.sum_norm().y[0]
 
     # versions without respective background
     countnrm_windows_s = countnrm_windows - countnrm_sum
