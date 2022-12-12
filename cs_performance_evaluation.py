@@ -12,53 +12,14 @@ import cluster_scanning
 from robust_estimators import std_ignore_outliers, mean_ignore_outliers
 from spectrum import Spectra
 import matplotlib as mpl
+from squeeze_array import squeeze
 
 mpl.rcParams.update(mpl.rcParamsDefault)
-
 plt.close("all")
-
-
-def num_der(x):
-    return (x[1:] - x[:-1]) / 2
 
 
 def middles(x):
     return (x[1:] + x[:-1]) / 2
-
-
-def max_norm(x):
-    return x / np.max(x)
-
-
-def norm(x):
-    return x / np.sum(x)
-
-
-def squeeze_1d(x, f):
-    x = x[: (len(x) // f) * f]
-    x = x.reshape((-1, f))
-    x = np.mean(x, axis=1)
-    return x
-
-
-def squeeze(x, f):
-    if len(x.shape) == 1:
-        x = x[: (len(x) // f) * f]
-        x = x.reshape((-1, f))
-        x = np.mean(x, axis=1)
-    elif len(x.shape) == 2:
-        xs = []
-        for line in x:
-            xs.append(squeeze_1d(line, f))
-        x = np.stack(xs)
-    return x
-
-
-# just a little test to see what factor is needed to compensate for 20% of outliers
-# a=np.random.normal(size=(50, 10000))
-# std1=np.mean(np.std(a, axis=0))
-# std2=np.mean(std_ignore_outliers(a))
-# print(std1/std2)
 
 
 def default_binning(W=100, lb=2600, rb=6000, steps=200):
@@ -104,12 +65,17 @@ def cs_performance_evaluation(
     sum_sp = sp_original.sum_sp()
 
     # normed vesions
-    countmax_sum = sum_sp.max_norm().y[0]
-    countnrm_sum = sum_sp.sum_norm().y[0]
+    sum_sp_maxn = sum_sp.max_norm()
+    sum_sp_sumn = sum_sp.sum_norm()
+
+    # DO I NEED THESE?
+    countnrm_sum = sum_sp_sumn.y[0]
 
     # versions without respective background
-    countnrm_windows_s = countnrm_windows - countnrm_sum
-    countmax_windows_s = countmax_windows - countmax_sum
+    sp_maxn_s = sp_maxn.subtract_bg(sum_sp_maxn)
+    sp_sumn_s = sp_sumn.subtract_bg(sum_sp_sumn)
+    countnrm_windows_s = sp_sumn_s.y
+    countmax_windows_s = sp_maxn_s.y
 
     baselinenrm = mean_ignore_outliers(countnrm_windows - countnrm_sum)
     countnrm_windows_sigma = std_ignore_outliers(countnrm_windows)
@@ -117,8 +83,8 @@ def cs_performance_evaluation(
         countnrm_windows - countnrm_sum - baselinenrm
     ) / countnrm_windows_sigma
 
-    num_der_counts_windows = num_der(countmax_windows.T).T
-    num_der_countmax_sum = num_der(countmax_sum)
+    num_der_counts_windows = sp_maxn.num_der().y
+    num_der_countmax_sum = sum_sp_maxn.num_der().y[0]
 
     if filterr == "lowpass":
         order = 6
@@ -359,19 +325,19 @@ def cs_performance_evaluation(
             if labels[j]:
                 plt.plot(
                     window_centers,
-                    countmax_windows[j] - countmax_sum,
+                    countmax_windows_s[j],
                     color="red",
                 )
             else:
                 plt.plot(
                     window_centers,
-                    countmax_windows[j] - countmax_sum,
+                    countmax_windows_s[j],
                     color="blue",
                 )
 
         plt.plot(
             window_centers,
-            np.mean(countmax_windows - countmax_sum, axis=0),
+            np.mean(countmax_windows_s, axis=0),
             color="lime",
         )
         plt.plot(
@@ -385,9 +351,9 @@ def cs_performance_evaluation(
         # plt.fill_between(window_centers, -np.std(countmax_windows, axis=0), np.std(countmax_windows, axis=0), alpha=0.2, color="lime")
         plt.fill_between(
             window_centers,
-            np.mean(countmax_windows - countmax_sum, axis=0)
+            np.mean(countmax_windows_s, axis=0)
             - np.std(countmax_windows, axis=0),
-            np.mean(countmax_windows - countmax_sum, axis=0)
+            np.mean(countmax_windows_s, axis=0)
             + np.std(countmax_windows, axis=0),
             alpha=0.4,
             color="lime",
