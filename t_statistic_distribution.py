@@ -1,10 +1,18 @@
 import matplotlib.pyplot as plt
 import pickle
-from cs_performance_evaluation import cs_performance_evaluation
+from cs_performance_evaluation import (
+    sliding_cluster_performance_evaluation,
+)
 import numpy as np
 import random
 from matplotlib.ticker import MaxNLocator
 import cluster_scanning
+
+import matplotlib as mpl
+
+mpl.rcParams.update(mpl.rcParamsDefault)  # TODO: DETELE THIS
+
+cs_performance_evaluation = sliding_cluster_performance_evaluation
 
 random.seed(a=2, version=2)
 plt.close("all")
@@ -169,24 +177,22 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
     )
 
 cont_paths_MB = [
-    "config/s0.1_0.5_1_MB.yml"
-    "config/s0.05_0.5_1_MB.yml"
-    "config/s0.025_0.5_1_MB.yml"
+    "config/s0.1_0.5_1_MB.yml",
+    "config/s0.05_0.5_1_MB.yml",
+    "config/s0.025_0.5_1_MB.yml",
 ]
 colors = ["darkgreen", "green", "lime"]
 for c, path, col in zip(contamiantions, cont_paths_MB, colors):
     arr = []
     ps = []
     for jj in range(10):
-        config_file_path = cont_paths_MB
-        cs = cluster_scanning.ClusterScanning(config_file_path)
+        cs = cluster_scanning.ClusterScanning(path)
         cs.load_mjj()
+        cs.ID = jj
         cs.load_results(jj)
         cs.sample_signal_events()
         counts_windows = cs.perform_binning()
 
-        res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
-        counts_windows = np.array(res["counts_windows"][0])
         res = cs_performance_evaluation(
             counts_windows=counts_windows,
             save_path=path,
@@ -367,24 +373,22 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
     )
 
 cont_paths_MB = [
-    "config/s0.1_0.5_1_MB.yml"
-    "config/s0.05_0.5_1_MB.yml"
-    "config/s0.025_0.5_1_MB.yml"
+    "config/s0.1_0.5_1_MB.yml",
+    "config/s0.05_0.5_1_MB.yml",
+    "config/s0.025_0.5_1_MB.yml",
 ]
 colors = ["darkgreen", "green", "lime"]
 for c, path, col in zip(contamiantions, cont_paths_MB, colors):
     arr = []
     ps = []
     for jj in range(10):
-        config_file_path = cont_paths_MB
-        cs = cluster_scanning.ClusterScanning(config_file_path)
+        cs = cluster_scanning.ClusterScanning(path)
         cs.load_mjj()
+        cs.ID = jj
         cs.load_results(jj)
         cs.sample_signal_events()
         counts_windows = cs.perform_binning()
 
-        res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
-        counts_windows = np.array(res["counts_windows"][0])
         res = cs_performance_evaluation(
             counts_windows=counts_windows,
             save_path=path,
