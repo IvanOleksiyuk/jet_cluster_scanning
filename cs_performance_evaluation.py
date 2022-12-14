@@ -4,7 +4,6 @@ from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, Birch
 import time
 import os
 import pickle
-from lowpasfilter import butter_lowpass_filter
 import scipy.signal
 import set_matplotlib_default as smd
 import cs_performance_plotting as csp
@@ -68,59 +67,39 @@ def cs_performance_evaluation(
     sum_sp_maxn = sum_sp.max_norm()
     sum_sp_sumn = sum_sp.sum_norm()
 
-    # DO I NEED THESE?
-    countnrm_sum = sum_sp_sumn.y[0]
-
     # versions without respective background
     sp_maxn_s = sp_maxn.subtract_bg(sum_sp_maxn)
     sp_sumn_s = sp_sumn.subtract_bg(sum_sp_sumn)
-    countnrm_windows_s = sp_sumn_s.y
-    countmax_windows_s = sp_maxn_s.y
 
-    baselinenrm = mean_ignore_outliers(countnrm_windows - countnrm_sum)
-    countnrm_windows_sigma = std_ignore_outliers(countnrm_windows)
-    countnrm_windows_std = (
-        countnrm_windows - countnrm_sum - baselinenrm
-    ) / countnrm_windows_sigma
+    # find robust mean and std for plotting
+    sp_sumn_meanrob = sp_sumn_s.mean_sp_rob()
+    sp_sumn_stdrob = sp_sumn_s.std_sp_rob()
+
+    # standardise robustly
+    sp_sumn_standrob = sp_sumn_s.standardize_rob()
 
     num_der_counts_windows = sp_maxn.num_der().y
     num_der_countmax_sum = sum_sp_maxn.num_der().y[0]
 
     if filterr == "lowpass":
-        order = 6
-        fs = 1  # sample rate, Hz
-        cutoff = 0.05  # desired cutoff frequency of the filter, Hz
-        for i in range(k):
-            num_der_counts_windows[i] = butter_lowpass_filter(
-                num_der_counts_windows[i], cutoff, fs, order
-            )
+        num_der_counts_windows = sp_maxn.num_der().butter_lowpas().y
 
-    elif filterr == "med5":
-        for i in range(k):
-            num_der_counts_windows[i] = scipy.signal.medfilt(
-                num_der_counts_windows[i], [5]
-            )
-
-    elif filterr == "med":
-        for i in range(k):
-            num_der_counts_windows[i] = scipy.signal.medfilt(
-                num_der_counts_windows[i], [7]
-            )
-
-    elif filterr == "med11":
-        for i in range(k):
-            num_der_counts_windows[i] = scipy.signal.medfilt(
-                num_der_counts_windows[i], [11]
-            )
-
+    elif filterr[:3] == "med":
+        if filterr[3:] == "":
+            filter_size = 7
+        else:
+            filter_size = int(filterr[3:])
+        num_der_counts_windows = sp_maxn.num_der().medfilt([filter_size]).y
     ###
     ###
+
+    if labeling == ">5sigma":  # for backcompatability TODO remove
+        labeling = "maxdev5"
 
     if labeling == "kmeans_der":
         np.random.seed(sid)
         kmeans = KMeans(2)
         kmeans.fit(num_der_counts_windows)
-        as_vectors = "derivatives"
         if np.sum(kmeans.labels_) < len(kmeans.labels_) // 2:
             labels = kmeans.labels_
         else:
@@ -130,16 +109,16 @@ def cs_performance_evaluation(
         np.random.seed(sid)
         kmeans = KMeans(2)
         kmeans.fit(countmax_windows)
-        as_vectors = "curves"
         if np.sum(kmeans.labels_) < len(kmeans.labels_) // 2:
             labels = kmeans.labels_
         else:
             labels = 1 - kmeans.labels_
 
-    elif labeling == ">5sigma":
+    elif labeling[:6] == "maxdev":
+        threshold = float(labeling[6:])
         labels = np.zeros(k)
         for j in range(k):
-            if np.any(countnrm_windows_std[j] > 5):
+            if np.any(sp_sumn_standrob.y[j] > threshold):
                 labels[j] = 1
             else:
                 labels[j] = 0
@@ -211,21 +190,21 @@ def cs_performance_evaluation(
 
         # subtracted curves norm
         csp.two_class_curves(
-            window_centers,
-            countnrm_windows_s,
+            sp_sumn_s.x,
+            sp_sumn_s.y,
             labels,
             figsize,
         )
         csp.plot_mean_deviat(
-            window_centers,
-            np.mean(countnrm_windows_s, axis=0),
+            sp_sumn_s.x,
+            np.mean(sp_sumn_s.y, axis=0),
             np.std(countnrm_windows, axis=0),
             fillb=True,
         )
         csp.plot_mean_deviat(
             window_centers,
-            baselinenrm,
-            std_ignore_outliers(countnrm_windows),
+            sp_sumn_meanrob.y[0],
+            sp_sumn_stdrob.y[0],
             color="orange",
             fillb=True,
         )
@@ -237,7 +216,7 @@ def cs_performance_evaluation(
         # all curves standardized
         csp.two_class_curves(
             window_centers,
-            countnrm_windows_std,
+            sp_sumn_standrob.y,
             labels,
             figsize,
         )
@@ -252,7 +231,7 @@ def cs_performance_evaluation(
         # all curves standardized
         csp.two_class_curves(
             window_centers,
-            countnrm_windows_std * np.sqrt(countnrm_windows),
+            sp_sumn_standrob.y * np.sqrt(countnrm_windows),
             labels,
             figsize,
             ylabel="deviation in SD",
@@ -263,7 +242,7 @@ def cs_performance_evaluation(
         sqf = 20
         csp.two_class_curves(
             squeeze(window_centers, sqf),
-            squeeze(countnrm_windows_std, sqf),
+            squeeze(sp_sumn_standrob.y, sqf),
             labels,
             figsize,
             ylabel="deviation in SD",
@@ -273,7 +252,7 @@ def cs_performance_evaluation(
         # distribution of total MSE after standartisation
         csp.two_class_curves(
             window_centers,
-            countnrm_windows_std,
+            sp_sumn_standrob.y,
             labels,
             figsize,
             ylabel="deviation in SD",
@@ -285,7 +264,7 @@ def cs_performance_evaluation(
         # all curves standardized points
         csp.two_class_curves(
             window_centers,
-            countnrm_windows_std * np.sqrt(countnrm_windows),
+            sp_sumn_standrob.y * np.sqrt(countnrm_windows),
             labels,
             figsize,
             ylabel="deviation in SD",
@@ -299,7 +278,7 @@ def cs_performance_evaluation(
         plt.sca(axs[0])
         ys = []
         for j in range(k):
-            ys.append(list(countnrm_windows_std[j]))
+            ys.append(list(sp_sumn_standrob.y[j]))
         ys = np.array(ys)
         ys = ys.reshape((-1,))
         xs = np.tile(window_centers, k)
@@ -324,20 +303,20 @@ def cs_performance_evaluation(
         for j in range(k):
             if labels[j]:
                 plt.plot(
-                    window_centers,
-                    countmax_windows_s[j],
+                    sp_maxn_s.x,
+                    sp_maxn_s.y[j],
                     color="red",
                 )
             else:
                 plt.plot(
-                    window_centers,
-                    countmax_windows_s[j],
+                    sp_maxn_s.x,
+                    sp_maxn_s.y[j],
                     color="blue",
                 )
 
         plt.plot(
             window_centers,
-            np.mean(countmax_windows_s, axis=0),
+            np.mean(sp_maxn_s.y, axis=0),
             color="lime",
         )
         plt.plot(
@@ -350,11 +329,9 @@ def cs_performance_evaluation(
         )
         # plt.fill_between(window_centers, -np.std(countmax_windows, axis=0), np.std(countmax_windows, axis=0), alpha=0.2, color="lime")
         plt.fill_between(
-            window_centers,
-            np.mean(countmax_windows_s, axis=0)
-            - np.std(countmax_windows, axis=0),
-            np.mean(countmax_windows_s, axis=0)
-            + np.std(countmax_windows, axis=0),
+            sp_maxn_s.x,
+            np.mean(sp_maxn_s.y, axis=0) - np.std(sp_maxn_s.y, axis=0),
+            np.mean(sp_maxn_s.y, axis=0) + np.std(sp_maxn_s.y, axis=0),
             alpha=0.4,
             color="lime",
         )
