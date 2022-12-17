@@ -33,7 +33,7 @@ class TestCSPerformance(unittest.TestCase):
             save_path="test_results/test_other/",
             filterr="med",
             plotting=False,
-            labeling="kmeans_der",
+            labeling="2meansder",
             verbous=False,
         )
         self.assertAlmostEqual(3.5990916567517726, res["chisq_ndof"])

@@ -96,7 +96,7 @@ def cs_performance_evaluation(
     if labeling == ">5sigma":  # for backcompatability TODO remove
         labeling = "maxdev5"
 
-    if labeling == "kmeans_der":
+    if labeling == "2meansder":
         np.random.seed(sid)
         kmeans = KMeans(2)
         kmeans.fit(num_der_counts_windows)
@@ -105,7 +105,7 @@ def cs_performance_evaluation(
         else:
             labels = 1 - kmeans.labels_
 
-    elif labeling == "kmeans_cur":
+    elif labeling == "2meanscur":
         np.random.seed(sid)
         kmeans = KMeans(2)
         kmeans.fit(countmax_windows)
@@ -142,15 +142,9 @@ def cs_performance_evaluation(
 
     anomaly_rich_sp.make_poiserr_another_sp_sumnorm(anomaly_poor_sp)
     # Change this!!!
-    anomaly_rich_sigma = anomaly_rich_sp.err[0]
-
     anomaly_poor_sp = anomaly_poor_sp.scale(
         np.sum(anomaly_rich_sp.y) / np.sum(anomaly_poor_sp.y)
     )
-    anomaly_poor_sigma = anomaly_poor_sp.err[0]
-
-    anomaly_poor = anomaly_poor_sp.y[0]
-    anomaly_rich = anomaly_rich_sp.y[0]
 
     chisq_ndof = anomaly_poor_sp.chisq_ndof(anomaly_rich_sp)
 
@@ -203,8 +197,8 @@ def cs_performance_evaluation(
         )
         csp.plot_mean_deviat(
             window_centers,
-            sp_sumn_meanrob.y[0],
-            sp_sumn_stdrob.y[0],
+            sp_sumn_s.mean_sp_rob().y[0],
+            sp_sumn_s.std_sp_rob().y[0],
             color="orange",
             fillb=True,
         )
@@ -414,29 +408,29 @@ def cs_performance_evaluation(
         sigmas = 2
         plt.fill_between(
             window_centers,
-            anomaly_rich - anomaly_rich_sigma * sigmas,
-            anomaly_rich + anomaly_rich_sigma * sigmas,
+            anomaly_rich_sp.y[0] - anomaly_rich_sp.err[0] * sigmas,
+            anomaly_rich_sp.y[0] + anomaly_rich_sp.err[0] * sigmas,
             alpha=0.2,
             color="red",
         )
         plt.fill_between(
             window_centers,
-            anomaly_poor - anomaly_poor_sigma * sigmas,
-            anomaly_poor + anomaly_poor_sigma * sigmas,
+            anomaly_poor_sp.y[0] - anomaly_poor_sp.err[0] * sigmas,
+            anomaly_poor_sp.y[0] + anomaly_poor_sp.err[0] * sigmas,
             alpha=0.2,
             color="blue",
         )
 
         plt.plot(
             window_centers,
-            anomaly_poor,
+            anomaly_poor_sp.y[0],
             label=r"$\tilde{N}_l$normalised sum of anomaly poor clusters",
             color="blue",
         )
-        # plt.plot(window_centers, anomaly_rich, label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
+        # plt.plot(window_centers, anomaly_rich_sp.y[0], label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
         plt.plot(
             window_centers,
-            anomaly_rich,
+            anomaly_rich_sp.y[0],
             label=r"$\tilde{N}_l$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$"
             + "{:.3f}".format(res["chisq_ndof"]),
             color="red",
@@ -447,8 +441,10 @@ def cs_performance_evaluation(
         plt.ylabel("jets in 16.58GeV window")
 
         # curvefit thingy
-        bg = scipy.interpolate.interp1d(window_centers, anomaly_poor)
-        p0_mu = window_centers[np.argmax(anomaly_rich - anomaly_poor)]
+        bg = scipy.interpolate.interp1d(window_centers, anomaly_poor_sp.y[0])
+        p0_mu = window_centers[
+            np.argmax(anomaly_rich_sp.y[0] - anomaly_poor_sp.y[0])
+        ]
 
         def f(x, w, n, mu, sig):
             return w * bg(x) + n * (bin_widths) * tf / np.sqrt(
@@ -460,8 +456,10 @@ def cs_performance_evaluation(
         rrr = scipy.optimize.curve_fit(
             f,
             window_centers,
-            anomaly_rich,
-            sigma=np.sqrt(anomaly_rich_sigma**2 + anomaly_poor_sigma**2),
+            anomaly_rich_sp.y[0],
+            sigma=np.sqrt(
+                anomaly_rich_sp.err[0] ** 2 + anomaly_poor_sp.err[0] ** 2
+            ),
             p0=p0,
             bounds=(
                 [0, 0, binning.min(), 10],
@@ -472,8 +470,8 @@ def cs_performance_evaluation(
         # likelyhood spectrum
         # plt.plot(window_centers, f(window_centers, *p0), color="green")
         chisq_fit = np.mean(
-            (anomaly_rich - f(window_centers, *rrr[0])) ** 2
-            / (anomaly_rich_sigma**2 + anomaly_poor_sigma**2)
+            (anomaly_rich_sp.y[0] - f(window_centers, *rrr[0])) ** 2
+            / (anomaly_rich_sp.err[0] ** 2 + anomaly_poor_sp.err[0] ** 2)
         )
         plt.plot(
             window_centers,
