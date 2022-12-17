@@ -7,6 +7,14 @@ import scipy.signal
 
 class Spectra:
     def __init__(self, x, y, err=None, poisson=True):
+        """_summary_
+
+        Args:
+            x (np.ndarray): One dimensional array of x-coordinates of all the spectra
+            y (np.ndarray): Two dimensional array, first index is the number of the spectrum the second is the index of y coordinate of this spectrum
+            err (np.ndarray, optional): symmetric standard deviations for each point on each spectrum. If None the poisson error is taken
+            poisson (bool, optional): tells if the error of current spectrum is poisson (namely equals square-root of spectrum or is approxiamtion of this)
+        """
         self.x = x
         self.y = y  # Has to be two dimensional where axis=0 loopes through all spectra
         if err is None:
@@ -116,3 +124,13 @@ class Spectra:
         x = self.x
         err = 0  # TODO THIS IS FALSE IMPROVE IT
         return Spectra(x, y, err, poisson=False)
+
+    def make_poiserr_another_sp_sumnorm(self, anothr_sp):
+        self.err = np.sqrt(
+            anothr_sp.y / np.sum(anothr_sp.y, axis=1) * np.sum(self.y, axis=1)
+        )
+
+    def chisq_ndof(self, another):
+        return np.mean(
+        (self.y - another.y) ** 2
+        / (self.err**2 + another.err**2))

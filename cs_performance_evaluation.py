@@ -130,7 +130,8 @@ def cs_performance_evaluation(
     tf = (binning.T[1][-1] - binning.T[0][0]) / np.sum(bin_widths)
     if verbous:
         print("trial_factor", tf)
-    # Addregate clusters using labels
+
+    # Aggregate clusters using labels
     anomaly_poor_sp = sp_original.sum_sp(np.logical_not(labels)).pscale(tf)
     if np.any(labels):
         anomaly_rich_sp = sp_original.sum_sp(
@@ -139,36 +140,30 @@ def cs_performance_evaluation(
     else:
         anomaly_rich_sp = anomaly_poor_sp
 
+    anomaly_rich_sp.make_poiserr_another_sp_sumnorm(anomaly_poor_sp)
+    # Change this!!!
+    anomaly_rich_sigma = anomaly_rich_sp.err[0]
+
+    anomaly_poor_sp = anomaly_poor_sp.scale(
+        np.sum(anomaly_rich_sp.y) / np.sum(anomaly_poor_sp.y)
+    )
+    anomaly_poor_sigma = anomaly_poor_sp.err[0]
+
     anomaly_poor = anomaly_poor_sp.y[0]
     anomaly_rich = anomaly_rich_sp.y[0]
 
-    anomaly_poor_sigma = anomaly_poor_sp.err[0]
-    anomaly_rich_sp.make_poiserr_another_sp_sumnorm(anomaly_poor_sp)
-    anomaly_rich_sigma = anomaly_rich_sp.err[0]
-
-    anomaly_poor_sigma = anomaly_poor_sigma * (
-        np.sum(anomaly_rich) / np.sum(anomaly_poor)
-    )
-    anomaly_poor = anomaly_poor * (np.sum(anomaly_rich) / np.sum(anomaly_poor))
-
-    chisq = np.mean(
-        (anomaly_rich - anomaly_poor) ** 2
-        / (anomaly_rich_sigma**2 + anomaly_poor_sigma**2)
-    )
-    mean_repetition = np.sum(bin_widths) / (binning.T[0][-1] - binning.T[0][0])
-    # total width of all (overlaing) bins devided by width of the covered area (approximation for number of time each point is counted)
-    # Assuming all windows have equal width we take the covered region from min of the firs to min of the last (not to max of the last) to compencete for the points close to edges not being counted sevral times
-    # Most likely a totaly false formula but actualy obsolete
-
-    n_dof = len(window_centers) / mean_repetition
-
-    if verbous:
-        print("n_dof=", n_dof)
+    chisq_ndof = anomaly_poor_sp.chisq_ndof(anomaly_rich_sp)
 
     res = {}
-    res["chisq_ndof"] = chisq
+    res["chisq_ndof"] = chisq_ndof
+
+    # theoretical interpretation
+    mean_repetition = np.sum(bin_widths) / (binning.T[0][-1] - binning.T[0][0])
+    n_dof = len(window_centers) / mean_repetition
     res["ndof"] = n_dof
-    res["deviation"] = (chisq - 1) * n_dof / np.sqrt(2 * n_dof)
+    if verbous:
+        print("n_dof=", n_dof)
+    res["deviation"] = (chisq_ndof - 1) * n_dof / np.sqrt(2 * n_dof)
 
     if plotting:
         # Some matplotlib stuff
@@ -438,7 +433,7 @@ def cs_performance_evaluation(
             label=r"$\tilde{N}_l$normalised sum of anomaly poor clusters",
             color="blue",
         )
-        # plt.plot(window_centers, anomaly_rich, label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq, (chisq-1)*n_dof/np.sqrt(2*n_dof)), color="red")
+        # plt.plot(window_centers, anomaly_rich, label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
         plt.plot(
             window_centers,
             anomaly_rich,
@@ -446,7 +441,7 @@ def cs_performance_evaluation(
             + "{:.3f}".format(res["chisq_ndof"]),
             color="red",
         )
-        # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq)
+        # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq_ndof)
         # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("jets in 16.58GeV window")
