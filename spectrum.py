@@ -25,6 +25,12 @@ class Spectra:
         x = self.x
         return Spectra(x, y, err, poisson=False)
 
+    def pscale(self, scale):
+        y = self.y * scale
+        err = self.err * np.sqrt(scale)
+        x = self.x
+        return Spectra(x, y, err, poisson=True)
+
     def sum_norm(self):
         return self.scale(1 / np.sum(self.y, axis=1, keepdims=True))
 
@@ -34,11 +40,14 @@ class Spectra:
     def num_der(self):
         y = (self.y[:, 1:] - self.y[:, :-1]) / 2
         x = (self.x[1:] + self.x[:-1]) / 2
-        err = 0  # correct this
+        err = 0  # TODO tTHIS IS FALSE IMPROVE IT
         return Spectra(x, y, err, poisson=False)
 
-    def sum_sp(self):
-        y = np.sum(self.y, axis=0, keepdims=True)
+    def sum_sp(self, choose=None):
+        if choose is None:
+            y = np.sum(self.y, axis=0, keepdims=True)
+        else:
+            y = np.sum(self.y[choose], axis=0, keepdims=True)
         x = self.x
         if self.poisson:
             return Spectra(x, y)

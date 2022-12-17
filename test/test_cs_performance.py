@@ -24,7 +24,7 @@ class TestCSPerformance(unittest.TestCase):
             labeling=">5sigma",
             verbous=False,
         )
-        self.assertEqual(3.508741407313602, res["chisq_ndof"])
+        self.assertAlmostEqual(3.508741407313602, res["chisq_ndof"])
 
     def test_other(self):
         """Test evluation of  method"""
@@ -36,7 +36,7 @@ class TestCSPerformance(unittest.TestCase):
             labeling="kmeans_der",
             verbous=False,
         )
-        self.assertEqual(3.5990916567517726, res["chisq_ndof"])
+        self.assertAlmostEqual(3.5990916567517726, res["chisq_ndof"])
         pass
 
     def test_m5sigma_with_plotting(self):

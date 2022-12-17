@@ -122,21 +122,36 @@ def cs_performance_evaluation(
                 labels[j] = 1
             else:
                 labels[j] = 0
+
     elif labeling == "random":
         labels = np.random.uniform(size=k) < 0.5
 
     # total width of all (overlaing) bins devided by width of the covered area (approximation for number of time each point is counted)
     tf = (binning.T[1][-1] - binning.T[0][0]) / np.sum(bin_widths)
 
-    anomaly_poor = np.sum(counts_windows[labels == 0], axis=0) * tf
+    # Addregate clusters using labels
+    anomaly_poor_sp = sp_original.sum_sp(np.logical_not(labels)).pscale(tf)
     if np.any(labels):
-        anomaly_rich = np.sum(counts_windows[labels == 1], axis=0) * tf
+        anomaly_rich_sp = sp_original.sum_sp(
+            labels.astype(dtype=np.bool_)
+        ).pscale(tf)
     else:
-        anomaly_rich = anomaly_poor
+        anomaly_rich_sp = anomaly_poor_sp
+
+    anomaly_poor = anomaly_poor_sp.y[0]
+    anomaly_rich = anomaly_rich_sp.y[0]
+
+    # anomaly_poor = np.sum(counts_windows[labels == 0], axis=0) * tf
+    # if np.any(labels):
+    #     anomaly_rich = np.sum(counts_windows[labels == 1], axis=0) * tf
+    # else:
+    #     anomaly_rich = anomaly_poor
+
+    anomaly_poor_sigma = anomaly_poor_sp.err[0]
 
     if verbous:
         print("trial_factor", tf)
-    anomaly_poor_sigma = np.sqrt(anomaly_poor)
+    # anomaly_poor_sigma = np.sqrt(anomaly_poor)
     anomaly_rich_sigma = np.sqrt(
         anomaly_poor / sum(anomaly_poor) * sum(anomaly_rich)
     )
