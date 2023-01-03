@@ -119,6 +119,47 @@ def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
         )
 
 
+def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res):
+    window_centers = anomaly_poor_sp.x
+    plt.figure(figsize=figsize)
+    plt.grid()
+    sigmas = 2
+    plt.fill_between(
+        window_centers,
+        anomaly_rich_sp.y[0] - anomaly_rich_sp.err[0] * sigmas,
+        anomaly_rich_sp.y[0] + anomaly_rich_sp.err[0] * sigmas,
+        alpha=0.2,
+        color="red",
+    )
+    plt.fill_between(
+        window_centers,
+        anomaly_poor_sp.y[0] - anomaly_poor_sp.err[0] * sigmas,
+        anomaly_poor_sp.y[0] + anomaly_poor_sp.err[0] * sigmas,
+        alpha=0.2,
+        color="blue",
+    )
+
+    plt.plot(
+        window_centers,
+        anomaly_poor_sp.y[0],
+        label=r"$\tilde{N}_l$normalised sum of anomaly poor clusters",
+        color="blue",
+    )
+    # plt.plot(window_centers, anomaly_rich_sp.y[0], label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
+    plt.plot(
+        window_centers,
+        anomaly_rich_sp.y[0],
+        label=r"$\tilde{N}_l$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$"
+        + "{:.3f}".format(res["chisq_ndof"]),
+        color="red",
+    )
+    # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq_ndof)
+    # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
+    plt.xlabel("window centre $m_{jj}$ [GeV]")
+    plt.ylabel("jets in 16.58GeV window")
+    plt.legend()
+
+
 ###OBSOLETE CODE BELOW !!!!!!!!!
 ###OBSOLETE CODE BELOW !!!!!!!!!
 ###OBSOLETE CODE BELOW !!!!!!!!!

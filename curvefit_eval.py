@@ -3,7 +3,8 @@ import scipy
 import numpy as np
 
 
-def curvefit_eval(anomaly_poor_sp, anomaly_rich_sp, binning, tf, save_path):
+def curvefit_eval(anomaly_poor_sp, anomaly_rich_sp, binning, tf, plot=True):
+
     # curvefit thingy
     bin_widths = binning.T[1] - binning.T[0]
     window_centers = anomaly_poor_sp.x
@@ -40,15 +41,15 @@ def curvefit_eval(anomaly_poor_sp, anomaly_rich_sp, binning, tf, save_path):
         (anomaly_rich_sp.y[0] - f(window_centers, *rrr[0])) ** 2
         / (anomaly_rich_sp.err[0] ** 2 + anomaly_poor_sp.err[0] ** 2)
     )
-    plt.plot(
-        window_centers,
-        f(window_centers, *rrr[0]),
-        color="green",
-        label="Curvefit $w=${:.03f}, $n=${:.01f}, \n $\mu=${:.01f}, $\sigma=${:.01f}, \n".format(
-            *rrr[0]
+    if plot:
+        plt.plot(
+            window_centers,
+            f(window_centers, *rrr[0]),
+            color="green",
+            label="Curvefit $w=${:.03f}, $n=${:.01f}, \n $\mu=${:.01f}, $\sigma=${:.01f}, \n".format(
+                *rrr[0]
+            )
+            + r"$\tilde{\chi}^2/n_{dof}=$"
+            + "{:.3f}".format(chisq_fit),
         )
-        + r"$\tilde{\chi}^2/n_{dof}=$"
-        + "{:.3f}".format(chisq_fit),
-    )
-    plt.legend()
-    plt.savefig(save_path + "eval/comb.png", bbox_inches="tight")
+        plt.legend()

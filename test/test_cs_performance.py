@@ -23,6 +23,7 @@ class TestCSPerformance(unittest.TestCase):
             plotting=False,
             labeling="maxdev5",
             verbous=False,
+            save=True,
         )
         self.assertAlmostEqual(3.508741407313602, res["chisq_ndof"])
 
@@ -35,6 +36,7 @@ class TestCSPerformance(unittest.TestCase):
             plotting=False,
             labeling="2meansder",
             verbous=False,
+            save=True,
         )
         self.assertAlmostEqual(3.5990916567517726, res["chisq_ndof"])
         pass
@@ -48,6 +50,7 @@ class TestCSPerformance(unittest.TestCase):
             plotting=True,
             labeling="maxdev5",
             verbous=False,
+            save=True,
         )
 
 

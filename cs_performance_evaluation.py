@@ -13,7 +13,7 @@ import matplotlib as mpl
 from squeeze_array import squeeze
 from curvefit_eval import curvefit_eval
 
-mpl.rcParams.update(mpl.rcParamsDefault)
+# mpl.rcParams.update(mpl.rcParamsDefault)
 plt.close("all")
 
 
@@ -33,16 +33,19 @@ def cs_performance_evaluation(
     plotting=True,
     filterr="med",
     labeling="kmeans_der",  # , #,">5sigma"
+    steal_sd_anomalypoor=2,
     binning=default_binning(),
-    save_path="cs_performance_evaluation/",
     verbous=True,
     sid=0,
+    save=False,
+    save_path="cs_performance_evaluation/",
 ):
     # Usuallly oriented incorrectly #TODO correct this
     counts_windows = counts_windows.T
 
     # Create folder if not yet exists
-    os.makedirs(save_path, exist_ok=True)
+    if save:
+        os.makedirs(save_path, exist_ok=True)
 
     # Useful shortcuts and variables
     window_centers = (binning.T[1] + binning.T[0]) / 2
@@ -140,16 +143,32 @@ def cs_performance_evaluation(
     else:
         anomaly_rich_sp = anomaly_poor_sp
 
-    anomaly_rich_sp.make_poiserr_another_sp_sumnorm(anomaly_poor_sp)
-    # Change this!!!
+    # Steal statistics from poor to rich spectrum if requested
+    if steal_sd_anomalypoor == 1:
+        # Stal only in low stat regions
+        anomaly_rich_sp.make_poiserr_another_sp_sumnorm_where_low_stat(
+            anomaly_poor_sp
+        )
+    elif steal_sd_anomalypoor == 2:
+        # Stal everywhere
+        anomaly_rich_sp.make_poiserr_another_sp_sumnorm(anomaly_poor_sp)
+
     anomaly_poor_sp = anomaly_poor_sp.scale(
         np.sum(anomaly_rich_sp.y) / np.sum(anomaly_poor_sp.y)
     )
 
     chisq_ndof = anomaly_poor_sp.chisq_ndof(anomaly_rich_sp)
+    max_sumnorm_dev = np.max(
+        anomaly_poor_sp.sum_norm().y - anomaly_rich_sp.sum_norm().y
+    )
+    max_maxnorm_dev = np.max(
+        anomaly_poor_sp.max_norm().y - anomaly_rich_sp.max_norm().y
+    )
 
     res = {}
     res["chisq_ndof"] = chisq_ndof
+    res["max_sumnorm_dev"] = max_sumnorm_dev
+    res["max_maxnorm_dev"] = max_maxnorm_dev
 
     # theoretical interpretation
     mean_repetition = np.sum(bin_widths) / (binning.T[0][-1] - binning.T[0][0])
@@ -158,6 +177,11 @@ def cs_performance_evaluation(
     if verbous:
         print("n_dof=", n_dof)
     res["deviation"] = (chisq_ndof - 1) * n_dof / np.sqrt(2 * n_dof)
+
+    if np.any(anomaly_rich_sp.y < 0):
+        print("WARNING: rich anomaly has negative values")
+    elif np.any(anomaly_rich_sp.y == 0):
+        print("WARNING: rich anomaly has zero values")
 
     if plotting:
         # Some matplotlib stuff
@@ -191,12 +215,12 @@ def cs_performance_evaluation(
         )
         csp.plot_mean_deviat(
             sp_sumn_s.x,
-            np.mean(sp_sumn_s.y, axis=0),
-            np.std(countnrm_windows, axis=0),
+            sp_sumn_s.mean_sp().y[0],
+            sp_sumn_s.std_sp().y[0],
             fillb=True,
         )
         csp.plot_mean_deviat(
-            window_centers,
+            sp_sumn_s.x,
             sp_sumn_s.mean_sp_rob().y[0],
             sp_sumn_s.std_sp_rob().y[0],
             color="orange",
@@ -291,22 +315,13 @@ def cs_performance_evaluation(
         plt.savefig(save_path + "eval/2d_hist.png", bbox_inches="tight")
 
         # subtracted curves norm
-        plt.figure(figsize=figsize)
-        plt.grid()
-
-        for j in range(k):
-            if labels[j]:
-                plt.plot(
-                    sp_maxn_s.x,
-                    sp_maxn_s.y[j],
-                    color="red",
-                )
-            else:
-                plt.plot(
-                    sp_maxn_s.x,
-                    sp_maxn_s.y[j],
-                    color="blue",
-                )
+        csp.two_class_curves(
+            window_centers,
+            sp_maxn_s.y,
+            labels,
+            figsize,
+            ylabel="n_clusater/max(n_cluster)-bg",
+        )
 
         plt.plot(
             window_centers,
@@ -321,7 +336,6 @@ def cs_performance_evaluation(
         plt.plot(
             window_centers, std_ignore_outliers(countmax_windows), color="lime"
         )
-        # plt.fill_between(window_centers, -np.std(countmax_windows, axis=0), np.std(countmax_windows, axis=0), alpha=0.2, color="lime")
         plt.fill_between(
             sp_maxn_s.x,
             np.mean(sp_maxn_s.y, axis=0) - np.std(sp_maxn_s.y, axis=0),
@@ -402,48 +416,22 @@ def cs_performance_evaluation(
         # TSNE
         csp.CS_TSNE(num_der_counts_windows, labels, save_path)
 
-        # combinations
-        plt.figure(figsize=figsize)
-        plt.grid()
-        sigmas = 2
-        plt.fill_between(
-            window_centers,
-            anomaly_rich_sp.y[0] - anomaly_rich_sp.err[0] * sigmas,
-            anomaly_rich_sp.y[0] + anomaly_rich_sp.err[0] * sigmas,
-            alpha=0.2,
-            color="red",
-        )
-        plt.fill_between(
-            window_centers,
-            anomaly_poor_sp.y[0] - anomaly_poor_sp.err[0] * sigmas,
-            anomaly_poor_sp.y[0] + anomaly_poor_sp.err[0] * sigmas,
-            alpha=0.2,
-            color="blue",
-        )
+        # aggregations
 
-        plt.plot(
-            window_centers,
-            anomaly_poor_sp.y[0],
-            label=r"$\tilde{N}_l$normalised sum of anomaly poor clusters",
-            color="blue",
-        )
-        # plt.plot(window_centers, anomaly_rich_sp.y[0], label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
-        plt.plot(
-            window_centers,
-            anomaly_rich_sp.y[0],
-            label=r"$\tilde{N}_l$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$"
-            + "{:.3f}".format(res["chisq_ndof"]),
-            color="red",
-        )
-        # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq_ndof)
-        # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("jets in 16.58GeV window")
+        csp.plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res)
+        curvefit_eval(anomaly_poor_sp, anomaly_rich_sp, binning, tf)
+        plt.savefig(save_path + "eval/comb.png", bbox_inches="tight")
 
-        curvefit_eval(anomaly_poor_sp, anomaly_rich_sp, binning, tf, save_path)
+        csp.plot_aggregation(
+            anomaly_poor_sp.subtract_sp(anomaly_rich_sp),
+            anomaly_rich_sp.subtract_sp(anomaly_rich_sp),
+            figsize,
+            res,
+        )
+        plt.savefig(save_path + "eval/comb_dev.png", bbox_inches="tight")
     return res
 
 
 if __name__ == "__main__":
-    sliding_cluster_performance_evaluation()
+    cs_performance_evaluation()
     print("Executed when invoked directly")

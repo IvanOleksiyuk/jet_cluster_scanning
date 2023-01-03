@@ -133,8 +133,9 @@ class ClusterScanning:
         )
         indexing_sg = np.where(indexing_sg)[0]
 
-        print(len(indexing_bg), "bg events found in interval")
-        print(len(indexing_sg), "sg events found in interval")
+        # TODO: DELETE prints  below
+        # print(len(indexing_bg), "bg events found in interval")
+        # print(len(indexing_sg), "sg events found in interval")
 
         start_time = time.time()
         print("start data extraction")
@@ -293,8 +294,9 @@ class ClusterScanning:
         )
         indexing_sg = np.where(indexing_sg)[0]
 
-        print(len(indexing_bg), "bg events found in interval")
-        print(len(indexing_sg), "sg events found in interval")
+        # TODO: DELETE prints  below
+        # print(len(indexing_bg), "bg events found in interval")
+        # print(len(indexing_sg), "sg events found in interval")
 
         if bootstrap_bg is None:
             bg = self.bg_lab[indexing_bg[0] : indexing_bg[-1]]

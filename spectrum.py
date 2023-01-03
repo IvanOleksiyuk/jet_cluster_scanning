@@ -92,6 +92,12 @@ class Spectra:
         err = np.sqrt(self.err**2 + background.err**2)
         return Spectra(x, y, err, poisson=False)
 
+    def subtract_sp(self, another):
+        y = self.y - another.y
+        x = self.x
+        err = np.sqrt(self.err**2)
+        return Spectra(x, y, err, poisson=False)
+
     def standardize(self):
         y = (self.y - np.mean(self.y, axis=0)) / np.std(self.y, axis=0)
         x = self.x
@@ -130,7 +136,18 @@ class Spectra:
             anothr_sp.y / np.sum(anothr_sp.y, axis=1) * np.sum(self.y, axis=1)
         )
 
+    def make_poiserr_another_sp_sumnorm_where_low_stat(
+        self, anothr_sp, low_stat=0
+    ):
+        if not self.poisson:
+            raise Exception("Self spectrum is not poisson")
+        if not anothr_sp.poisson:
+            raise Exception("Another spectrum is not poisson")
+        self.err[self.y <= low_stat] = np.sqrt(
+            anothr_sp.y / np.sum(anothr_sp.y, axis=1) * np.sum(self.y, axis=1)
+        )[self.y <= low_stat]
+
     def chisq_ndof(self, another):
         return np.mean(
-        (self.y - another.y) ** 2
-        / (self.err**2 + another.err**2))
+            (self.y - another.y) ** 2 / (self.err**2 + another.err**2)
+        )

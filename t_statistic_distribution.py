@@ -6,81 +6,21 @@ import random
 from matplotlib.ticker import MaxNLocator
 import cluster_scanning
 
-import matplotlib as mpl
+import set_matplotlib_default as smd
+from load_old_bootstrap_experiments import (
+    load_old_bootstrap_experiments05_1,
+    load_old_bootstrap_experiments00,
+)
 
-mpl.rcParams.update(mpl.rcParamsDefault)  # TODO: DETELE THIS
 
 random.seed(a=2, version=2)
 plt.close("all")
-save_path = "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID1/"
-# /home/ivan/mnt/cluster/k_means_anomaly_jet/char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID1
-
+output_path = "plots2/"
 labeling = ">5sigma"  # "kmeans_der" #"kmeans_der"#">5sigma"#
 filterr = "med"
 mehtod = 1
 
-counts_windows_boot = []
-res = pickle.load(open(save_path + "res.pickle", "rb"))
-counts_windows_boot += res["counts_windows_boot"]
-# print("found boostraps: ", len(counts_windows_boot))
-for i in range(46):
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID0/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(40):
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID1/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(37):
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID2/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(44):
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID3/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(18):
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID4/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(4):
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID5/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-# cs_performance_evaluation(np.array(counts_windows_boot[36]), save_path=save_path, plotting=True, labeling=">5sigma")
-
-bootstraps = len(counts_windows_boot)
-print("found boostraps: ", bootstraps)
+counts_windows_boot = load_old_bootstrap_experiments00()
 
 res_list = []
 for i, counts_windows in enumerate(counts_windows_boot):
@@ -88,7 +28,7 @@ for i, counts_windows in enumerate(counts_windows_boot):
     res_list.append(
         cs_performance_evaluation(
             counts_windows,
-            save_path=save_path,
+            save=False,
             filterr=filterr,
             plotting=False,
             labeling=labeling,
@@ -141,7 +81,7 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
         counts_windows = np.array(res["counts_windows"][0])
         res = cs_performance_evaluation(
             counts_windows=counts_windows,
-            save_path=path,
+            save=False,
             filterr=filterr,
             plotting=False,
             labeling=labeling,
@@ -191,7 +131,7 @@ for c, path, col in zip(contamiantions, cont_paths_MB, colors):
 
         res = cs_performance_evaluation(
             counts_windows=counts_windows,
-            save_path=path,
+            save=False,
             filterr=filterr,
             plotting=False,
             labeling=labeling,
@@ -227,7 +167,11 @@ plt.yscale("log")
 
 #%%
 
-plt.savefig("plots2/chi_s1sqrt_" + labeling[1:] + ".png", bbox_inches="tight")
+plt.savefig(
+    output_path + "chi_s1sqrt_" + labeling[1:] + ".png",
+    dpi=300,
+    bbox_inches="tight",
+)
 
 #%%
 # the same but now for no preprocessing
@@ -235,55 +179,7 @@ plt.savefig("plots2/chi_s1sqrt_" + labeling[1:] + ".png", bbox_inches="tight")
 # /home/ivan/mnt/cluster/k_means_anomaly_jet/char/old_char/BS26w60wk50MBret0con0.0W100ste200rewnonesme0ID1
 
 
-counts_windows_boot = []
-for i in range(47):  # 26
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewnonesme0ID0/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(49):  # 26
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewnonesme0ID1/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(45):  # 26
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewnonesme0ID1/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(44):  # 26
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewnonesme0ID1/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-for i in range(15):
-    res = pickle.load(
-        open(
-            "char/old_char/BS26w60wk50MBret0con0.0W100ste200rewsqrtsme1ID4/"
-            + "res{0:04d}.pickle".format(i),
-            "rb",
-        )
-    )
-    counts_windows_boot += res["counts_windows_boot"]
-
-bootstraps = len(counts_windows_boot)
-print("found boostraps: ", bootstraps)
+counts_windows_boot = load_old_bootstrap_experiments05_1()
 # cs_performance_evaluation(np.array(counts_windows_boot[36]), save_path=save_path, plotting=True, labeling=">5sigma")
 
 res_list = []
@@ -292,7 +188,7 @@ for i, counts_windows in enumerate(counts_windows_boot):
     res_list.append(
         cs_performance_evaluation(
             counts_windows,
-            save_path=save_path,
+            save=False,
             filterr=filterr,
             plotting=False,
             labeling=labeling,
@@ -387,7 +283,7 @@ for c, path, col in zip(contamiantions, cont_paths_MB, colors):
 
         res = cs_performance_evaluation(
             counts_windows=counts_windows,
-            save_path=path,
+            save=False,
             filterr=filterr,
             plotting=False,
             labeling=labeling,
@@ -424,4 +320,8 @@ plt.yscale("log")
 #%%
 ax = plt.gca()
 ax.set_xticks([0, 1, 2])
-plt.savefig("plots2/chi_s0none_" + labeling[1:] + ".png", bbox_inches="tight")
+plt.savefig(
+    output_path + "chi_s0none_" + labeling[1:] + ".png",
+    dpi=300,
+    bbox_inches="tight",
+)
