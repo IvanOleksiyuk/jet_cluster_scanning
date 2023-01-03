@@ -211,7 +211,6 @@ class ClusterScanning:
     def sample_signal_events(self):
         self.seed()
         num_true = int(np.rint(self.cfg.signal_fraction * len(self.mjj_sg)))
-        print(num_true)
         self.allowed = np.concatenate(
             (
                 np.zeros(len(self.mjj_sg) - num_true, dtype=bool),

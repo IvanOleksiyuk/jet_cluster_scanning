@@ -3,6 +3,7 @@ import pickle
 from cs_performance_evaluation import cs_performance_evaluation
 import numpy as np
 import random
+import scipy
 from matplotlib.ticker import MaxNLocator
 import cluster_scanning
 
@@ -38,8 +39,6 @@ for i, counts_windows in enumerate(counts_windows_boot):
     if i % 100 == 0:
         print(i)
 
-#%%
-import scipy
 
 plt.figure(figsize=(4, 3))
 chisq_list = [el["chisq_ndof"] for el in res_list]
@@ -58,9 +57,6 @@ ndof = 7  # 2/(np.std(chisq_list))**2
 #%%
 # Contaminations
 contamiantions = [0.01, 0.005, 0.0025]
-# cont_paths=["char/old_char/26w60wk50ret0con0.1W100ste200rewnonesme0ID2/",
-#            "char/old_char/26w60wk50ret0con0.05W100ste200rewsqrtsme1ID0/",
-#            "char/old_char/26w60wk50MBret0con0.025W100ste201rewsqrtsme1ID0/"]
 cont_paths = [
     "char/old_char/BS26w60wk50ret0con0.1W100ste200rewsqrtsme1ID10/",
     "char/old_char/BS26w60wk50ret0con0.05W100ste200rewsqrtsme1ID10/",
@@ -70,15 +66,25 @@ plt.plot(
     [1], [1], alpha=0, label=r"$n=0.5,\sigma=1$, method {:}".format(mehtod)
 )
 colors = ["red", "orange", "gold"]
-for c, path, col in zip(contamiantions, cont_paths, colors):
-    # res=cs_performance_evaluation(save_path=path, filterr="med", plotting=False, labeling=labeling, verbous=False)
-    # print(res["chisq_ndof"])
-    # plt.axvline(res["chisq_ndof"], color=col, label="$\epsilon$={:.4f}, p={:.3f}".format(c, np.sum(chisq_list>res["chisq_ndof"])/len(chisq_list)))
+
+
+def draw_contamination(c, path, col, old=False, postfix=""):
     arr = []
     ps = []
     for jj in range(10):
-        res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
-        counts_windows = np.array(res["counts_windows"][0])
+        if old:
+            res = pickle.load(
+                open(path + "res{0:04d}.pickle".format(jj), "rb")
+            )
+            counts_windows = np.array(res["counts_windows"][0])
+        else:
+            cs = cluster_scanning.ClusterScanning(path)
+            cs.load_mjj()
+            cs.ID = jj
+            cs.load_results(jj)
+            cs.sample_signal_events()
+            counts_windows = cs.perform_binning()
+
         res = cs_performance_evaluation(
             counts_windows=counts_windows,
             save=False,
@@ -87,7 +93,7 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
             labeling=labeling,
             verbous=False,
         )
-        print(res["chisq_ndof"])
+        # print(res["chisq_ndof"])
         arr.append(res["chisq_ndof"])
         ps.append(
             (
@@ -99,11 +105,14 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
         )
 
     if np.mean(ps) == 0:
-        label = "$\epsilon$={:.4f}, $<p><${:.4f}".format(
-            c, 1 / len(chisq_list)
+        label = (
+            "$\epsilon$={:.4f}, $<p><${:.4f}".format(c, 1 / len(chisq_list))
+            + postfix
         )
     else:
-        label = "$\epsilon$={:.4f}, $<p>=${:.4f}".format(c, np.mean(ps))
+        label = (
+            "$\epsilon$={:.4f}, $<p>=${:.4f}".format(c, np.mean(ps)) + postfix
+        )
     plt.axvline(np.mean(arr), color=col, label=label)
     plt.axvspan(
         np.mean(arr) - np.std(arr),
@@ -111,6 +120,10 @@ for c, path, col in zip(contamiantions, cont_paths, colors):
         color=col,
         alpha=0.15,
     )
+
+
+for c, path, col in zip(contamiantions, cont_paths, colors):
+    draw_contamination(c, path, col, old=True)
 
 cont_paths_MB = [
     "config/s0.1_0.5_1_MB.yml",
@@ -119,53 +132,11 @@ cont_paths_MB = [
 ]
 colors = ["darkgreen", "green", "lime"]
 for c, path, col in zip(contamiantions, cont_paths_MB, colors):
-    arr = []
-    ps = []
-    for jj in range(10):
-        cs = cluster_scanning.ClusterScanning(path)
-        cs.load_mjj()
-        cs.ID = jj
-        cs.load_results(jj)
-        cs.sample_signal_events()
-        counts_windows = cs.perform_binning()
-
-        res = cs_performance_evaluation(
-            counts_windows=counts_windows,
-            save=False,
-            filterr=filterr,
-            plotting=False,
-            labeling=labeling,
-            verbous=False,
-        )
-        print(res["chisq_ndof"])
-        arr.append(res["chisq_ndof"])
-        ps.append(
-            (
-                np.sum(chisq_list >= res["chisq_ndof"])
-                + np.sum(chisq_list > res["chisq_ndof"])
-            )
-            / 2
-            / len(chisq_list)
-        )
-    if np.mean(ps) == 0:
-        label = "$\epsilon$={:.4f}, $<p><${:.4f} MB".format(
-            c, 1 / len(chisq_list)
-        )
-    else:
-        label = "$\epsilon$={:.4f}, $<p>=${:.4f} MB".format(c, np.mean(ps))
-    plt.axvline(np.mean(arr), color=col, label=label)
-    plt.axvspan(
-        np.mean(arr) - np.std(arr),
-        np.mean(arr) + np.std(arr),
-        color=col,
-        alpha=0.15,
-    )
+    draw_contamination(c, path, col, old=False, postfix=" MB")
 
 plt.legend(loc=1)
 plt.yscale("log")
 # plt.xlim((0, 30))
-
-#%%
 
 plt.savefig(
     output_path + "chi_s1sqrt_" + labeling[1:] + ".png",
@@ -175,12 +146,14 @@ plt.savefig(
 
 #%%
 # the same but now for no preprocessing
-
-# /home/ivan/mnt/cluster/k_means_anomaly_jet/char/old_char/BS26w60wk50MBret0con0.0W100ste200rewnonesme0ID1
+print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+print("First part finished")
+print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
 counts_windows_boot = load_old_bootstrap_experiments05_1()
-# cs_performance_evaluation(np.array(counts_windows_boot[36]), save_path=save_path, plotting=True, labeling=">5sigma")
 
 res_list = []
 for i, counts_windows in enumerate(counts_windows_boot):
@@ -197,9 +170,6 @@ for i, counts_windows in enumerate(counts_windows_boot):
     )
     if i % 100 == 0:
         print(i)
-
-#%%
-import scipy
 
 plt.figure(figsize=(4, 3))
 chisq_list = [el["chisq_ndof"] for el in res_list]
@@ -227,42 +197,7 @@ cont_paths = [
 plt.plot([1], [1], alpha=0, label=r"$n=0,\sigma=0$, method {:}".format(mehtod))
 colors = ["red", "orange", "gold"]
 for c, path, col in zip(contamiantions, cont_paths, colors):
-    arr = []
-    ps = []
-    for jj in range(10):
-        res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
-        counts_windows = np.array(res["counts_windows"][0])
-        res = cs_performance_evaluation(
-            counts_windows=counts_windows,
-            save_path=path,
-            filterr=filterr,
-            plotting=False,
-            labeling=labeling,
-            verbous=False,
-        )
-        print(res["chisq_ndof"])
-        arr.append(res["chisq_ndof"])
-        ps.append(
-            (
-                np.sum(chisq_list >= res["chisq_ndof"])
-                + np.sum(chisq_list > res["chisq_ndof"])
-            )
-            / 2
-            / len(chisq_list)
-        )
-    if np.mean(ps) == 0:
-        label = "$\epsilon$={:.4f}, $<p><${:.4f}".format(
-            c, 1 / len(chisq_list)
-        )
-    else:
-        label = "$\epsilon$={:.4f}, $<p>=${:.4f}".format(c, np.mean(ps))
-    plt.axvline(np.mean(arr), color=col, label=label)
-    plt.axvspan(
-        np.mean(arr) - np.std(arr),
-        np.mean(arr) + np.std(arr),
-        color=col,
-        alpha=0.15,
-    )
+    draw_contamination(c, path, col, old=True)
 
 cont_paths_MB = [
     "config/s0.1_0.5_1_MB.yml",
@@ -271,53 +206,12 @@ cont_paths_MB = [
 ]
 colors = ["darkgreen", "green", "lime"]
 for c, path, col in zip(contamiantions, cont_paths_MB, colors):
-    arr = []
-    ps = []
-    for jj in range(10):
-        cs = cluster_scanning.ClusterScanning(path)
-        cs.load_mjj()
-        cs.ID = jj
-        cs.load_results(jj)
-        cs.sample_signal_events()
-        counts_windows = cs.perform_binning()
-
-        res = cs_performance_evaluation(
-            counts_windows=counts_windows,
-            save=False,
-            filterr=filterr,
-            plotting=False,
-            labeling=labeling,
-            verbous=False,
-        )
-        print(res["chisq_ndof"])
-        arr.append(res["chisq_ndof"])
-        ps.append(
-            (
-                np.sum(chisq_list >= res["chisq_ndof"])
-                + np.sum(chisq_list > res["chisq_ndof"])
-            )
-            / 2
-            / len(chisq_list)
-        )
-    if np.mean(ps) == 0:
-        label = "$\epsilon$={:.4f}, $<p><${:.4f} MB".format(
-            c, 1 / len(chisq_list)
-        )
-    else:
-        label = "$\epsilon$={:.4f}, $<p>=${:.4f} MB".format(c, np.mean(ps))
-    plt.axvline(np.mean(arr), color=col, label=label)
-    plt.axvspan(
-        np.mean(arr) - np.std(arr),
-        np.mean(arr) + np.std(arr),
-        color=col,
-        alpha=0.15,
-    )
+    draw_contamination(c, path, col, old=False, postfix=" MB")
 
 plt.legend(loc=1)
 plt.yscale("log")
 # plt.xlim((0, 30))
 
-#%%
 ax = plt.gca()
 ax.set_xticks([0, 1, 2])
 plt.savefig(

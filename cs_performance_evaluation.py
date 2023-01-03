@@ -178,10 +178,10 @@ def cs_performance_evaluation(
         print("n_dof=", n_dof)
     res["deviation"] = (chisq_ndof - 1) * n_dof / np.sqrt(2 * n_dof)
 
-    if np.any(anomaly_rich_sp.y < 0):
-        print("WARNING: rich anomaly has negative values")
-    elif np.any(anomaly_rich_sp.y == 0):
-        print("WARNING: rich anomaly has zero values")
+    if np.any(anomaly_rich_sp.err < 0):
+        print("WARNING: rich anomaly error has negative values")
+    elif np.any(anomaly_rich_sp.err == 0):
+        print("WARNING: rich anomaly error has zero values")
 
     if plotting:
         # Some matplotlib stuff
