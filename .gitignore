@@ -7,3 +7,5 @@ test_results/**
 image_data_sets_path.txt
 jet_clustering_stuct.pptx
 ~$jet_clustering_stuct.pptx
+try_code.py
+plots2/**
