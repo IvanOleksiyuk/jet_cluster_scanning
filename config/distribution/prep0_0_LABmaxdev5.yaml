@@ -1,6 +1,7 @@
 seed: 2
 output_path: "plots2/"
-labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
+plot_name: "prep0_0_LABmaxdev5"
+labeling: "maxdev5"   # "kmeans_der" #"kmeans_der"#">5sigma"#
 filterr: "med"
 method: 1
 counts_windows_boot_load: "old00"
@@ -16,9 +17,9 @@ old_CS:
   - True
   - True
 cont_paths:
-  - "char/old_char/BS26w60wk50ret0con0.1W100ste200rewsqrtsme1ID10/" 
-  - "char/old_char/BS26w60wk50ret0con0.05W100ste200rewsqrtsme1ID10/" 
-  - "char/old_char/BS26w60wk50ret0con0.025W100ste200rewsqrtsme1ID10/"
+  - "char/old_char/BS26w60wk50ret0con0.1W100ste200rewnonesme0ID10/"
+  - "char/old_char/BS26w60wk50ret0con0.05W100ste200rewnonesme0ID10/"
+  - "char/old_char/BS26w60wk50ret0con0.025W100ste200rewnonesme0ID10/"
 colors:
   - "red"
   - "orange"

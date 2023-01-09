@@ -1,5 +1,6 @@
 seed: 2
 output_path: "plots2/"
+plot_name: "prep05_1_LABmaxdev5"
 labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
 filterr: "med"
 method: 1
