@@ -167,8 +167,8 @@ def cs_performance_evaluation(
 
     res = {}
     res["chisq_ndof"] = chisq_ndof
-    res["max_sumnorm_dev"] = max_sumnorm_dev
-    res["max_maxnorm_dev"] = max_maxnorm_dev
+    res["max-sumnorm-dev"] = max_sumnorm_dev
+    res["max-maxnorm-dev"] = max_maxnorm_dev
 
     # theoretical interpretation
     mean_repetition = np.sum(bin_widths) / (binning.T[0][-1] - binning.T[0][0])

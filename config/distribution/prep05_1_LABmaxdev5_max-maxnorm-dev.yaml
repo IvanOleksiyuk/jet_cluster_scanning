@@ -1,11 +1,11 @@
 seed: 2
 output_path: "plots2/"
-plot_name: "prep05_1_LABmaxdev5"
+plot_name: "prep05_1_LABmaxdev5_max-maxnorm-dev"
 
 labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
 filterr: "med"
-test_statistic: "chisq_ndof"
-xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
+test_statistic: "max-maxnorm-dev"
+xlabel: "max-sumnorm-dev"
 
 counts_windows_boot_load: "old05_1"
 title: "$n=0.5,\\sigma=1$, method 1"
@@ -36,9 +36,6 @@ colors:
   - "red"
   - "orange"
   - "gold"
-  - "darkgreen"
-  - "green"
-  - "lime"
 postfix:
   - ""
   - ""

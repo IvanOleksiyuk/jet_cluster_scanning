@@ -59,11 +59,11 @@ def t_statistic_distribution(config_file_path):
                 verbous=False,
             )
             # print(res["chisq_ndof"])
-            arr.append(res["chisq_ndof"])
+            arr.append(res[cfg.test_statistic])
             ps.append(
                 (
-                    np.sum(chisq_list >= res["chisq_ndof"])
-                    + np.sum(chisq_list > res["chisq_ndof"])
+                    np.sum(chisq_list >= res[cfg.test_statistic])
+                    + np.sum(chisq_list > res[cfg.test_statistic])
                 )
                 / 2
                 / len(chisq_list)
@@ -112,10 +112,10 @@ def t_statistic_distribution(config_file_path):
             print(i)
 
     plt.figure(figsize=(4, 3))
-    chisq_list = [el["chisq_ndof"] for el in res_list]
+    chisq_list = [el[cfg.test_statistic] for el in res_list]
     chisq_list = np.array(chisq_list)
     plt.hist(chisq_list, bins=40)
-    plt.xlabel(r"$\tilde{\chi}^2/n_{dof}$")
+    plt.xlabel(cfg.xlabel)
     plt.ylabel("Tries")
     # plt.axvline(np.mean(chisq_list), color="blue", label=r"Average for $H_0$")
     print(np.mean(chisq_list))
@@ -125,7 +125,7 @@ def t_statistic_distribution(config_file_path):
 
     #%%
     # Contaminations
-    plt.plot([1], [1], alpha=0, label=cfg.title)
+    plt.title(cfg.title)
 
     for c, path, col, old, postfix in zip(
         contamiantions, cont_paths, colors, cfg.old_CS, cfg.postfix
@@ -140,9 +140,23 @@ def t_statistic_distribution(config_file_path):
         dpi=300,
         bbox_inches="tight",
     )
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":
-    t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
-    t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_LABkmeans_der.yaml")
+    # t_statistic_distribution(
+    #     "config/distribution/prep05_1_LABmaxdev5_max-sumnorm-dev.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/prep0_0_LABmaxdev5_max-sumnorm-dev.yaml"
+    # )
+    t_statistic_distribution(
+        "config/distribution/prep05_1_LABmaxdev5_max-maxnorm-dev.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/prep0_0_LABmaxdev5_max-maxnorm-dev.yaml"
+    )
