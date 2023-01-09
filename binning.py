@@ -13,7 +13,11 @@ def perform_binning_all(path):
 
 
 if __name__ == "__main__":
-    perform_binning_all(
-        "char/0kmeans_scan/k2Trueret0con0W2000_2100ste4_w0.5s1Nboot/"
-        + "config.yaml"
-    )
+    if len(sys.argv) == 1:
+        config_file_path = (
+            "char/0kmeans_scan/k2Trueret0con0W2000_2100ste4_w0.5s1Nboot/"
+        )
+        +"config.yaml"
+    else:
+        config_file_path = sys.argv[1]
+    perform_binning_all(config_file_path)
