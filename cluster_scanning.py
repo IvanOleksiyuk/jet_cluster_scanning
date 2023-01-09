@@ -35,15 +35,14 @@ class ClusterScanning:
         )
         if self.cfg.restart:
             if self.cfg.bootstrap:
-                self.save_path += "rest/"
-            else:
                 self.save_path += "boot/"
+            else:
+                self.save_path += "rest/"
         else:
             self.ID = self.cfg.ID
             self.save_path += "_ID{:}/".format(self.cfg.ID)
             self.seed()
 
-        os.makedirs(self.save_path, exist_ok=True)
         self.Mjjmin_arr = np.linspace(
             self.cfg.eval_interval[0],
             self.cfg.eval_interval[1] - self.cfg.W,
@@ -51,7 +50,7 @@ class ClusterScanning:
         )
         self.Mjjmax_arr = self.Mjjmin_arr + self.cfg.W
         HP = self.config.get_dict()
-        shutil.copy2(config_file_path, self.save_path + "config.yaml")
+
         self.bootstrap_bg = None  # by default when bootstrap resampling is needed a corresponding function will be called
 
     def seed(self):
@@ -447,6 +446,8 @@ class ClusterScanning:
         )
 
     def run(self):
+        os.makedirs(self.save_path, exist_ok=True)
+        shutil.copy2(config_file_path, self.save_path + "config.yaml")
         if self.cfg.restart:
             self.multi_run()
         else:
@@ -502,10 +503,31 @@ class ClusterScanning:
                 % (time.time() - start_time)
             )
 
+    def save_counts_windows(self):
+        pathh = (
+            self.save_path
+            + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}/"
+        )
+        os.makedirs(pathh, exist_ok=True)
+        if self.cfg.restart:
+            with open(pathh + f"bres{self.ID}.pickle", "wb") as file:
+                pickle.dump(self.counts_windows, file)
+        else:
+            with open(pathh + f"bres.pickle", "wb") as file:
+                pickle.dump(self.counts_windows, file)
+
+    def available_IDs(self):
+        # TODO redo with glob.glob?
+        IDs = []
+        for file in os.listdir(self.save_path):
+            if file.startswith("lab"):
+                IDs.append(int(file[3:-7]))
+        return IDs
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        config_file_path = "config/s0.1_0.5_1_MB.yml"
+        config_file_path = "config/test_bootstrap.yml"
     else:
         config_file_path = sys.argv[1]
     print("sarting", config_file_path)
