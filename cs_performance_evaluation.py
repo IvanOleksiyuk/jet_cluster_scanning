@@ -74,10 +74,6 @@ def cs_performance_evaluation(
     sp_maxn_s = sp_maxn.subtract_bg(sum_sp_maxn)
     sp_sumn_s = sp_sumn.subtract_bg(sum_sp_sumn)
 
-    # find robust mean and std for plotting
-    sp_sumn_meanrob = sp_sumn_s.mean_sp_rob()
-    sp_sumn_stdrob = sp_sumn_s.std_sp_rob()
-
     # standardise robustly
     sp_sumn_standrob = sp_sumn_s.standardize_rob()
 
