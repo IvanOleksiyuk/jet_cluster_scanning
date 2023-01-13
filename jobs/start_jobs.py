@@ -14,7 +14,7 @@ jnames = ["0_300", "300_600", "600_900", "900_1200", "1200_1500"]
 # copy a job template to scripted folder
 for jname, config_file in zip(jnames, config_files):
     path = "scripted/" + f"job_{jname}.sh"
-    shutil.copy2("job_CPU_6h", path)
+    shutil.copy2("job_CPU_6h.sh", path)
     # Append a python run command to the job template
     with open(path, "a") as f:
         f.write(
