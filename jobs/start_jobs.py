@@ -23,3 +23,4 @@ for jname, config_file in zip(jnames, config_files):
     # Submit the job to the cluster
     bashCommand = "sbatch " + path
     os.system(bashCommand)
+    print("submitted job: ", jname)
