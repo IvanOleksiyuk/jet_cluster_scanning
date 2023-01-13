@@ -28,15 +28,17 @@ class Config(object):
     retrieval of nested elements, e.g. cfg.get_config("meta/dataset_name")
     """
 
-    def __init__(self, config_path, default_path=None):
-        with open(config_path) as cf_file:
-            cfg = yaml.safe_load(cf_file.read())
-
-        if default_path is not None:
-            with open(default_path) as def_cf_file:
-                default_cfg = yaml.safe_load(def_cf_file.read())
-            merge_dictionaries_recursively(default_cfg, cfg)
-
+    def __init__(self, config_path):
+        if isinstance(config_path, str):
+            with open(config_path) as cf_file:
+                cfg = yaml.safe_load(cf_file.read())
+        elif isinstance(config_path, list):
+            cfg = {}
+            for path in config_path:
+                with open(path) as cf_file:
+                    merge_dictionaries_recursively(
+                        cfg, yaml.safe_load(cf_file.read())
+                    )
         self._data = cfg
 
     def get(self, path=None, default=None):
@@ -64,3 +66,7 @@ class Config(object):
 
     def get_dict(self):
         return self._data
+
+    def write(self, path):
+        with open(path, "w") as cf_file:
+            yaml.dump(self._data, cf_file, default_flow_style=False)

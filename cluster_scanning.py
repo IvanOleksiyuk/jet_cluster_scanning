@@ -16,22 +16,19 @@ import shutil
 
 class ClusterScanning:
     def __init__(self, config_file_path):
+        self.config_file_path = config_file_path
         self.config = Config(config_file_path)
         self.cfg = self.config.get_dotmap()
         self.reproc = reprocessing.Reprocessing(self.cfg.reproc_arg_string)
         self.cfg.reproc_name = self.reproc.name
-        self.save_path = (
-            "char/0kmeans_scan/k{:}{:}ret{:}con{:}"
-            "W{:}_{:}ste{:}_{:}".format(
-                self.cfg.k,
-                self.cfg.MiniBatch,
-                self.cfg.retrain,
-                self.cfg.signal_fraction,
-                self.cfg.train_interval[0],
-                self.cfg.train_interval[1],
-                self.cfg.steps,
-                self.cfg.reproc_name,
-            )
+        self.save_path = self.cfg.save_path + (
+            f"k{self.cfg.k}"
+            f"{self.cfg.MiniBatch}"
+            f"ret{self.cfg.retrain}"
+            f"con{self.cfg.signal_fraction}"
+            f"W{self.cfg.train_interval[0]}_{self.cfg.train_interval[1]}"
+            f"ste{self.cfg.steps}_"
+            f"{self.cfg.reproc_name}"
         )
         if self.cfg.restart:
             if self.cfg.bootstrap:
@@ -80,9 +77,7 @@ class ClusterScanning:
         self.im_sg = im_sg_file["data"]
         if self.cfg.memory_intensive:
             self.im_bg = self.reproc(
-                im_bg_file["data"][:].reshape(
-                    (-1, self.cfg.image_w, self.cfg.image_h)
-                )
+                im_bg_file["data"][:].reshape((-1, self.cfg.image_w, self.cfg.image_h))
             ).reshape(
                 (
                     -1,
@@ -91,9 +86,7 @@ class ClusterScanning:
                 )
             )
             self.im_sg = self.reproc(
-                im_sg_file["data"][:].reshape(
-                    (-1, self.cfg.image_w, self.cfg.image_h)
-                )
+                im_sg_file["data"][:].reshape((-1, self.cfg.image_w, self.cfg.image_h))
             ).reshape(
                 (
                     -1,
@@ -122,14 +115,10 @@ class ClusterScanning:
             _type_: _description_
         """
         print("loading window", Mjjmin, Mjjmax)
-        indexing_bg = np.logical_and(
-            self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax
-        )
+        indexing_bg = np.logical_and(self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax)
         indexing_bg = np.where(indexing_bg)[0]
 
-        indexing_sg = np.logical_and(
-            self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax
-        )
+        indexing_sg = np.logical_and(self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax)
         indexing_sg = np.where(indexing_sg)[0]
 
         # TODO: DELETE prints  below
@@ -141,8 +130,9 @@ class ClusterScanning:
         if self.bootstrap_bg is None:
             bg = self.im_bg[indexing_bg[0] : indexing_bg[-1]]
         else:
-            print(len(self.im_bg[indexing_bg[0] : indexing_bg[-1]]))
-            print(len(self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
+            if self.cfg.verbose:
+                print(len(self.im_bg[indexing_bg[0] : indexing_bg[-1]]))
+                print(len(self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
             bg = np.repeat(
                 self.im_bg[indexing_bg[0] : indexing_bg[-1]],
                 self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
@@ -230,9 +220,8 @@ class ClusterScanning:
             self.bg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_bg) / batch_size))):
-                print(
-                    i * batch_size, min((i + 1) * batch_size, len(self.im_bg))
-                )
+                if self.cfg.verbose:
+                    print(i * batch_size, min((i + 1) * batch_size, len(self.im_bg)))
                 self.bg_lab.append(
                     self.kmeans.predict(
                         self.reproc(
@@ -283,13 +272,9 @@ class ClusterScanning:
         Returns:
             np.array(dtype=int): number of jets in each cluster in this bin.
         """
-        indexing_bg = np.logical_and(
-            self.mjj_bg >= mjjmin, self.mjj_bg <= mjjmax
-        )
+        indexing_bg = np.logical_and(self.mjj_bg >= mjjmin, self.mjj_bg <= mjjmax)
         indexing_bg = np.where(indexing_bg)[0]
-        indexing_sg = np.logical_and(
-            self.mjj_sg >= mjjmin, self.mjj_sg <= mjjmax
-        )
+        indexing_sg = np.logical_and(self.mjj_sg >= mjjmin, self.mjj_sg <= mjjmax)
         indexing_sg = np.where(indexing_sg)[0]
 
         # TODO: DELETE prints  below
@@ -385,18 +370,12 @@ class ClusterScanning:
         conts_sg = []
         for Mjjmin, Mjjmax in zip(self.Mjjmin_arr, self.Mjjmax_arr):
             conts_bg.append(
-                np.sum(
-                    np.logical_and(
-                        self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax
-                    )
-                )
+                np.sum(np.logical_and(self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax))
             )
             conts_sg.append(
                 np.sum(
                     np.logical_and(
-                        np.logical_and(
-                            self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax
-                        ),
+                        np.logical_and(self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax),
                         self.allowed,
                     )
                 )
@@ -430,9 +409,7 @@ class ClusterScanning:
             plt.plot(window_centers, countnrm_windows[:, j])
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
-        plt.savefig(
-            self.save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight"
-        )
+        plt.savefig(self.save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
         for i in range(len(window_centers)):
             if smallest_cluster_count_window[i] < min_allowed_count:
                 if smallest_cluster_count_window[i] < min_min_allowed_count:
@@ -447,7 +424,13 @@ class ClusterScanning:
 
     def run(self):
         os.makedirs(self.save_path, exist_ok=True)
-        shutil.copy2(config_file_path, self.save_path + "config.yaml")
+        if isinstance(self.config_file_path, str):
+            shutil.copy2(self.config_file_path, self.save_path + "config.yaml")
+        elif isinstance(self.config_file_path, list):
+            for i, path in enumerate(self.config_file_path):
+                shutil.copy2(path, self.save_path + f"config_{i}.yaml")
+        self.config.write(self.save_path + "confsum.yaml")
+
         if self.cfg.restart:
             self.multi_run()
         else:
@@ -484,9 +467,7 @@ class ClusterScanning:
         start_time = time.time()
         self.load_mjj()
         self.load_data()
-        for IDb in range(
-            self.cfg.restart_ID_start, self.cfg.restart_ID_finish
-        ):
+        for IDb in range(self.cfg.restart_ID_start, self.cfg.restart_ID_finish):
             if os.path.exists(self.save_path + f"lab{IDb}.pickle"):
                 print(f"IDb {IDb} already exists")
                 continue
@@ -498,10 +479,7 @@ class ClusterScanning:
             self.train_k_means()
             self.evaluate_whole_dataset()
             self.save_results(IDb)
-            print(
-                f"Done IDb {IDb} ### %s seconds ###"
-                % (time.time() - start_time)
-            )
+            print(f"Done IDb {IDb} ### %s seconds ###" % (time.time() - start_time))
 
     def save_counts_windows(self):
         pathh = (
@@ -529,7 +507,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = "config/test_bootstrap.yml"
     else:
-        config_file_path = sys.argv[1]
+        config_file_path = sys.argv[1:]
     print("sarting", config_file_path)
     cs = ClusterScanning(config_file_path)
     cs.run()

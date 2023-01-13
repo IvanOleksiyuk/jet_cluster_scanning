@@ -1,0 +1,25 @@
+ID: 100
+MiniBatch: true
+W: 100
+bootstrap: true
+data_path: ../../DATA/LHCO/
+eval_interval:
+- 2000
+- 6000
+image_h: 40
+image_size: 40
+image_w: 40
+jet_per_event: 2
+k: 2
+memory_intensive: false
+reproc_arg_string: w 0.5 s 1 N
+restart: true
+restart_ID_finish: 3
+restart_ID_start: 0
+retrain: 0
+signal_fraction: 0
+steps: 4
+train_interval:
+- 2000
+- 2100
+verbous: true
