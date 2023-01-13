@@ -18,7 +18,7 @@ for jname, config_file in zip(jnames, config_files):
     # Append a python run command to the job template
     with open(path, "a") as f:
         f.write(
-            "python3 cluster_scanning.py config/default_MB.yaml" + " " + config_file
+            "python3 cluster_scanning.py config/s0_0_0_MB.yaml" + " " + config_file
         )
     # Submit the job to the cluster
     bashCommand = "sbatch " + path
