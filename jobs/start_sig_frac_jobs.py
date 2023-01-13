@@ -6,9 +6,9 @@ import shutil
 config_files = [
     "config/sig_frac/0.1.yaml",
     "config/sig_frac/0.05.yaml",
-    "config/sig_frac/0.01.yaml",
+    "config/sig_frac/0.025.yaml",
 ]
-jnames = ["0.1", "0.05", "0.01"]
+jnames = ["0.1", "0.05", "0.025"]
 
 # copy a job template to scripted folder
 for jname, config_file in zip(jnames, config_files):
