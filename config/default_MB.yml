@@ -29,7 +29,7 @@ memory_intensive: False
 train_interval:
   - 2600
   - 2700
-signal_fraction: 0.05 #THIS IS THE SIGNAL FRACTION OF THE SIGNAL DATASET TO USE DURING TRAINING
+signal_fraction: 0 #THIS IS THE SIGNAL FRACTION OF THE SIGNAL DATASET TO USE DURING TRAINING
 k: 50 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
 MiniBatch: True #recommended to enable when doing bootstrapping
