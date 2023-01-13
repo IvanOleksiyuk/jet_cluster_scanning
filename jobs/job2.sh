@@ -19,8 +19,10 @@
  
 ### Load modules
 module load GCC/10.2.0 CUDA/11.1.1 OpenMPI/4.0.5
+module load Python/3.8.6
+module load matplotlib/3.3.3
 module load scikit-learn/0.23.2
 
 ### Execute your application
 cd ..
-python3 cluster_scanning.py "config/bootstrap_300_600_0.5_1.yaml"
+python3 cluster_scanning.py "config/bootstrap/default_bootstrap.yml" ""
