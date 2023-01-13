@@ -1,3 +1,4 @@
+import sys
 import os
 import shutil
 
@@ -17,9 +18,7 @@ for jname, config_file in zip(jnames, config_files):
     shutil.copy2("job_CPU_6h.sh", path)
     # Append a python run command to the job template
     with open(path, "a") as f:
-        f.write(
-            "python3 cluster_scanning.py config/s0_0_0_MB.yaml" + " " + config_file
-        )
+        f.write("python3 cluster_scanning.py " + sys.argv[1:] + " " + config_file)
     # Submit the job to the cluster
     bashCommand = "sbatch " + path
     os.system(bashCommand)
