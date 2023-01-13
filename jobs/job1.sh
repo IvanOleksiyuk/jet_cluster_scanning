@@ -26,4 +26,4 @@ module load scikit-learn/0.23.2
 
 ### Execute your application
 cd ..
-python3 cluster_scanning.py "config/bootstrap/default_bootstrap.yml" 
+python3 cluster_scanning.py "config/default_MB.yml" "config/bootstrap/0_300.yaml"
