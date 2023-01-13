@@ -3,11 +3,11 @@ import shutil
 
 # list of config files:
 config_files = [
-    "config/bootstra/0_300.yaml",
-    "config/bootstra/300_600.yaml",
-    "config/bootstra/600_900.yaml",
-    "config/bootstra/900_1200.yaml",
-    "config/bootstra/1200_1500.yaml",
+    "config/bootstrap/0_300.yaml",
+    "config/bootstrap/300_600.yaml",
+    "config/bootstrap/600_900.yaml",
+    "config/bootstrap/900_1200.yaml",
+    "config/bootstrap/1200_1500.yaml",
 ]
 jnames = ["0_300", "300_600", "600_900", "900_1200", "1200_1500"]
 
