@@ -13,6 +13,6 @@ jet_clustering_stuct.pptx
 
 plots2/**
 jobs/scripted/**
-jobs/output/**
+jobs/outputs/**
 
 try_code.py
