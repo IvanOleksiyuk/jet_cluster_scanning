@@ -7,7 +7,7 @@
  
 ### Output path for stdout and stderr
 ### %J is the job ID, %I is the array ID
-#SBATCH --output=outputs/output_job_%J.txt
+#SBATCH --output=outputs/output_BINNING_%J.txt
  
 ### Request the time you need for execution. The full format is D-HH:MM:SS
 ### You must at least specify minutes OR days and hours and may add or
@@ -29,5 +29,5 @@ module load scikit-learn/0.23.2
 cd ..
 
 ### Execute your application here
-pyhton binning.py char/v2/
+python3 binning.py char/v2/
 sh export_bres.sh 
