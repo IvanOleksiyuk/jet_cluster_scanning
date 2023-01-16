@@ -12,7 +12,7 @@
 ### Request the time you need for execution. The full format is D-HH:MM:SS
 ### You must at least specify minutes OR days and hours and may add or
 ### leave out any other parameters
-#SBATCH --time=60
+#SBATCH --time=120
  
 ### Request the amount of memory you need for your job. 
 ### You can specify this in either MB (1024M) or GB (4G).
