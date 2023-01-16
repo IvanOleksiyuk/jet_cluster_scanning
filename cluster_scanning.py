@@ -525,7 +525,9 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
             "config/s0_0.5_1_MB.yaml",
-            "config/bootstrap/0.yaml",
+            "config/sig_frac/0.05.yaml",
+            "config/restart/0.yaml",
+            "config/binning/CURTAINS.yaml",
             "config/v3.yaml",
         ]
     else:

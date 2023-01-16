@@ -63,8 +63,8 @@ def perform_binning_directory(directory, override_config=None):
                 perform_binning_all(
                     [
                         os.path.join(directory, subfolder, "confsum.yaml"),
-                        override_config,
                     ]
+                    + override_config
                 )
 
 

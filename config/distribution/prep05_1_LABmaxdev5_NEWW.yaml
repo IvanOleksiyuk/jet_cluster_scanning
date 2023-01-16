@@ -1,14 +1,17 @@
 seed: 2
 output_path: "plots2/"
-plot_name: "prep05_1_LABmaxdev5_max-maxnorm-dev"
+plot_name: "prep05_1_LABmaxdev5_neww"
 
 labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
 filterr: "med"
-test_statistic: "max-maxnorm-dev"
-xlabel: "max-maxnorm-dev"
+test_statistic: "chisq_ndof"
+xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
-counts_windows_boot_load: "old05_1"
+counts_windows_boot_load: 
+  - "old05_1"
+  - "char/v2/k50Trueret0con0W2600_2700ste200_w0.5s1Nboot/binnedW100s200ei26006000boot/"
 title: "$n=0.5,\\sigma=1$, method 1"
+density: 1
 
 #Different contaminatations (vertical lines on the plot)
 contaminations:
@@ -19,19 +22,19 @@ contaminations:
   - 0.005
   - 0.0025
 old_CS:
-  - True
-  - True
-  - True
-  - False
-  - False
-  - False
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
 cont_paths:
   - "char/old_char/BS26w60wk50ret0con0.1W100ste200rewsqrtsme1ID10/" 
   - "char/old_char/BS26w60wk50ret0con0.05W100ste200rewsqrtsme1ID10/" 
   - "char/old_char/BS26w60wk50ret0con0.025W100ste200rewsqrtsme1ID10/"
-  - "config/s0.1_0.5_1_MB.yml"
-  - "config/s0.05_0.5_1_MB.yml"
-  - "config/s0.025_0.5_1_MB.yml"
+  - "char/v2/k50Trueret0con0.1W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.05W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.025W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
 colors:
   - "red"
   - "orange"

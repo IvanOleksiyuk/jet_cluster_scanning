@@ -12,6 +12,7 @@ from spectrum import Spectra
 import matplotlib as mpl
 from squeeze_array import squeeze
 from curvefit_eval import curvefit_eval
+from binning_utils import default_binning
 
 # mpl.rcParams.update(mpl.rcParamsDefault)
 plt.close("all")
@@ -19,13 +20,6 @@ plt.close("all")
 
 def middles(x):
     return (x[1:] + x[:-1]) / 2
-
-
-def default_binning(W=100, lb=2600, rb=6000, steps=200):
-    mjjmin_arr = np.linspace(lb, rb - W, steps)
-    mjjmax_arr = mjjmin_arr + W
-    binning = np.stack([mjjmin_arr, mjjmax_arr]).T
-    return binning
 
 
 def cs_performance_evaluation(
