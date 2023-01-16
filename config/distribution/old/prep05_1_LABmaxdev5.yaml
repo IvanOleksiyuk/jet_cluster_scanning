@@ -1,0 +1,48 @@
+seed: 2
+output_path: "plots2/"
+plot_name: "prep05_1_LABmaxdev5"
+
+labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
+filterr: "med"
+test_statistic: "chisq_ndof"
+xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
+
+counts_windows_boot_load: "old05_1"
+title: "$n=0.5,\\sigma=1$, method 1"
+density: 1
+#Different contaminatations (vertical lines on the plot)
+contaminations:
+  - 0.01
+  - 0.005
+  - 0.0025
+  - 0.01
+  - 0.005
+  - 0.0025
+old_CS:
+  - 1
+  - 1
+  - 1
+  - 2
+  - 2
+  - 2
+cont_paths:
+  - "char/old_char/BS26w60wk50ret0con0.1W100ste200rewsqrtsme1ID10/" 
+  - "char/old_char/BS26w60wk50ret0con0.05W100ste200rewsqrtsme1ID10/" 
+  - "char/old_char/BS26w60wk50ret0con0.025W100ste200rewsqrtsme1ID10/"
+  - ["config/s0_0.5_1_MB.yaml", "config/sig_frac/0.1.yaml", "config/0kmeans_scan.yaml"]
+  - ["config/s0_0.5_1_MB.yaml", "config/sig_frac/0.05.yaml", "config/0kmeans_scan.yaml"]
+  - ["config/s0_0.5_1_MB.yaml", "config/sig_frac/0.025.yaml", "config/0kmeans_scan.yaml"]
+colors:
+  - "red"
+  - "orange"
+  - "gold"
+  - "darkgreen"
+  - "green"
+  - "lime"
+postfix:
+  - ""
+  - ""
+  - ""
+  - "MB"
+  - "MB"
+  - "MB"

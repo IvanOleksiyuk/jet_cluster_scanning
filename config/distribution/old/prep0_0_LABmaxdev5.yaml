@@ -1,0 +1,33 @@
+seed: 2
+output_path: "plots2/"
+plot_name: "prep0_0_LABmaxdev5"
+
+labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
+filterr: "med"
+test_statistic: "chisq_ndof"
+xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
+
+counts_windows_boot_load: "old00"
+title: "$n=0,\\sigma=0$, method 1"
+
+#Different contaminatations (vertical lines on the plot)
+contaminations:
+  - 0.01
+  - 0.005
+  - 0.0025
+old_CS:
+  - True
+  - True
+  - True
+cont_paths:
+  - "char/old_char/BS26w60wk50ret0con0.1W100ste200rewnonesme0ID10/"
+  - "char/old_char/BS26w60wk50ret0con0.05W100ste200rewnonesme0ID10/"
+  - "char/old_char/BS26w60wk50ret0con0.025W100ste200rewnonesme0ID10/"
+colors:
+  - "red"
+  - "orange"
+  - "gold"
+postfix:
+  - ""
+  - ""
+  - ""
