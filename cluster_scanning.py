@@ -189,13 +189,16 @@ class ClusterScanning:
         print("trained --- %s seconds ---" % (time.time() - start_time))
 
     def bootstrap_resample(self):
-        self.seed()
-        n = len(self.mjj_bg)
-        np.sort(
-            np.random.randint(0, n, (n,))
-        )  # this is the line that takes time and does nothing but if I remove it the incosistensies will begin because the random seed will be different
-        a = np.arange(n)
-        self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
+        if self.cfg.bootstrap:
+            self.seed()
+            n = len(self.mjj_bg)
+            np.sort(
+                np.random.randint(0, n, (n,))
+            )  # this is the line that takes time and does nothing but if I remove it the incosistensies will begin because the random seed will be different
+            a = np.arange(n)
+            self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
+        else:
+            print("bootstrap is not set to true in config file => ignoring bootstrap")
 
     def cancel_bootstrap_resampling(self):
         self.bg_bootstrap = None
@@ -493,6 +496,8 @@ class ClusterScanning:
             self.save_path
             + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}/"
         )
+        if self.bootstrap_bg is not None:
+            pathh += f"boot/"
         if directory:
             return pathh
         else:

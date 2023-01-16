@@ -65,6 +65,7 @@ def draw_contamination(cfg, c, path, col, chisq_list, old=False, postfix=""):
             cs.ID = jj
             cs.load_results(jj)
             cs.sample_signal_events()
+            cs.bootstrap_resample()
             counts_windows = cs.perform_binning()
         else:
             counts_windows = pickle.load(open(path + f"bres{jj}.pickle", "rb"))
