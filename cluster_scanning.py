@@ -505,8 +505,8 @@ class ClusterScanning:
                 IDs.append(int(file[3:-7]))
         return IDs
 
-    def check_if_binning_exists(self):
-        pathh = self.counts_windows_path(self)
+    def check_if_binning_exist(self):
+        pathh = self.counts_windows_path()
         return os.path.exists(pathh)
 
 
