@@ -27,8 +27,7 @@ class ClusterScanning:
             f"{self.cfg.MiniBatch}"
             f"ret{self.cfg.retrain}"
             f"con{self.cfg.signal_fraction}"
-            f"W{self.cfg.train_interval[0]}_{self.cfg.train_interval[1]}"
-            f"ste{self.cfg.steps}_"
+            f"W{self.cfg.train_interval[0]}_{self.cfg.train_interval[1]}_"
             f"{self.cfg.reproc_name}"
         )
 
