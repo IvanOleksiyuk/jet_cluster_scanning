@@ -19,19 +19,19 @@ contaminations:
   - 0.005
   - 0.0025
 old_CS:
-  - True
-  - True
-  - True
-  - False
-  - False
-  - False
+  - 1
+  - 1
+  - 1
+  - 2
+  - 2
+  - 2
 cont_paths:
   - "char/old_char/BS26w60wk50ret0con0.1W100ste200rewsqrtsme1ID10/" 
   - "char/old_char/BS26w60wk50ret0con0.05W100ste200rewsqrtsme1ID10/" 
   - "char/old_char/BS26w60wk50ret0con0.025W100ste200rewsqrtsme1ID10/"
-  - "config/s0.1_0.5_1_MB.yml"
-  - "config/s0.05_0.5_1_MB.yml"
-  - "config/s0.025_0.5_1_MB.yml"
+  - ["config/s0_0.5_1_MB.yaml", "config/sig_frac/0.1.yaml", "config/0kmeans_scan.yaml"]
+  - ["config/s0_0.5_1_MB.yaml", "config/sig_frac/0.05.yaml", "config/0kmeans_scan.yaml"]
+  - ["config/s0_0.5_1_MB.yaml", "config/sig_frac/0.025.yaml", "config/0kmeans_scan.yaml"]
 colors:
   - "red"
   - "orange"

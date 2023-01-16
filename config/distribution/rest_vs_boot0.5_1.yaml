@@ -1,0 +1,15 @@
+seed: 2
+output_path: "plots2/"
+plot_name: "old_to_new05_1_rest"
+
+labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
+filterr: "med"
+test_statistic: "chisq_ndof"
+xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
+
+counts_windows_boot_load: 
+  - "char/v2/k50Trueret0con0W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0W2600_2700ste200_w0.5s1Nboot/binnedW100s200ei26006000/"
+title: "$n=0.5,\\sigma=1$, method 1"
+density: 1
+

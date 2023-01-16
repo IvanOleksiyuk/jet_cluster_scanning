@@ -16,3 +16,4 @@ jobs/scripted/**
 jobs/outputs/**
 
 try_code.py
+look_pickle.py

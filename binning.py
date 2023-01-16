@@ -18,6 +18,7 @@ def perform_binning_ID(config, ID, override_config=None):
     cs.ID = ID
     cs.load_results(ID)
     cs.sample_signal_events()
+    cs.bootstrap_resample()
     cs.perform_binning()
     cs.save_counts_windows()
 

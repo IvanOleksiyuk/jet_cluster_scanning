@@ -39,6 +39,7 @@ def cs_performance_evaluation(
     sid=0,
     save=False,
     save_path="cs_performance_evaluation/",
+    ID="",
 ):
     # Usuallly oriented incorrectly #TODO correct this
     counts_windows = counts_windows.T
@@ -133,18 +134,14 @@ def cs_performance_evaluation(
     # Aggregate clusters using labels
     anomaly_poor_sp = sp_original.sum_sp(np.logical_not(labels)).pscale(tf)
     if np.any(labels):
-        anomaly_rich_sp = sp_original.sum_sp(
-            labels.astype(dtype=np.bool_)
-        ).pscale(tf)
+        anomaly_rich_sp = sp_original.sum_sp(labels.astype(dtype=np.bool_)).pscale(tf)
     else:
         anomaly_rich_sp = anomaly_poor_sp
 
     # Steal statistics from poor to rich spectrum if requested
     if steal_sd_anomalypoor == 1:
         # Stal only in low stat regions
-        anomaly_rich_sp.make_poiserr_another_sp_sumnorm_where_low_stat(
-            anomaly_poor_sp
-        )
+        anomaly_rich_sp.make_poiserr_another_sp_sumnorm_where_low_stat(anomaly_poor_sp)
     elif steal_sd_anomalypoor == 2:
         # Stal everywhere
         anomaly_rich_sp.make_poiserr_another_sp_sumnorm(anomaly_poor_sp)
@@ -190,17 +187,16 @@ def cs_performance_evaluation(
             counts_windows,
             countmax_windows,
             countnrm_windows,
-            save_path,
+            save_path + f"plots{ID}/",
             figsize,
         )
 
         # Make a directory for evaluation
-        os.makedirs(save_path + "eval/", exist_ok=True)
+        eval_path = save_path + f"eval{ID}/"
+        os.makedirs(eval_path, exist_ok=True)
 
         # Distribution of spectra integrals after max normalisation
-        csp.plot_sum_over_bins_dist(
-            countmax_windows, bin_widths, labels, save_path
-        )
+        csp.plot_sum_over_bins_dist(countmax_windows, bin_widths, labels, eval_path)
 
         # subtracted curves norm
         csp.two_class_curves(
@@ -225,7 +221,7 @@ def cs_performance_evaluation(
         plt.legend()
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$-background")
-        plt.savefig(save_path + "eval/norm-toatal.png", bbox_inches="tight")
+        plt.savefig(eval_path + "norm-toatal.png", bbox_inches="tight")
 
         # all curves standardized
         csp.two_class_curves(
@@ -238,9 +234,7 @@ def cs_performance_evaluation(
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("deviation in SD")
         plt.legend()
-        plt.savefig(
-            save_path + "eval/norm-toatal-sigmas.png", bbox_inches="tight"
-        )
+        plt.savefig(eval_path + "norm-toatal-sigmas.png", bbox_inches="tight")
 
         # all curves standardized
         csp.two_class_curves(
@@ -249,7 +243,7 @@ def cs_performance_evaluation(
             labels,
             figsize,
             ylabel="deviation in SD",
-            save_file=save_path + "eval/norm-toatal-sigmas-special.png",
+            save_file=eval_path + "norm-toatal-sigmas-special.png",
         )
 
         # all curves standardized squeezed
@@ -260,7 +254,7 @@ def cs_performance_evaluation(
             labels,
             figsize,
             ylabel="deviation in SD",
-            save_file=save_path + "eval/norm-toatal-sigmas-squeezed.png",
+            save_file=eval_path + "norm-toatal-sigmas-squeezed.png",
         )
 
         # distribution of total MSE after standartisation
@@ -270,7 +264,7 @@ def cs_performance_evaluation(
             labels,
             figsize,
             ylabel="deviation in SD",
-            save_file=save_path + "eval/norm-toatal-sigmas-special.png",
+            save_file=eval_path + "norm-toatal-sigmas-special.png",
             marker=".",
             linestyle="",
         )
@@ -282,7 +276,7 @@ def cs_performance_evaluation(
             labels,
             figsize,
             ylabel="deviation in SD",
-            save_file=save_path + "eval/norm-toatal-sigmas-special.png",
+            save_file=eval_path + "norm-toatal-sigmas-special.png",
         )
 
         # all curves standardized distribution
@@ -308,7 +302,7 @@ def cs_performance_evaluation(
         plt.step(yy, np.mean(h, axis=0), where="mid", color="darkorange")
         plt.xlabel("deviations in SD")
         plt.ylabel("avarage curve points per bin")
-        plt.savefig(save_path + "eval/2d_hist.png", bbox_inches="tight")
+        plt.savefig(eval_path + "2d_hist.png", bbox_inches="tight")
 
         # subtracted curves norm
         csp.two_class_curves(
@@ -329,9 +323,7 @@ def cs_performance_evaluation(
             -std_ignore_outliers(countmax_windows),
             color="lime",
         )
-        plt.plot(
-            window_centers, std_ignore_outliers(countmax_windows), color="lime"
-        )
+        plt.plot(window_centers, std_ignore_outliers(countmax_windows), color="lime")
         plt.fill_between(
             sp_maxn_s.x,
             np.mean(sp_maxn_s.y, axis=0) - np.std(sp_maxn_s.y, axis=0),
@@ -341,7 +333,7 @@ def cs_performance_evaluation(
         )
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("n_clusater/max(n_cluster)-bg")
-        plt.savefig(save_path + "eval/maxnorm-toatal.png", bbox_inches="tight")
+        plt.savefig(eval_path + "maxnorm-toatal.png", bbox_inches="tight")
 
         # all center curves with found labels
         plt.figure(figsize=figsize)
@@ -353,9 +345,7 @@ def cs_performance_evaluation(
                 plt.plot(window_centers, countmax_windows[j], color="blue")
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("n_clusater/max(n_cluster)")
-        plt.savefig(
-            save_path + "eval/countmax_windows.png", bbox_inches="tight"
-        )
+        plt.savefig(eval_path + "countmax_windows.png", bbox_inches="tight")
 
         # all center curve derivatives with found labels
         plt.figure(figsize=figsize)
@@ -381,9 +371,7 @@ def cs_performance_evaluation(
                 lab2 = None
         plt.xlabel("window centre $m_{jj}$ [GeV] between adjacent windows")
         plt.ylabel(r"$\Delta(N_i(m_{jj})/sum(N_i(m_{jj}))$)")
-        plt.savefig(
-            save_path + "eval/num_der_counts_windows.png", bbox_inches="tight"
-        )
+        plt.savefig(eval_path + "num_der_counts_windows.png", bbox_inches="tight")
 
         # all center curve derivatives with found labels
         plt.figure(figsize=figsize)
@@ -405,18 +393,18 @@ def cs_performance_evaluation(
         plt.ylabel(r"$Median filtered \Delta[N_i(m_{jj})/sum(N_i(m_{jj}))]$")
         plt.legend()
         plt.savefig(
-            save_path + "eval/num_der_counts_windows_-bg.png",
+            eval_path + "num_der_counts_windows_-bg.png",
             bbox_inches="tight",
         )
 
         # TSNE
-        csp.CS_TSNE(num_der_counts_windows, labels, save_path)
+        csp.CS_TSNE(num_der_counts_windows, labels, eval_path)
 
         # aggregations
 
         csp.plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res)
         curvefit_eval(anomaly_poor_sp, anomaly_rich_sp, binning, tf)
-        plt.savefig(save_path + "eval/comb.png", bbox_inches="tight")
+        plt.savefig(eval_path + "comb.png", bbox_inches="tight")
 
         csp.plot_aggregation(
             anomaly_poor_sp.subtract_sp(anomaly_rich_sp),
@@ -424,7 +412,7 @@ def cs_performance_evaluation(
             figsize,
             res,
         )
-        plt.savefig(save_path + "eval/comb_dev.png", bbox_inches="tight")
+        plt.savefig(eval_path + "comb_dev.png", bbox_inches="tight")
     return res
 
 

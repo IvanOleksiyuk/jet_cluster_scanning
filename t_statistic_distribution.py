@@ -56,16 +56,18 @@ def draw_contamination(cfg, c, path, col, chisq_list, old=False, postfix=""):
     arr = []
     ps = []
     for jj in range(10):
-        if old:
+        if old == 1:
             res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
             counts_windows = np.array(res["counts_windows"][0])
-        else:
+        elif old == 2:
             cs = cluster_scanning.ClusterScanning(path)
             cs.load_mjj()
             cs.ID = jj
             cs.load_results(jj)
             cs.sample_signal_events()
             counts_windows = cs.perform_binning()
+        else:
+            counts_windows = pickle.load(open(path + f"bres{jj}.pickle", "rb"))
 
         res = cs_performance_evaluation(
             counts_windows=counts_windows,
@@ -166,10 +168,11 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
-    # t_statistic_distribution(
-    #    "config/distribution/prep05_1_LABmaxdev5_NEW.yaml"
-    # )
-    t_statistic_distribution("config/distribution/compare_old_distributions.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
+    # t_statistic_distribution("config/distribution/compare_old_distributions.yaml")
+    # t_statistic_distribution("config/distribution/rest_vs_boot0.5_1.yaml")
+    # t_statistic_distribution("config/distribution/compare_old_to_new0.5_1_rest.yaml")
+    # t_statistic_distribution("config/distribution/compare_old_to_new00_rest.yaml")
     # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
     # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_LABkmeans_der.yaml")

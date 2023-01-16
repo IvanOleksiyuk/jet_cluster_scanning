@@ -5,7 +5,7 @@ import set_matplotlib_default as smd
 from robust_estimators import std_ignore_outliers, mean_ignore_outliers
 
 
-def CS_TSNE(num_der_counts_windows, labels, save_path):
+def CS_TSNE(num_der_counts_windows, labels, eval_path):
     X_embedded = TSNE().fit_transform(num_der_counts_windows)
     plt.figure()
     plt.grid()
@@ -23,10 +23,10 @@ def CS_TSNE(num_der_counts_windows, labels, save_path):
     )
     plt.xlabel("embedding dim 0")
     plt.ylabel("embedding dim 1")
-    plt.savefig(save_path + "eval/TSNE.png")
+    plt.savefig(eval_path + "TSNE.png")
 
 
-def plot_sum_over_bins_dist(counts, bin_widths, labels, save_path):
+def plot_sum_over_bins_dist(counts, bin_widths, labels, eval_path):
     plt.figure()
     plt.grid()
     plt.hist(
@@ -40,7 +40,7 @@ def plot_sum_over_bins_dist(counts, bin_widths, labels, save_path):
     )
     plt.xlabel("integral under the curve")
     plt.ylabel("cluster n")
-    plt.savefig(save_path + "eval/curves_integrals.png", bbox_inches="tight")
+    plt.savefig(eval_path + "curves_integrals.png", bbox_inches="tight")
 
 
 def two_class_curves(

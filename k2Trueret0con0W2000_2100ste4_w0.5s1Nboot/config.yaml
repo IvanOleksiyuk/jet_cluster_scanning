@@ -5,9 +5,8 @@
 # "mjj_sig_sort.npy"
 #
 #
-verbous: False
+verbous: True
 data_path: "../../DATA/LHCO/"
-save_path: "char/test/"
 
 # Some general properties of the datasets provided
 jet_per_event: 2
@@ -19,8 +18,8 @@ image_h: 40
 ID: 100
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
-restart: False
-bootstrap: False
+restart: True 
+bootstrap: True
 restart_ID_start: 0
 restart_ID_finish: 3
 
@@ -32,7 +31,7 @@ train_interval:
 signal_fraction: 0
 k: 2 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
-MiniBatch: False #recommended to enable when doing bootstrapping
+MiniBatch: True #recommended to enable when doing bootstrapping
 
 #Parameters for binning
 W: 100 #Bin width 

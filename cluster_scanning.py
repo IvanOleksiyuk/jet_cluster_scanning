@@ -21,6 +21,7 @@ class ClusterScanning:
         self.cfg = self.config.get_dotmap()
         self.reproc = reprocessing.Reprocessing(self.cfg.reproc_arg_string)
         self.cfg.reproc_name = self.reproc.name
+
         self.save_path = self.cfg.save_path + (
             f"k{self.cfg.k}"
             f"{self.cfg.MiniBatch}"
@@ -30,15 +31,14 @@ class ClusterScanning:
             f"ste{self.cfg.steps}_"
             f"{self.cfg.reproc_name}"
         )
-        if self.cfg.restart:
-            if self.cfg.bootstrap:
-                self.save_path += "boot/"
-            else:
-                self.save_path += "rest/"
+
+        if self.cfg.bootstrap:
+            self.save_path += "boot/"
         else:
+            self.save_path += "rest/"
+
+        if not self.cfg.restart:
             self.ID = self.cfg.ID
-            self.save_path += "_ID{:}/".format(self.cfg.ID)
-            self.seed()
 
         self.Mjjmin_arr = np.linspace(
             self.cfg.eval_interval[0],
@@ -174,6 +174,7 @@ class ClusterScanning:
         return data
 
     def train_k_means(self):
+        self.seed()
         if self.cfg.MiniBatch:
             self.kmeans = MiniBatchKMeans(self.cfg.k)
         else:
@@ -321,6 +322,9 @@ class ClusterScanning:
 
     def make_plots(self):
         # Some plotting
+        plots_path = self.save_path + f"plots{self.ID}/"
+        os.makedirs(plots_path, exist_ok=True)
+
         window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
         min_allowed_count = 100
         min_min_allowed_count = 10
@@ -330,7 +334,7 @@ class ClusterScanning:
             plt.plot(window_centers, self.counts_windows[:, j])
         plt.xlabel("m_jj")
         plt.ylabel("n points from window")
-        plt.savefig(self.save_path + "kmeans_ni_mjj_total.png")
+        plt.savefig(plots_path + "kmeans_ni_mjj_total.png")
         smallest_cluster_count_window = np.min(self.counts_windows, axis=1)
         for i in range(len(window_centers)):
             if smallest_cluster_count_window[i] < min_allowed_count:
@@ -339,7 +343,7 @@ class ClusterScanning:
                 else:
                     plt.axvline(window_centers[i], color="black", alpha=0.3)
 
-        plt.savefig(self.save_path + "kmeans_ni_mjj_total_statAllowed.png")
+        plt.savefig(plots_path + "kmeans_ni_mjj_total_statAllowed.png")
 
         partials_windows = np.zeros(self.counts_windows.shape)
         for i in range(len(self.Mjjmin_arr)):
@@ -353,7 +357,7 @@ class ClusterScanning:
             plt.plot(window_centers, partials_windows[:, j])
         plt.xlabel("m_jj")
         plt.ylabel("fraction of points in window")
-        plt.savefig(self.save_path + "kmeans_xi_mjj_total.png")
+        plt.savefig(plots_path + "kmeans_xi_mjj_total.png")
 
         countmax_windows = np.zeros(self.counts_windows.shape)
         for i in range(self.cfg.k):
@@ -386,7 +390,7 @@ class ClusterScanning:
         plt.plot(window_centers, conts / np.max(conts), "--")
         plt.xlabel("m_jj")
         plt.ylabel("n points from window/max(...)")
-        plt.savefig(self.save_path + "kmeans_xi_mjj_maxn.png")
+        plt.savefig(plots_path + "kmeans_xi_mjj_maxn.png")
 
         for i in range(len(window_centers)):
             if smallest_cluster_count_window[i] < min_allowed_count:
@@ -395,7 +399,7 @@ class ClusterScanning:
                 else:
                     plt.axvline(window_centers[i], color="black", alpha=0.3)
 
-        plt.savefig(self.save_path + "kmeans_xi_mjj_maxn_statAllowed.png")
+        plt.savefig(plots_path + "kmeans_xi_mjj_maxn_statAllowed.png")
 
         countnrm_windows = np.zeros(self.counts_windows.shape)
         for i in range(self.cfg.k):
@@ -409,7 +413,7 @@ class ClusterScanning:
             plt.plot(window_centers, countnrm_windows[:, j])
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
-        plt.savefig(self.save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
+        plt.savefig(plots_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
         for i in range(len(window_centers)):
             if smallest_cluster_count_window[i] < min_allowed_count:
                 if smallest_cluster_count_window[i] < min_min_allowed_count:
@@ -418,7 +422,7 @@ class ClusterScanning:
                     plt.axvline(window_centers[i], color="black", alpha=0.3)
 
         plt.savefig(
-            self.save_path + "kmeans_ni_mjj_norm_statAllowed.png",
+            plots_path + "kmeans_ni_mjj_norm_statAllowed.png",
             bbox_inches="tight",
         )
 
@@ -436,8 +440,8 @@ class ClusterScanning:
         else:
             self.single_run()
 
-    def save_results(self, IDb=""):
-        with open(self.save_path + f"lab{IDb}.pickle", "wb") as file:
+    def save_results(self):
+        with open(self.save_path + f"lab{self.ID}.pickle", "wb") as file:
             pickle.dump(
                 {"bg": self.bg_lab, "sg": self.sg_lab, "k_means": self.kmeans},
                 file,
@@ -455,12 +459,14 @@ class ClusterScanning:
         self.load_mjj()
         self.load_data()
         self.sample_signal_events()
+        if self.cfg.bootstrap:
+            self.bootstrap_resample()
         self.train_k_means()
         self.evaluate_whole_dataset()
         self.save_results()
         self.perform_binning()
         self.make_plots()
-        plt.show()
+        # plt.show()
         print("All done ### %s seconds ###" % (time.time() - start_time))
 
     def multi_run(self):
@@ -473,12 +479,11 @@ class ClusterScanning:
                 continue
             self.ID = IDb
             self.sample_signal_events()
-            self.seed()
             if self.cfg.bootstrap:
                 self.bootstrap_resample()
             self.train_k_means()
             self.evaluate_whole_dataset()
-            self.save_results(IDb)
+            self.save_results()
             print(f"Done IDb {IDb} ### %s seconds ###" % (time.time() - start_time))
 
     def counts_windows_path(self, directory=False):
@@ -489,10 +494,7 @@ class ClusterScanning:
         if directory:
             return pathh
         else:
-            if self.cfg.restart:
-                return pathh + f"bres{self.ID}.pickle"
-            else:
-                return pathh + f"bres.pickle"
+            return pathh + f"bres{self.ID}.pickle"
 
     def save_counts_windows(self):
         os.makedirs(self.counts_windows_path(directory=True), exist_ok=True)
@@ -514,7 +516,11 @@ class ClusterScanning:
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        config_file_path = "config/test_bootstrap.yml"
+        config_file_path = [
+            "config/s0_0.5_1_MB.yaml",
+            "config/restart/0.yaml",
+            "config/v3.yaml",
+        ]
     else:
         config_file_path = sys.argv[1:]
     print("sarting", config_file_path)

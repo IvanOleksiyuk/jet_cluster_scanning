@@ -1,6 +1,6 @@
 ID: 0
 
 restart: False
-bootstrap: False
+bootstrap: True
 restart_ID_start: 0
-restart_ID_finish: 10
+restart_ID_finish: 3
