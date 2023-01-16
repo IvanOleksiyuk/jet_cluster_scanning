@@ -3,6 +3,25 @@ import sys
 from cluster_scanning import ClusterScanning
 
 
+def perform_binning_ID(config, ID, override_config=None):
+    """Performs binning for the given ID in the cluster_scanning object and saves count_windows
+
+    Parameters
+    ----------
+    config : path to yaml file containing the configuration parameters (path to data, binning parameters etc.)
+    ID : ID to perform the binning for
+    override_config : path to yaml file containing the configuration parameters (path to data, binning parameters etc.)
+    HINT: if you want to override some of the parameters in the config file, you can pass a list of config files each overriding the previous one.
+    """
+    cs = ClusterScanning(config)
+    cs.load_mjj()
+    cs.ID = ID
+    cs.load_results(ID)
+    cs.sample_signal_events()
+    cs.perform_binning()
+    cs.save_counts_windows()
+
+
 def perform_binning_all(config):
     """Performs binning for all available IDs in the cluster_scanning object and saves count_windows
 
@@ -15,6 +34,8 @@ def perform_binning_all(config):
     cs.load_mjj()
     for jj in cs.available_IDs():
         cs.ID = jj
+        if not cs.check_if_binning_exist(jj):
+            continue
         cs.load_results(jj)
         cs.sample_signal_events()
         cs.perform_binning()

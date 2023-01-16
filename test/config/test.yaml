@@ -7,7 +7,7 @@
 #
 verbous: False
 data_path: "../../DATA/LHCO/"
-save_path: "char/0kmeans_scan/"
+save_path: "char/test/"
 
 # Some general properties of the datasets provided
 jet_per_event: 2
@@ -16,7 +16,7 @@ image_w: 40
 image_h: 40
 
 #Either specifie an ID if a single trainng is required
-ID: 100
+ID: 0
 #OR
 #Enable batched bootstrap training and evaluation for a range of ID's
 restart: False

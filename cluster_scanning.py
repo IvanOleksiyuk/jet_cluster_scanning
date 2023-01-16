@@ -481,18 +481,21 @@ class ClusterScanning:
             self.save_results(IDb)
             print(f"Done IDb {IDb} ### %s seconds ###" % (time.time() - start_time))
 
-    def save_counts_windows(self):
+    def counts_windows_path(self):
         pathh = (
             self.save_path
             + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}/"
         )
-        os.makedirs(pathh, exist_ok=True)
         if self.cfg.restart:
-            with open(pathh + f"bres{self.ID}.pickle", "wb") as file:
-                pickle.dump(self.counts_windows, file)
+            return pathh + f"bres{self.ID}.pickle"
         else:
-            with open(pathh + f"bres.pickle", "wb") as file:
-                pickle.dump(self.counts_windows, file)
+            return pathh + f"bres.pickle"
+
+    def save_counts_windows(self):
+        pathh = self.counts_windows_path()
+        os.makedirs(pathh, exist_ok=True)
+        with open(pathh, "wb") as file:
+            pickle.dump(self.counts_windows, file)
 
     def available_IDs(self):
         # TODO redo with glob.glob?
@@ -501,6 +504,11 @@ class ClusterScanning:
             if file.startswith("lab"):
                 IDs.append(int(file[3:-7]))
         return IDs
+
+    def check_if_binning_exists(self):
+        pathh = self.counts_windows_path(self)
+        return os.path.exists(pathh)
+
 
 
 if __name__ == "__main__":

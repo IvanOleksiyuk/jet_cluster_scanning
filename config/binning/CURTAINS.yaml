@@ -1,0 +1,5 @@
+W: 100 #Bin width 
+steps: 16 #Number of bins
+eval_interval: #Histogram window
+  - 3000
+  - 4600
