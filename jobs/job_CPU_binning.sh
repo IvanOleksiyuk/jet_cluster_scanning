@@ -1,5 +1,5 @@
-### Rather simple job script for binning pf  all files in char/ and export them to export/ if needed
 #!/bin/bash
+### Rather simple job script for binning pf  all files in char/ and export them to export/ if needed
 #SBATCH --partition=shared-cpu
 
 ### Job name
