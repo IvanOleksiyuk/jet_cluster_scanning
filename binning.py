@@ -34,7 +34,7 @@ def perform_binning_all(config):
     cs.load_mjj()
     for jj in cs.available_IDs():
         cs.ID = jj
-        if cs.check_if_binning_exist(jj):
+        if cs.check_if_binning_exist():
             print("checked_exist: ", cs.counts_windows_path())
             continue
         cs.load_results(jj)
