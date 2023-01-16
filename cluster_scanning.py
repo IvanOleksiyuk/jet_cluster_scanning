@@ -494,10 +494,12 @@ class ClusterScanning:
     def counts_windows_path(self, directory=False):
         pathh = (
             self.save_path
-            + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}/"
+            + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}"
         )
         if self.bootstrap_bg is not None:
             pathh += f"boot/"
+        else:
+            pathh += "/"
         if directory:
             return pathh
         else:
