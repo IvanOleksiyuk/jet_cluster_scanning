@@ -40,6 +40,7 @@ def perform_binning_all(config):
             continue
         cs.load_results(jj)
         cs.sample_signal_events()
+        cs.bootstrap_resample()
         cs.perform_binning()
         cs.save_counts_windows()
         # print("done: ", cs.counts_windows_path())

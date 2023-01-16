@@ -191,7 +191,9 @@ class ClusterScanning:
     def bootstrap_resample(self):
         self.seed()
         n = len(self.mjj_bg)
-        np.sort(np.random.randint(0, n, (n,)))
+        np.sort(
+            np.random.randint(0, n, (n,))
+        )  # this is the line that takes time and does nothing but if I remove it the incosistensies will begin because the random seed will be different
         a = np.arange(n)
         self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
 
@@ -518,7 +520,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
             "config/s0_0.5_1_MB.yaml",
-            "config/restart/0.yaml",
+            "config/bootstrap/0.yaml",
             "config/v3.yaml",
         ]
     else:
