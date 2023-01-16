@@ -21,7 +21,7 @@ def perform_binning_all(config):
         cs.save_counts_windows()
 
 
-def perform_binning_directory(dir, override_config=None):
+def perform_binning_directory(directory, override_config=None):
     """For all subfolders in the directory Performs binning for all available IDs in the cluster_scanning object and saves count_windows
 
     Parameters
@@ -29,20 +29,24 @@ def perform_binning_directory(dir, override_config=None):
     override_config : path to yaml file containing the configuration parameters (path to data, binning parameters etc.)
     HINT: if you want to override some of the parameters in the config file, you can pass a list of config files each overriding the previous one.
     """
-    for subfolder in os.listdir(dir):
-        if os.path.isdir(os.path.join(dir, subfolder)):
+    for subfolder in os.listdir(directory):
+        if os.path.isdir(os.path.join(directory, subfolder)):
             if override_config is None:
-                perform_binning_all(os.path.join(dir, subfolder, "config.yaml"))
+                perform_binning_all(os.path.join(directory, subfolder, "confsum.yaml"))
             else:
                 perform_binning_all(
-                    [os.path.join(dir, subfolder, "config.yaml"), override_config]
+                    [
+                        os.path.join(directory, subfolder, "confsum.yaml"),
+                        override_config,
+                    ]
                 )
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        config_file_path = "char/0kmeans_scan/k2Trueret0con0W2000_2100ste4_w0.5s1Nboot/"
-        +"config.yaml"
+    if sys.argv[1] == "-d":
+        if len(sys.argv) >= 4:
+            perform_binning_directory(sys.argv[2], sys.argv[3:])
+        else:
+            perform_binning_directory(sys.argv[2])
     else:
-        config_file_path = sys.argv[1]
-    perform_binning_all(config_file_path)
+        perform_binning_all(sys.argv[1:])

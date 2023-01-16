@@ -7,7 +7,7 @@
 #
 verbous: False
 data_path: "../../DATA/LHCO/"
-save_path: "char/"
+save_path: "char/v2/"
 
 # Some general properties of the datasets provided
 jet_per_event: 2
