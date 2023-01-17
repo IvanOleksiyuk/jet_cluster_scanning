@@ -169,10 +169,13 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
-    t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5CURTAINS.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5CURTAINS.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
-    t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
+    t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
+    # t_statistic_distribution("config/distribution/compare/compare_old_to_new00.yaml")
+    # t_statistic_distribution("config/distribution/compare/compare_old_to_new0.5_1.yaml")
+    # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5CURTAINS.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5CURTAINS.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
 
     # t_statistic_distribution("config/distribution/compare_old_distributions.yaml")
     # t_statistic_distribution("config/distribution/rest_vs_boot0.5_1.yaml")

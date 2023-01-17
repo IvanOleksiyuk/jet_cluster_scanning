@@ -55,7 +55,10 @@ def gaussian_smearing(x, sigma, batch=True):
 
 
 def reweighting(x, n):
-    return x**n
+    if n == 0:
+        return x != 0
+    else:
+        return x**n
 
 
 def reproc_heavi(x):
@@ -70,9 +73,7 @@ def reproc_log(x, l):
 
 
 class Reprocessing:
-    def __init__(
-        self, arg_str=None
-    ):  # TODO: add parsing with a name argument!
+    def __init__(self, arg_str=None):  # TODO: add parsing with a name argument!
         if (arg_str is None) or arg_str == "none":
             self.name = "none"
             self.function = lambda x: x

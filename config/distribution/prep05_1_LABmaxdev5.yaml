@@ -7,7 +7,7 @@ filterr: "med"
 test_statistic: "chisq_ndof"
 xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
-counts_windows_boot_load: "char/v2/k50Trueret0con0W2600_2700ste200_w0.5s1Nboot/binnedW100s200ei26006000boot/"
+counts_windows_boot_load: "char/v2/k50Trueret0con0W2600_2700_w0.5s1Nboot/binnedW100s200ei26006000boot/"
 title: "$n=0.5,\\sigma=1$, method 1"
 density: 1
 #Different contaminatations (vertical lines on the plot)
@@ -20,9 +20,9 @@ old_CS:
   - 0
   - 0
 cont_paths:
-  - "char/v2/k50Trueret0con0.1W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
-  - "char/v2/k50Trueret0con0.05W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
-  - "char/v2/k50Trueret0con0.025W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.1W2600_2700_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.05W2600_2700_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.025W2600_2700_w0.5s1Nrest/binnedW100s200ei26006000/"
 colors:
   - "red"
   - "orange"

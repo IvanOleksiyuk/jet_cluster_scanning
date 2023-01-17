@@ -6,7 +6,7 @@ from binning_utils import default_binning
 def one_full_analysis():
     cs = ClusterScanning(
         [
-            "config/s0_0.5_1_MB.yaml",
+            "config/s0_0_0_MB.yaml",
             "config/sig_frac/0.05.yaml",
             "config/restart/0.yaml",
             "config/binning/CURTAINS.yaml",
