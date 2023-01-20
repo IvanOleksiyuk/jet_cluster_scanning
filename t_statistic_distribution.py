@@ -52,7 +52,9 @@ def score_sample(cfg, counts_windows_boot_load):
     return chisq_list
 
 
-def draw_contamination(cfg, c, path, col, chisq_list, old=False, postfix=""):
+def draw_contamination(
+    cfg, c, path, col, chisq_list, old=False, postfix="", style="Uall"
+):
     arr = []
     ps = []
     for jj in range(10):
@@ -95,13 +97,36 @@ def draw_contamination(cfg, c, path, col, chisq_list, old=False, postfix=""):
         )
     else:
         label = "$\epsilon$={:.4f}, $<p>=${:.4f}".format(c, np.mean(ps)) + postfix
-    plt.axvline(np.mean(arr), color=col, label=label)
-    plt.axvspan(
-        np.mean(arr) - np.std(arr),
-        np.mean(arr) + np.std(arr),
-        color=col,
-        alpha=0.15,
-    )
+
+    if style[0] == "U":
+        fig = plt.gcf()
+        fig.add_subplot(2, 1, (1, 1))
+        style = style[1:]
+
+    if style == "mean_std":
+        plt.axvline(np.mean(arr), color=col, label=label)
+        plt.axvspan(
+            np.mean(arr) - np.std(arr),
+            np.mean(arr) + np.std(arr),
+            color=col,
+            alpha=0.15,
+        )
+    elif style == "all":
+        for i, a in enumerate(arr):
+            if i == 0:
+                plt.axvline(a, color=col, label=label, alpha=0.2)
+            else:
+                plt.axvline(a, color=col, alpha=0.2)
+    elif style == "mean":
+        plt.axvline(np.mean(arr), color=col, label=label)
+    elif style == "median_quartiles":
+        plt.axvline(np.median(arr), color=col, label=label)
+        plt.axvspan(
+            np.quantile(arr, 0.25),
+            np.quantile(arr, 0.75),
+            color=col,
+            alpha=0.15,
+        )
 
 
 def t_statistic_distribution(config_file_path):
@@ -169,12 +194,12 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
-    t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
+    # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new00.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new0.5_1.yaml")
     # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5CURTAINS.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5CURTAINS.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
     # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
 
     # t_statistic_distribution("config/distribution/compare_old_distributions.yaml")
