@@ -6,7 +6,7 @@ save_path: "test_results/test_2meansder/"
 
 #more run parameters
 sid: 0
-labeling: "maxdev5"   
+labeling: "2meansder"   
 filterr: "med"
 steal_sd_anomalypoor: 2
 
