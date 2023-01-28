@@ -2,9 +2,9 @@ seed: 2
 output_path: "plots2/"
 plot_name: "prep0_0_LABkmeans_der"
 
-labeling: "2meansder"   # "kmeans_der" #"kmeans_der"#">5sigma"#
-filterr: "med"
-test_statistic: "chisq_ndof"
+# parametetrs for cs_eval
+CSEconf: "config/cs_eval/2eansder"
+
 xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
 counts_windows_boot_load: "char/v2/k50Trueret0con0W2600_2700_w0s0Nboot/binnedW100s200ei26006000boot/"

@@ -1,0 +1,15 @@
+
+#overal run options
+verbous: False 
+plotting: False
+save: False
+save_path: "cs_performance_evaluation/"
+
+# specify test statistic to compute:
+labeling: "maxdev5"   
+filterr: "med"
+test_statistic: "chisq_ndof"
+steal_sd_anomalypoor: 2
+
+#random seed
+sid: 0

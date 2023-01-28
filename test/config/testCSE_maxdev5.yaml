@@ -1,0 +1,14 @@
+# global run configurations
+verbous: False
+plotting: False
+save: False
+save_path: "test_results/test_maxdev5/"
+
+#more run parameters
+sid: 0
+labeling: "maxdev5"   
+prepare_spectra:
+  - "sumnorm"
+
+filterr: "med"
+steal_sd_anomalypoor: 2

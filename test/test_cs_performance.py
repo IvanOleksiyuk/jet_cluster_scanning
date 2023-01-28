@@ -10,20 +10,13 @@ class TestCSPerformance(unittest.TestCase):
 
     def setUp(self) -> None:
         """Download a test data"""
-        self.counts_windows = np.load(
-            sys.path[0] + "/test_materials/count_windows.npy"
-        )
+        self.counts_windows = np.load(sys.path[0] + "/test_materials/count_windows.npy")
 
     def test_maxdev5(self):
         """Test evluation of maxdev5 method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
-            save_path="test_results/test_maxdev5/",
-            filterr="med",
-            plotting=False,
-            labeling="maxdev5",
-            verbous=False,
-            save=True,
+            config_file_path=sys.path[0] + "/config/testCSE_maxdev5.yaml",
         )
         self.assertAlmostEqual(3.508741407313602, res["chisq_ndof"])
 
@@ -31,12 +24,7 @@ class TestCSPerformance(unittest.TestCase):
         """Test evluation of 2meansder method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
-            save_path="test_results/test_2meansder/",
-            filterr="med",
-            plotting=False,
-            labeling="2meansder",
-            verbous=False,
-            save=True,
+            config_file_path=sys.path[0] + "/config/testCSE_2meansder.yaml",
         )
         self.assertAlmostEqual(3.5990916567517726, res["chisq_ndof"])
         pass
@@ -47,10 +35,8 @@ class TestCSPerformance(unittest.TestCase):
             counts_windows=self.counts_windows,
             save_path="test_results/test_maxdev5_with_plotting/",
             filterr="med",
-            plotting=True,
             labeling="maxdev5",
-            verbous=False,
-            save=True,
+            config_file_path=sys.path[0] + "/config/testCSE.yaml",
         )
 
 

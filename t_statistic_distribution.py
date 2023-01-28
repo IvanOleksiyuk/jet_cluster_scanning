@@ -2,10 +2,10 @@
 import os
 import matplotlib.pyplot as plt
 import pickle
-from cs_performance_evaluation import cs_performance_evaluation
+from cs_performance_evaluation import cs_performance_evaluation, CS_evaluation_process
 import numpy as np
 import random
-import scipy
+import time
 from matplotlib.ticker import MaxNLocator
 import cluster_scanning
 import set_matplotlib_default as smd
@@ -36,12 +36,7 @@ def score_sample(cfg, counts_windows_boot_load):
         counts_windows = np.array(counts_windows)
         res_list.append(
             cs_performance_evaluation(
-                counts_windows,
-                save=False,
-                filterr=cfg.filterr,
-                plotting=False,
-                labeling=cfg.labeling,
-                verbous=False,
+                counts_windows=counts_windows, config_file_path=cfg.CSEconf
             )
         )
         if i % 100 == 0:
@@ -73,12 +68,7 @@ def draw_contamination(
             counts_windows = pickle.load(open(path + f"bres{jj}.pickle", "rb"))
 
         res = cs_performance_evaluation(
-            counts_windows=counts_windows,
-            save=False,
-            filterr=cfg.filterr,
-            plotting=False,
-            labeling=cfg.labeling,
-            verbous=False,
+            counts_windows=counts_windows, config_file_path=cfg.CSEconf
         )
         # print(res["chisq_ndof"])
         arr.append(res[cfg.test_statistic])
@@ -199,7 +189,9 @@ if __name__ == "__main__":
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new0.5_1.yaml")
     # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5CURTAINS.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5CURTAINS.yaml")
+    start_time = time.time()
     t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
+    print("done in time --- %s seconds ---" % (time.time() - start_time))
     # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
 
     # t_statistic_distribution("config/distribution/compare_old_distributions.yaml")
