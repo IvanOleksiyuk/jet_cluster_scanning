@@ -36,9 +36,7 @@ class Config(object):
             cfg = {}
             for path in config_path:
                 with open(path) as cf_file:
-                    merge_dictionaries_recursively(
-                        cfg, yaml.safe_load(cf_file.read())
-                    )
+                    merge_dictionaries_recursively(cfg, yaml.safe_load(cf_file.read()))
         self._data = cfg
 
     def get(self, path=None, default=None):
@@ -62,7 +60,7 @@ class Config(object):
             return default
 
     def get_dotmap(self):
-        return DotMap(self._data)
+        return DotMap(self._data, _dynamic=False)
 
     def get_dict(self):
         return self._data
