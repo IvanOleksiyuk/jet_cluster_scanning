@@ -11,11 +11,13 @@ class TestCSPerformance(unittest.TestCase):
     def setUp(self) -> None:
         """Download a test data"""
         self.counts_windows = np.load(sys.path[0] + "/test_materials/count_windows.npy")
+        self.binning = np.load(sys.path[0] + "/test_materials/binning.npy")
 
     def test_maxdev5(self):
         """Test evluation of maxdev5 method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
+            binning=self.binning,
             config_file_path=sys.path[0] + "/config/testCSE_maxdev5.yaml",
         )
         self.assertAlmostEqual(3.508741407313602, res)
@@ -24,6 +26,7 @@ class TestCSPerformance(unittest.TestCase):
         """Test evluation of 2meansder method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
+            binning=self.binning,
             config_file_path=sys.path[0] + "/config/testCSE_2meansder.yaml",
         )
         self.assertAlmostEqual(3.5990916567517726, res)
@@ -33,6 +36,7 @@ class TestCSPerformance(unittest.TestCase):
         """Test evluation of >5sigma method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
+            binning=self.binning,
             config_file_path=[
                 sys.path[0] + "/config/testCSE_maxdev5.yaml",
                 sys.path[0] + "/config/testCSE_plotting.yaml",

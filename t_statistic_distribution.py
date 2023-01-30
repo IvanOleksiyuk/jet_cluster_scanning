@@ -14,14 +14,17 @@ from load_old_bootstrap_experiments import (
     load_old_bootstrap_experiments00,
 )
 from config_utils import Config
+from binning_utils import default_binning
 
 
 def score_sample(cfg, counts_windows_boot_load):
 
     if counts_windows_boot_load == "old00":
         counts_windows_boot = load_old_bootstrap_experiments00()
+        binning = default_binning()
     elif counts_windows_boot_load == "old05_1":
         counts_windows_boot = load_old_bootstrap_experiments05_1()
+        binning = default_binning()
     else:
         print(len(os.listdir(counts_windows_boot_load)))
         counts_windows_boot = []
@@ -30,13 +33,15 @@ def score_sample(cfg, counts_windows_boot_load):
                 counts_windows_boot.append(
                     pickle.load(open(counts_windows_boot_load + file, "rb"))
                 )
-
+        binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
     tstat_list = []
     for i, counts_windows in enumerate(counts_windows_boot):
         counts_windows = np.array(counts_windows)
         tstat_list.append(
             cs_performance_evaluation(
-                counts_windows=counts_windows, config_file_path=cfg.CSEconf
+                counts_windows=counts_windows,
+                binning=binning,
+                config_file_path=cfg.CSEconf,
             )
         )
         if i % 100 == 0:
@@ -47,14 +52,16 @@ def score_sample(cfg, counts_windows_boot_load):
 
 
 def draw_contamination(
-    cfg, c, path, col, tstat_list, old=False, postfix="", style="Uall"
+    cfg, c, path, col, tstat_list, old=False, postfix="", style="mean_std"
 ):
     arr = []
     ps = []
+    binning = None
     for jj in range(10):
         if old == 1:
             res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
             counts_windows = np.array(res["counts_windows"][0])
+            binning = default_binning()
         elif old == 2:
             cs = cluster_scanning.ClusterScanning(path)
             cs.load_mjj()
@@ -63,11 +70,13 @@ def draw_contamination(
             cs.sample_signal_events()
             cs.bootstrap_resample()
             counts_windows = cs.perform_binning()
+            binning = default_binning()
         else:
             counts_windows = pickle.load(open(path + f"bres{jj}.pickle", "rb"))
-
+            if binning is None:
+                binning = pickle.load(open(path + "binning.pickle", "rb"))
         res = cs_performance_evaluation(
-            counts_windows=counts_windows, config_file_path=cfg.CSEconf
+            counts_windows=counts_windows, binning=binning, config_file_path=cfg.CSEconf
         )
         # print(res["chisq_ndof"])
         arr.append(res)

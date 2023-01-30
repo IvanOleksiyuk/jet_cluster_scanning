@@ -5,7 +5,7 @@
 # "mjj_sig_sort.npy"
 #
 #
-verbous: False
+verbose: False
 data_path: "../../DATA/LHCO/"
 save_path: "char/v2/"
 

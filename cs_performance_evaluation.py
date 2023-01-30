@@ -31,6 +31,7 @@ class CS_evaluation_process:
         counts_windows=None,
         binning=default_binning(),
         ID="",
+        path=None,
     ):
 
         self.config_file_path = config_file_path
@@ -52,7 +53,13 @@ class CS_evaluation_process:
         # plotting configurations
         plt.rcParams["lines.linewidth"] = 1
         self.figsize = (6, 4.5)
+
+        # Paths
+        if path is not None:
+            self.cfg.save_path = path
         self.eval_path = self.cfg.save_path + f"eval{ID}/"
+
+        # other variables that have to be initialized
         self.labels = None
 
     def prepare_spectra(self, prepare_spectra=[]):
@@ -141,7 +148,6 @@ class CS_evaluation_process:
         binning = self.binning
 
         # parameters from config file
-        plotting = self.cfg.plotting
         save = self.cfg.save
         verbous = self.cfg.verbous
         save_path = self.cfg.save_path
@@ -371,7 +377,20 @@ def cs_performance_evaluation(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    cs_performance_evaluation()
+    config_path = ["config/cs_eval/maxdev5.yaml", "config/cs_eval/plotting.yaml"]
+    jj = 0
+    path = "char/test/k50Trueret0con0.05W2600_2700_w0.5s1Nrest/"
+    # path1 = path + "binnedW100s200ei26006000/"
+    path1 = path + "binnedW100s16ei30004600/"
+    counts_windows = pickle.load(open(path1 + f"bres{jj}.pickle", "rb"))
+    binning = pickle.load(open(path1 + "binning.pickle", "rb"))
+    cs_performance_evaluation(
+        counts_windows=counts_windows,
+        binning=binning,
+        path=path,
+        ID=jj,
+        config_file_path=config_path,
+    )
     print("Executed when invoked directly")
 
 # Concepts

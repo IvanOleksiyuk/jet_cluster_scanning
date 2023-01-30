@@ -244,7 +244,7 @@ class ClusterScanning:
             self.sg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_sg) / batch_size))):
-                if self.cfg.verbous:
+                if self.cfg.verbose:
                     print(
                         i * batch_size,
                         min((i + 1) * batch_size, len(self.im_bg)),
@@ -521,15 +521,23 @@ class ClusterScanning:
         pathh = self.counts_windows_path()
         return os.path.exists(pathh)
 
+    def save_binning_array(self):
+        os.makedirs(self.counts_windows_path(directory=True), exist_ok=True)
+        with open(
+            self.counts_windows_path(directory=True) + "binning.pickle", "wb"
+        ) as file:
+            binning = np.stack([self.Mjjmin_arr, self.Mjjmax_arr]).T
+            pickle.dump(binning, file)
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
             "config/s0_0.5_1_MB.yaml",
             "config/sig_frac/0.05.yaml",
-            "config/restart/0.yaml",
-            "config/binning/CURTAINS.yaml",
-            "config/v3.yaml",
+            "config/restart/0_3.yaml",
+            # "config/binning/CURTAINS.yaml",
+            "config/test.yaml",
         ]
     else:
         config_file_path = sys.argv[1:]

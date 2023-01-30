@@ -33,6 +33,7 @@ def perform_binning_all(config):
     """
     cs = ClusterScanning(config)
     cs.load_mjj()
+    cs.save_binning_array()
     for jj in cs.available_IDs():
         cs.ID = jj
         if cs.check_if_binning_exist():
@@ -69,10 +70,13 @@ def perform_binning_directory(directory, override_config=None):
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "-d":
-        if len(sys.argv) >= 4:
-            perform_binning_directory(sys.argv[2], sys.argv[3:])
-        else:
-            perform_binning_directory(sys.argv[2])
+    if len(sys.argv) < 2:
+        perform_binning_directory("char/test/", ["config/binning/CURTAINS.yaml"])
     else:
-        perform_binning_all(sys.argv[1:])
+        if sys.argv[1] == "-d":
+            if len(sys.argv) >= 4:
+                perform_binning_directory(sys.argv[2], sys.argv[3:])
+            else:
+                perform_binning_directory(sys.argv[2])
+        else:
+            perform_binning_all(sys.argv[1:])
