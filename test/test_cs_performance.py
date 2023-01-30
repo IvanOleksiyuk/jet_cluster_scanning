@@ -43,4 +43,4 @@ class TestCSPerformance(unittest.TestCase):
 if __name__ == "__main__":
     TT = TestCSPerformance()
     TT.setUp()
-    TT.test_maxdev5_with_plotting()
+    TT.test_maxdev5()
