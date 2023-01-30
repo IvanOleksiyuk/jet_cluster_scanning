@@ -10,3 +10,4 @@ labeling: "2meansder"
 filterr: "med"
 steal_sd_anomalypoor: 2
 
+test_statistic: "chisq_ndof"

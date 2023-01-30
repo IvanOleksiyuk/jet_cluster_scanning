@@ -31,10 +31,10 @@ def score_sample(cfg, counts_windows_boot_load):
                     pickle.load(open(counts_windows_boot_load + file, "rb"))
                 )
 
-    res_list = []
+    tstat_list = []
     for i, counts_windows in enumerate(counts_windows_boot):
         counts_windows = np.array(counts_windows)
-        res_list.append(
+        tstat_list.append(
             cs_performance_evaluation(
                 counts_windows=counts_windows, config_file_path=cfg.CSEconf
             )
@@ -42,13 +42,12 @@ def score_sample(cfg, counts_windows_boot_load):
         if i % 100 == 0:
             print(i)
 
-    chisq_list = [el[cfg.test_statistic] for el in res_list]
-    chisq_list = np.array(chisq_list)
-    return chisq_list
+    tstat_list = np.array(tstat_list)
+    return tstat_list
 
 
 def draw_contamination(
-    cfg, c, path, col, chisq_list, old=False, postfix="", style="Uall"
+    cfg, c, path, col, tstat_list, old=False, postfix="", style="Uall"
 ):
     arr = []
     ps = []
@@ -71,19 +70,14 @@ def draw_contamination(
             counts_windows=counts_windows, config_file_path=cfg.CSEconf
         )
         # print(res["chisq_ndof"])
-        arr.append(res[cfg.test_statistic])
+        arr.append(res)
         ps.append(
-            (
-                np.sum(chisq_list >= res[cfg.test_statistic])
-                + np.sum(chisq_list > res[cfg.test_statistic])
-            )
-            / 2
-            / len(chisq_list)
+            (np.sum(tstat_list >= res) + np.sum(tstat_list > res)) / 2 / len(tstat_list)
         )
 
     if np.mean(ps) == 0:
         label = (
-            "$\epsilon$={:.4f}, $<p><${:.4f}".format(c, 1 / len(chisq_list)) + postfix
+            "$\epsilon$={:.4f}, $<p><${:.4f}".format(c, 1 / len(tstat_list)) + postfix
         )
     else:
         label = "$\epsilon$={:.4f}, $<p>=${:.4f}".format(c, np.mean(ps)) + postfix

@@ -134,7 +134,7 @@ class CS_evaluation_process:
 
         return labels
 
-    def run(self):
+    def chi_squared_metric(self):
 
         # Parameters that are not given via config
         binning = self.binning
@@ -145,8 +145,6 @@ class CS_evaluation_process:
         verbous = self.cfg.verbous
         save_path = self.cfg.save_path
 
-        sid = self.cfg.sid
-        labeling = self.cfg.labeling
         steal_sd_anomalypoor = self.cfg.steal_sd_anomalypoor
 
         # Create folder if not yet exists
@@ -156,47 +154,11 @@ class CS_evaluation_process:
         # Useful shortcuts and variables
         window_centers = (binning.T[1] + binning.T[0]) / 2
         bin_widths = binning.T[1] - binning.T[0]
-        k = self.k
 
         # Original spectra
         sp_original = self.prepare_spectra()
 
-        if labeling == ">5sigma":  # for backcompatability TODO remove
-            labeling = "maxdev5"
-
-        if labeling == "2meansder":
-            num_der_counts_windows = self.prepare_spectra(["maxn", "der", "med7"]).y
-            np.random.seed(sid)
-            kmeans = KMeans(2)
-            kmeans.fit(num_der_counts_windows)
-            if np.sum(kmeans.labels_) < len(kmeans.labels_) // 2:
-                labels = kmeans.labels_
-            else:
-                labels = 1 - kmeans.labels_
-
-        elif labeling == "2meanscur":
-            countmax_windows = self.prepare_spectra(["maxn", "med7"]).y
-            np.random.seed(sid)
-            kmeans = KMeans(2)
-            kmeans.fit(countmax_windows)
-            if np.sum(kmeans.labels_) < len(kmeans.labels_) // 2:
-                labels = kmeans.labels_
-            else:
-                labels = 1 - kmeans.labels_
-
-        elif labeling[:6] == "maxdev":
-            sp_sumn_standrob = self.prepare_spectra(["sumn", "-bsumsumn", "standrob"])
-            threshold = float(labeling[6:])
-            labels = np.zeros(k)
-            for j in range(k):
-                if np.any(sp_sumn_standrob.y[j] > threshold):
-                    labels[j] = 1
-                else:
-                    labels[j] = 0
-
-        elif labeling == "random":
-            labels = np.random.uniform(size=k) < 0.5
-
+        labels = self.label_spectra()
         # total width of all (overlaing) bins devided by width of the covered area (approximation for number of time each point is counted)
         tf = (binning.T[1][-1] - binning.T[0][0]) / np.sum(bin_widths)
         if verbous:
@@ -250,6 +212,16 @@ class CS_evaluation_process:
             print("WARNING: rich anomaly error has negative values")
         elif np.any(anomaly_rich_sp.err == 0):
             print("WARNING: rich anomaly error has zero values")
+        return res
+
+    def run(self):
+        """function to run the evaluation process of a test statistic or a given metric"""
+        if self.cfg.test_statistic == "chisq_ndof":
+            return self.chi_squared_metric()["chisq_ndof"]
+        elif self.cfg.test_statistic == "max-sumnorm-dev":
+            return self.chi_squared_metric()["max-sumnorm-dev"]
+        elif self.cfg.test_statistic == "max-maxnorm-dev":
+            return self.chi_squared_metric()["max-maxnorm-dev"]
 
         # if plotting:
         #     # Some matplotlib stuff
@@ -490,7 +462,6 @@ class CS_evaluation_process:
         #         res,
         #     )
         #     plt.savefig(eval_path + "comb_dev.png", bbox_inches="tight")
-        return res
 
 
 def cs_performance_evaluation(*args, **kwargs):

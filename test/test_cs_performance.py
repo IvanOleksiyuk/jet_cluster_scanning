@@ -18,7 +18,7 @@ class TestCSPerformance(unittest.TestCase):
             counts_windows=self.counts_windows,
             config_file_path=sys.path[0] + "/config/testCSE_maxdev5.yaml",
         )
-        self.assertAlmostEqual(3.508741407313602, res["chisq_ndof"])
+        self.assertAlmostEqual(3.508741407313602, res)
 
     def test_2meansder(self):
         """Test evluation of 2meansder method"""
@@ -26,7 +26,7 @@ class TestCSPerformance(unittest.TestCase):
             counts_windows=self.counts_windows,
             config_file_path=sys.path[0] + "/config/testCSE_2meansder.yaml",
         )
-        self.assertAlmostEqual(3.5990916567517726, res["chisq_ndof"])
+        self.assertAlmostEqual(3.5990916567517726, res)
         pass
 
     def test_maxdev5_with_plotting(self):
