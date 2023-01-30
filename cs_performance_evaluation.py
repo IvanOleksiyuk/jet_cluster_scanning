@@ -40,12 +40,12 @@ class CS_evaluation_process:
             self.config = Config(config_file_path)
         self.cfg = self.config.get_dotmap()
 
-        self.counts_windows = counts_windows
+        self.counts_windows = counts_windows.T
         self.binning = binning
         self.ID = ID
 
         # Useful shortcuts and variables
-        self.k = counts_windows.shape[0]
+        self.k = self.counts_windows.shape[0]
 
     def prepare_spectra(self, prepare_spectra=[]):
         """function to prepare the spectra for the evaluation process
@@ -54,9 +54,6 @@ class CS_evaluation_process:
         # Parameters that are not given via config
         counts_windows = self.counts_windows
         binning = self.binning
-
-        # Usually oriented incorrectly #TODO correct this
-        counts_windows = counts_windows.T
 
         # Useful shortcuts and variables
         window_centers = (binning.T[1] + binning.T[0]) / 2
@@ -140,9 +137,7 @@ class CS_evaluation_process:
     def run(self):
 
         # Parameters that are not given via config
-        counts_windows = self.counts_windows
         binning = self.binning
-        ID = self.ID
 
         # parameters from config file
         plotting = self.cfg.plotting
@@ -161,7 +156,7 @@ class CS_evaluation_process:
         # Useful shortcuts and variables
         window_centers = (binning.T[1] + binning.T[0]) / 2
         bin_widths = binning.T[1] - binning.T[0]
-        k = counts_windows.shape[1]
+        k = self.k
 
         # Original spectra
         sp_original = self.prepare_spectra()
