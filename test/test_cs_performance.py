@@ -33,14 +33,14 @@ class TestCSPerformance(unittest.TestCase):
         """Test evluation of >5sigma method"""
         res = cs_performance_evaluation(
             counts_windows=self.counts_windows,
-            save_path="test_results/test_maxdev5_with_plotting/",
-            filterr="med",
-            labeling="maxdev5",
-            config_file_path=sys.path[0] + "/config/testCSE.yaml",
+            config_file_path=[
+                sys.path[0] + "/config/testCSE_maxdev5.yaml",
+                sys.path[0] + "/config/testCSE_plotting.yaml",
+            ],
         )
 
 
 if __name__ == "__main__":
     TT = TestCSPerformance()
     TT.setUp()
-    TT.test_maxdev5()
+    TT.test_maxdev5_with_plotting()

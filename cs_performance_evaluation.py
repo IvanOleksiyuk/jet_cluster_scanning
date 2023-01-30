@@ -46,20 +46,21 @@ class CS_evaluation_process:
 
         # Useful shortcuts and variables
         self.k = self.counts_windows.shape[0]
+        self.window_centers = (binning.T[1] + binning.T[0]) / 2
+        self.bin_widths = binning.T[1] - binning.T[0]
+
+        # plotting configurations
+        plt.rcParams["lines.linewidth"] = 1
+        self.figsize = (6, 4.5)
+        self.eval_path = self.cfg.save_path + f"eval{ID}/"
+        self.labels = None
 
     def prepare_spectra(self, prepare_spectra=[]):
         """function to prepare the spectra for the evaluation process
         saves spectra after each preparation step so thet they may be used for plotting later on"""
 
-        # Parameters that are not given via config
-        counts_windows = self.counts_windows
-        binning = self.binning
-
-        # Useful shortcuts and variables
-        window_centers = (binning.T[1] + binning.T[0]) / 2
-
         # Original spectra
-        sp_original = Spectra(window_centers, counts_windows)
+        sp_original = Spectra(self.window_centers, self.counts_windows)
         previous = sp_original
         for i, action in enumerate(prepare_spectra):
             if action == "sumn":
@@ -131,7 +132,7 @@ class CS_evaluation_process:
 
         else:
             raise ValueError("labeling method not recognized")
-
+        self.labels = labels
         return labels
 
     def chi_squared_metric(self):
@@ -199,7 +200,11 @@ class CS_evaluation_process:
         res["chisq_ndof"] = chisq_ndof
         res["max-sumnorm-dev"] = max_sumnorm_dev
         res["max-maxnorm-dev"] = max_maxnorm_dev
-
+        res["tf"] = tf
+        self.agg_sp = {}
+        self.agg_sp["rich"] = anomaly_rich_sp
+        self.agg_sp["poor"] = anomaly_poor_sp
+        self.agg_sp["res"] = res
         # theoretical interpretation
         mean_repetition = np.sum(bin_widths) / (binning.T[0][-1] - binning.T[0][0])
         n_dof = len(window_centers) / mean_repetition
@@ -217,251 +222,146 @@ class CS_evaluation_process:
     def run(self):
         """function to run the evaluation process of a test statistic or a given metric"""
         if self.cfg.test_statistic == "chisq_ndof":
-            return self.chi_squared_metric()["chisq_ndof"]
+            res = self.chi_squared_metric()["chisq_ndof"]
         elif self.cfg.test_statistic == "max-sumnorm-dev":
-            return self.chi_squared_metric()["max-sumnorm-dev"]
+            res = self.chi_squared_metric()["max-sumnorm-dev"]
         elif self.cfg.test_statistic == "max-maxnorm-dev":
-            return self.chi_squared_metric()["max-maxnorm-dev"]
+            res = self.chi_squared_metric()["max-maxnorm-dev"]
 
-        # if plotting:
-        #     # Some matplotlib stuff
-        #     plt.rcParams["lines.linewidth"] = 1
-        #     figsize = (6, 4.5)
+        if self.cfg.plotting:
+            self.plot()
 
-        #     # Duplicate plots from the cluster scanning OBSOLETE
-        #     csp.plot_all_scalings(
-        #         window_centers,
-        #         counts_windows,
-        #         countmax_windows,
-        #         countnrm_windows,
-        #         save_path + f"plots{ID}/",
-        #         figsize,
-        #     )
+        return res
 
-        #     # Make a directory for evaluation
-        #     eval_path = save_path + f"eval{ID}/"
-        #     os.makedirs(eval_path, exist_ok=True)
+    def plot(self):
+        os.makedirs(self.cfg.save_path, exist_ok=True)
+        self.redo_cs_plots()
+        os.makedirs(self.eval_path, exist_ok=True)
+        if self.labels is not None:
+            csp.plot_sum_over_bins_dist(
+                self.prepare_spectra(["maxn"]).y,
+                self.bin_widths,
+                self.labels,
+                self.eval_path,
+            )
+            self.plot_standardisation_step(
+                self.prepare_spectra(["sumn", "-bsumsumn"]),
+                self.labels,
+                y_label="$N_i(m_{jj})/sum(N_i(m_{jj}))$-background",
+                savefile="sumn-toatal.png",
+            )
+            self.plot_standardisation_step(
+                self.prepare_spectra(["maxn", "-bsummaxn"]),
+                self.labels,
+                y_label="$N_i(m_{jj})/max(N_i(m_{jj}))$-background",
+                savefile="maxm-toatal.png",
+            )
+            self.plot_labeled_spectra(
+                self.prepare_spectra(["sumn", "-bsumsumn", "standrob"]),
+                self.labels,
+                add_line=True,
+                ylabel="deviation in SD",
+                filename="norm-toatal-sigmas.png",
+            )
+            self.plot_labeled_spectra(
+                self.prepare_spectra(["sumn"]),
+                self.labels,
+                ylabel="$N_i(m_{jj})/sum(N_i(m_{jj}))$",
+                filename="sumn.png",
+            )
+            self.plot_labeled_spectra(
+                self.prepare_spectra(["maxn"]),
+                self.labels,
+                ylabel="$N_i(m_{jj})/max(N_i(m_{jj}))$",
+                filename="maxn.png",
+            )
+            self.plot_labeled_spectra(
+                self.prepare_spectra(["maxn", "der", "med7"]),
+                self.labels,
+                ylabel=r"$\Delta(N_i(m_{jj})/max(N_i(m_{jj}))$)",
+                filename="num-der.png",
+            )
+            # TSNE
+            csp.CS_TSNE(
+                self.prepare_spectra(["maxn", "der", "med7"]).y,
+                self.labels,
+                self.eval_path,
+            )
+            # aggregations
+            csp.plot_aggregation(
+                self.agg_sp["poor"],
+                self.agg_sp["rich"],
+                self.figsize,
+                self.agg_sp["res"],
+            )
+            curvefit_eval(
+                self.agg_sp["poor"],
+                self.agg_sp["rich"],
+                self.binning,
+                self.agg_sp["res"]["tf"],
+            )
+            plt.savefig(self.eval_path + "comb.png", bbox_inches="tight")
+            csp.plot_aggregation(
+                self.agg_sp["poor"].subtract_sp(self.agg_sp["poor"]),
+                self.agg_sp["poor"].subtract_sp(self.agg_sp["rich"]),
+                self.figsize,
+                self.agg_sp["res"],
+            )
+            plt.savefig(self.eval_path + "comb_dev.png", bbox_inches="tight")
 
-        #     # Distribution of spectra integrals after max normalisation
-        #     csp.plot_sum_over_bins_dist(countmax_windows, bin_widths, labels, eval_path)
+    def redo_cs_plots(self):
+        # Duplicate plots from the cluster scanning OBSOLETE
+        os.makedirs(self.cfg.save_path + f"plots{self.ID}/", exist_ok=True)
+        csp.plot_all_scalings(
+            self.window_centers,
+            self.counts_windows,
+            self.prepare_spectra(["maxn"]).y,
+            self.prepare_spectra(["sumn"]).y,
+            self.cfg.save_path + f"plots{self.ID}/",
+            self.figsize,
+        )
 
-        #     # subtracted curves norm
-        #     csp.two_class_curves(
-        #         sp_sumn_s.x,
-        #         sp_sumn_s.y,
-        #         labels,
-        #         figsize,
-        #     )
-        #     csp.plot_mean_deviat(
-        #         sp_sumn_s.x,
-        #         sp_sumn_s.mean_sp().y[0],
-        #         sp_sumn_s.std_sp().y[0],
-        #         fillb=True,
-        #     )
-        #     csp.plot_mean_deviat(
-        #         sp_sumn_s.x,
-        #         sp_sumn_s.mean_sp_rob().y[0],
-        #         sp_sumn_s.std_sp_rob().y[0],
-        #         color="orange",
-        #         fillb=True,
-        #     )
-        #     plt.legend()
-        #     plt.xlabel("window centre $m_{jj}$ [GeV]")
-        #     plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$-background")
-        #     plt.savefig(eval_path + "norm-toatal.png", bbox_inches="tight")
+    def plot_labeled_spectra(
+        self, sp, labels, ylabel="y", filename="test.png", add_line=False
+    ):
+        csp.two_class_curves(
+            sp.x,
+            sp.y,
+            labels,
+            self.figsize,
+        )
+        if add_line:
+            plt.axhline(5, color="red", alpha=0.2)
+        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.ylabel(ylabel)
+        plt.legend()
+        plt.savefig(self.eval_path + filename, bbox_inches="tight")
 
-        #     # all curves standardized
-        #     csp.two_class_curves(
-        #         window_centers,
-        #         sp_sumn_standrob.y,
-        #         labels,
-        #         figsize,
-        #     )
-        #     plt.axhline(5, color="red", alpha=0.2)
-        #     plt.xlabel("window centre $m_{jj}$ [GeV]")
-        #     plt.ylabel("deviation in SD")
-        #     plt.legend()
-        #     plt.savefig(eval_path + "norm-toatal-sigmas.png", bbox_inches="tight")
+    def plot_standardisation_step(self, sp, labels, y_label="y", savefile="test.png"):
 
-        #     # all curves standardized
-        #     csp.two_class_curves(
-        #         window_centers,
-        #         sp_sumn_standrob.y * np.sqrt(countnrm_windows),
-        #         labels,
-        #         figsize,
-        #         ylabel="deviation in SD",
-        #         save_file=eval_path + "norm-toatal-sigmas-special.png",
-        #     )
-
-        #     # all curves standardized squeezed
-        #     sqf = 20
-        #     csp.two_class_curves(
-        #         squeeze(window_centers, sqf),
-        #         squeeze(sp_sumn_standrob.y, sqf),
-        #         labels,
-        #         figsize,
-        #         ylabel="deviation in SD",
-        #         save_file=eval_path + "norm-toatal-sigmas-squeezed.png",
-        #     )
-
-        #     # distribution of total MSE after standartisation
-        #     csp.two_class_curves(
-        #         window_centers,
-        #         sp_sumn_standrob.y,
-        #         labels,
-        #         figsize,
-        #         ylabel="deviation in SD",
-        #         save_file=eval_path + "norm-toatal-sigmas-special.png",
-        #         marker=".",
-        #         linestyle="",
-        #     )
-
-        #     # all curves standardized points
-        #     csp.two_class_curves(
-        #         window_centers,
-        #         sp_sumn_standrob.y * np.sqrt(countnrm_windows),
-        #         labels,
-        #         figsize,
-        #         ylabel="deviation in SD",
-        #         save_file=eval_path + "norm-toatal-sigmas-special.png",
-        #     )
-
-        #     # all curves standardized distribution
-        #     fig, axs = plt.subplots(
-        #         1, 2, figsize=(9, 3), gridspec_kw={"width_ratios": [2, 1]}
-        #     )
-        #     plt.sca(axs[0])
-        #     ys = []
-        #     for j in range(k):
-        #         ys.append(list(sp_sumn_standrob.y[j]))
-        #     ys = np.array(ys)
-        #     ys = ys.reshape((-1,))
-        #     xs = np.tile(window_centers, k)
-        #     h, xedges, yedges, image = plt.hist2d(
-        #         xs, ys, bins=(200, 40), cmap="gist_heat_r"
-        #     )
-        #     plt.xlabel("window centre $m_{jj}$ [GeV]")
-        #     plt.ylabel("deviation in SD")
-        #     plt.colorbar()
-        #     plt.sca(axs[1])
-        #     yy = (yedges[:-1] + yedges[1:]) / 2
-        #     # for i in range(200):
-        #     plt.step(yy, np.mean(h, axis=0), where="mid", color="darkorange")
-        #     plt.xlabel("deviations in SD")
-        #     plt.ylabel("avarage curve points per bin")
-        #     plt.savefig(eval_path + "2d_hist.png", bbox_inches="tight")
-
-        #     # subtracted curves norm
-        #     csp.two_class_curves(
-        #         window_centers,
-        #         sp_maxn_s.y,
-        #         labels,
-        #         figsize,
-        #         ylabel="n_clusater/max(n_cluster)-bg",
-        #     )
-
-        #     plt.plot(
-        #         window_centers,
-        #         np.mean(sp_maxn_s.y, axis=0),
-        #         color="lime",
-        #     )
-        #     plt.plot(
-        #         window_centers,
-        #         -std_ignore_outliers(countmax_windows),
-        #         color="lime",
-        #     )
-        #     plt.plot(
-        #         window_centers, std_ignore_outliers(countmax_windows), color="lime"
-        #     )
-        #     plt.fill_between(
-        #         sp_maxn_s.x,
-        #         np.mean(sp_maxn_s.y, axis=0) - np.std(sp_maxn_s.y, axis=0),
-        #         np.mean(sp_maxn_s.y, axis=0) + np.std(sp_maxn_s.y, axis=0),
-        #         alpha=0.4,
-        #         color="lime",
-        #     )
-        #     plt.xlabel("window centre $m_{jj}$ [GeV]")
-        #     plt.ylabel("n_clusater/max(n_cluster)-bg")
-        #     plt.savefig(eval_path + "maxnorm-toatal.png", bbox_inches="tight")
-
-        #     # all center curves with found labels
-        #     plt.figure(figsize=figsize)
-        #     plt.grid()
-        #     for j in range(k):
-        #         if labels[j]:
-        #             plt.plot(window_centers, countmax_windows[j], color="red")
-        #         else:
-        #             plt.plot(window_centers, countmax_windows[j], color="blue")
-        #     plt.xlabel("window centre $m_{jj}$ [GeV]")
-        #     plt.ylabel("n_clusater/max(n_cluster)")
-        #     plt.savefig(eval_path + "countmax_windows.png", bbox_inches="tight")
-
-        #     # all center curve derivatives with found labels
-        #     plt.figure(figsize=figsize)
-        #     plt.grid()
-        #     lab1 = "anomalous clusters \n method 1"
-        #     lab2 = "non-anomalous clusters \n method 1"
-        #     for j in range(k):
-        #         if labels[j]:
-        #             plt.plot(
-        #                 middles(window_centers),
-        #                 num_der_counts_windows[j],
-        #                 color="red",
-        #                 label=lab1,
-        #             )
-        #             lab1 = None
-        #         else:
-        #             plt.plot(
-        #                 middles(window_centers),
-        #                 num_der_counts_windows[j],
-        #                 color="blue",
-        #                 label=lab2,
-        #             )
-        #             lab2 = None
-        #     plt.xlabel("window centre $m_{jj}$ [GeV] between adjacent windows")
-        #     plt.ylabel(r"$\Delta(N_i(m_{jj})/sum(N_i(m_{jj}))$)")
-        #     plt.savefig(eval_path + "num_der_counts_windows.png", bbox_inches="tight")
-
-        #     # all center curve derivatives with found labels
-        #     plt.figure(figsize=figsize)
-        #     plt.grid()
-        #     for j in range(k):
-        #         if labels[j]:
-        #             plt.plot(
-        #                 middles(window_centers),
-        #                 num_der_counts_windows[j] - num_der_countmax_sum,
-        #                 color="red",
-        #             )
-        #         else:
-        #             plt.plot(
-        #                 middles(window_centers),
-        #                 num_der_counts_windows[j] - num_der_countmax_sum,
-        #                 color="blue",
-        #             )
-        #     plt.xlabel("window centre $m_{jj}$ [GeV]")
-        #     plt.ylabel(r"$Median filtered \Delta[N_i(m_{jj})/sum(N_i(m_{jj}))]$")
-        #     plt.legend()
-        #     plt.savefig(
-        #         eval_path + "num_der_counts_windows_-bg.png",
-        #         bbox_inches="tight",
-        #     )
-
-        #     # TSNE
-        #     csp.CS_TSNE(num_der_counts_windows, labels, eval_path)
-
-        #     # aggregations
-
-        #     csp.plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res)
-        #     curvefit_eval(anomaly_poor_sp, anomaly_rich_sp, binning, tf)
-        #     plt.savefig(eval_path + "comb.png", bbox_inches="tight")
-
-        #     csp.plot_aggregation(
-        #         anomaly_poor_sp.subtract_sp(anomaly_rich_sp),
-        #         anomaly_rich_sp.subtract_sp(anomaly_rich_sp),
-        #         figsize,
-        #         res,
-        #     )
-        #     plt.savefig(eval_path + "comb_dev.png", bbox_inches="tight")
+        csp.two_class_curves(
+            sp.x,
+            sp.y,
+            labels,
+            self.figsize,
+        )
+        csp.plot_mean_deviat(
+            sp.x,
+            sp.mean_sp().y[0],
+            sp.std_sp().y[0],
+            fillb=True,
+        )
+        csp.plot_mean_deviat(
+            sp.x,
+            sp.mean_sp_rob().y[0],
+            sp.std_sp_rob().y[0],
+            color="orange",
+            fillb=True,
+        )
+        plt.legend()
+        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.ylabel(y_label)
+        plt.savefig(self.eval_path + savefile, bbox_inches="tight")
 
 
 def cs_performance_evaluation(*args, **kwargs):
@@ -473,3 +373,72 @@ def cs_performance_evaluation(*args, **kwargs):
 if __name__ == "__main__":
     cs_performance_evaluation()
     print("Executed when invoked directly")
+
+# Concepts
+#     # all curves standardized
+#     csp.two_class_curves(
+#         window_centers,
+#         sp_sumn_standrob.y * np.sqrt(countnrm_windows),
+#         labels,
+#         figsize,
+#         ylabel="deviation in SD",
+#         save_file=eval_path + "norm-toatal-sigmas-special.png",
+#     )
+
+#     # all curves standardized squeezed
+#     sqf = 20
+#     csp.two_class_curves(
+#         squeeze(window_centers, sqf),
+#         squeeze(sp_sumn_standrob.y, sqf),
+#         labels,
+#         figsize,
+#         ylabel="deviation in SD",
+#         save_file=eval_path + "norm-toatal-sigmas-squeezed.png",
+#     )
+
+#     # distribution of total MSE after standartisation
+#     csp.two_class_curves(
+#         window_centers,
+#         sp_sumn_standrob.y,
+#         labels,
+#         figsize,
+#         ylabel="deviation in SD",
+#         save_file=eval_path + "norm-toatal-sigmas-special.png",
+#         marker=".",
+#         linestyle="",
+#     )
+
+#     # all curves standardized points
+#     csp.two_class_curves(
+#         window_centers,
+#         sp_sumn_standrob.y * np.sqrt(countnrm_windows),
+#         labels,
+#         figsize,
+#         ylabel="deviation in SD",
+#         save_file=eval_path + "norm-toatal-sigmas-special.png",
+#     )
+
+#     # all curves standardized distribution
+#     fig, axs = plt.subplots(
+#         1, 2, figsize=(9, 3), gridspec_kw={"width_ratios": [2, 1]}
+#     )
+#     plt.sca(axs[0])
+#     ys = []
+#     for j in range(k):
+#         ys.append(list(sp_sumn_standrob.y[j]))
+#     ys = np.array(ys)
+#     ys = ys.reshape((-1,))
+#     xs = np.tile(window_centers, k)
+#     h, xedges, yedges, image = plt.hist2d(
+#         xs, ys, bins=(200, 40), cmap="gist_heat_r"
+#     )
+#     plt.xlabel("window centre $m_{jj}$ [GeV]")
+#     plt.ylabel("deviation in SD")
+#     plt.colorbar()
+#     plt.sca(axs[1])
+#     yy = (yedges[:-1] + yedges[1:]) / 2
+#     # for i in range(200):
+#     plt.step(yy, np.mean(h, axis=0), where="mid", color="darkorange")
+#     plt.xlabel("deviations in SD")
+#     plt.ylabel("avarage curve points per bin")
+#     plt.savefig(eval_path + "2d_hist.png", bbox_inches="tight")
