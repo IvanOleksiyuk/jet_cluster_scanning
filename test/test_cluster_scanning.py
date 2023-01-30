@@ -9,7 +9,7 @@ class TestClusterScanning(unittest.TestCase):
     """Class for testing cs_performance"""
 
     def test_run(self):
-        cs = ClusterScanning("test/config/test.yaml")
+        cs = ClusterScanning("test/config/testCS.yaml")
         cs.run()
         self.assertAlmostEqual(cs.counts_windows[0, 1], 12358)
 
