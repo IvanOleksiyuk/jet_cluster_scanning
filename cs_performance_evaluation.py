@@ -44,6 +44,9 @@ class CS_evaluation_process:
         self.binning = binning
         self.ID = ID
 
+        # Useful shortcuts and variables
+        self.k = counts_windows.shape[0]
+
     def prepare_spectra(self, prepare_spectra=[]):
         """function to prepare the spectra for the evaluation process
         saves spectra after each preparation step so thet they may be used for plotting later on"""
@@ -90,32 +93,45 @@ class CS_evaluation_process:
 
         return previous
 
-    def label_spectra(self, sp):
+    def flip_labels_if_majority_positive(self, labels):
+        """function to flip the labels if the majority of the labels is positive"""
+
+        # Useful shortcuts and variables
+        k = labels.shape[0]
+
+        # Flip labels if majority is positive
+        if np.sum(labels) > k / 2:
+            labels = 1 - labels
+
+        return labels
+
+    def label_spectra(self):
         """function to label the spectra for the evaluation process"""
 
         # parameters from config file
         labeling = self.cfg.labeling
-        steal_sd_anomalypoor = self.cfg.steal_sd_anomalypoor
 
-        # Useful shortcuts and variables
-        window_centers = sp.x
-        counts_windows = sp.y
+        if labeling == "2meansder":
+            sp_y = self.prepare_spectra(["maxn", "der", "med7"]).y
+            np.random.seed(self.cfg.sid)
+            kmeans = KMeans(2)
+            kmeans.fit(sp_y)
+            labels = kmeans.labels_
+            labels = self.flip_labels_if_majority_positive(labels)
 
-        # Labeling
-        if labeling == "kmeans":
-            kmeans = KMeans(n_clusters=2, random_state=0).fit(counts_windows)
-            labels = kmeans.labels_
-        elif labeling == "kmeans_mini":
-            kmeans = MiniBatchKMeans(n_clusters=2, random_state=0).fit(counts_windows)
-            labels = kmeans.labels_
-        elif labeling == "dbscan":
-            labels = DBSCAN(eps=0.3, min_samples=10).fit_predict(counts_windows)
-        elif labeling == "birch":
-            labels = Birch(n_clusters=2).fit_predict(counts_windows)
-        elif labeling == "steal_sd":
-            labels = steal_sd_anomalypoor(window_centers, counts_windows)
-        elif labeling == "steal_sd_anomalypoor":
-            labels = steal_sd_anomalypoor(window_centers, counts_windows)
+        elif labeling[:6] == "maxdev":
+            sp_sumn_standrob = self.prepare_spectra(["sumn", "-bsumsumn", "standrob"])
+            threshold = float(labeling[6:])
+            labels = np.zeros(self.k)
+            for j in range(self.k):
+                if np.any(sp_sumn_standrob.y[j] > threshold):
+                    labels[j] = 1
+                else:
+                    labels[j] = 0
+
+        elif labeling == "random":
+            labels = np.random.uniform(size=self.k) < 0.5
+
         else:
             raise ValueError("labeling method not recognized")
 
@@ -145,7 +161,7 @@ class CS_evaluation_process:
         # Useful shortcuts and variables
         window_centers = (binning.T[1] + binning.T[0]) / 2
         bin_widths = binning.T[1] - binning.T[0]
-        k = counts_windows.shape[0]
+        k = counts_windows.shape[1]
 
         # Original spectra
         sp_original = self.prepare_spectra()
