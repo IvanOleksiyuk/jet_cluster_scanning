@@ -1,0 +1,33 @@
+seed: 2
+output_path: "plots/"
+plot_name: "prep05_1_maxdev5CURTAINS"
+
+# parametetrs for cs_eval
+CSEconf: "config/cs_eval/maxdev5.yaml"
+
+xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
+
+counts_windows_boot_load: "char/v2/k50Trueret0con0W2600_2700_w0.5s1Nboot/binnedW100s16ei30004600boot/"
+title: "$n=0.5,\\sigma=1$, method 1"
+density: 1
+#Different contaminatations (vertical lines on the plot)
+contaminations:
+  - 0.01
+  - 0.005
+  - 0.0025
+old_CS:
+  - 0
+  - 0
+  - 0
+cont_paths:
+  - "char/v2/k50Trueret0con0.1W2600_2700_w0.5s1Nrest/binnedW100s16ei30004600/"
+  - "char/v2/k50Trueret0con0.05W2600_2700_w0.5s1Nrest/binnedW100s16ei30004600/"
+  - "char/v2/k50Trueret0con0.025W2600_2700_w0.5s1Nrest/binnedW100s16ei30004600/"
+colors:
+  - "red"
+  - "orange"
+  - "gold"
+postfix:
+  - "MB"
+  - "MB"
+  - "MB"

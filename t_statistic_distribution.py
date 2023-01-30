@@ -187,14 +187,24 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
+    # main plots ===============================================================
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
+
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
+    # main plots ===============================================================
+
+    # experiments ==============================================================
+
     # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new00.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new0.5_1.yaml")
     # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5CURTAINS.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5CURTAINS.yaml")
-    start_time = time.time()
-    t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
-    print("done in time --- %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # t_statistic_distribution("config/distribution/prep05_1_LABmaxdev5.yaml")
+    # print("done in time --- %s seconds ---" % (time.time() - start_time))
     # t_statistic_distribution("config/distribution/prep0_0_LABmaxdev5.yaml")
 
     # t_statistic_distribution("config/distribution/compare_old_distributions.yaml")
