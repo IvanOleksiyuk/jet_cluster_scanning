@@ -1,15 +1,15 @@
 seed: 2
-output_path: "plots2/"
-plot_name: "prep05_1_LABmaxdev5_new"
+output_path: "plots/compare/"
+plot_name: "old_to_new05_1_maxdev5_allR"
+contamination_style: "Uall"
 
-labeling: ">5sigma"   # "kmeans_der" #"kmeans_der"#">5sigma"#
-filterr: "med"
-test_statistic: "chisq_ndof"
+CSEconf: "config/cs_eval/maxdev5.yaml"
+
 xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
 counts_windows_boot_load: 
-  - "char/v2/k50Trueret0con0W2600_2700ste200_w0.5s1Nboot/binnedW100s200ei26006000boot/"
   - "old05_1"
+  - "char/v2/k50Trueret0con0W2600_2700_w0.5s1Nboot/binnedW100s200ei26006000boot/"
 title: "$n=0.5,\\sigma=1$, method 1"
 density: 1
 
@@ -32,9 +32,9 @@ cont_paths:
   - "char/old_char/BS26w60wk50ret0con0.1W100ste200rewsqrtsme1ID10/" 
   - "char/old_char/BS26w60wk50ret0con0.05W100ste200rewsqrtsme1ID10/" 
   - "char/old_char/BS26w60wk50ret0con0.025W100ste200rewsqrtsme1ID10/"
-  - "char/v2/k50Trueret0con0.1W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
-  - "char/v2/k50Trueret0con0.05W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
-  - "char/v2/k50Trueret0con0.025W2600_2700ste200_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.1W2600_2700_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.05W2600_2700_w0.5s1Nrest/binnedW100s200ei26006000/"
+  - "char/v2/k50Trueret0con0.025W2600_2700_w0.5s1Nrest/binnedW100s200ei26006000/"
 colors:
   - "red"
   - "orange"

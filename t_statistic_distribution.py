@@ -151,9 +151,6 @@ def t_statistic_distribution(config_file_path):
 
     # Replace all these where needed
     output_path = cfg.output_path
-    contamiantions = cfg.contaminations
-    cont_paths = cfg.cont_paths
-    colors = cfg.colors
 
     # initialise the main figure:
     plt.close("all")
@@ -212,19 +209,21 @@ def t_statistic_distribution(config_file_path):
 
     if cfg.contamination_style[0] == "U":
         plt.sca(ax2)
-    for c, path, col, old, postfix in zip(
-        contamiantions, cont_paths, colors, cfg.old_CS, cfg.postfix
-    ):
-        draw_contamination(
-            cfg,
-            c,
-            path,
-            col,
-            chisq_list,
-            old=old,
-            postfix=postfix,
-            style=cfg.contamination_style,
-        )
+
+    if "contaminations" in config.get_dict().keys():
+        for c, path, col, old, postfix in zip(
+            cfg.contaminations, cfg.cont_paths, cfg.colors, cfg.old_CS, cfg.postfix
+        ):
+            draw_contamination(
+                cfg,
+                c,
+                path,
+                col,
+                chisq_list,
+                old=old,
+                postfix=postfix,
+                style=cfg.contamination_style,
+            )
 
     plt.legend(loc=1)
     plt.xlabel(cfg.xlabel)
@@ -244,12 +243,18 @@ if __name__ == "__main__":
     # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
 
-    # experiments ==============================================================
+    # comparison with old distributions ========================================
+
+    # t_statistic_distribution(
+    #     r"config\distribution\compare\compare_old_to_new0.5_1maxdev5.yaml"
+    # )
+    # t_statistic_distribution(r"config\distribution\compare\prep05_1_maxdev5_COMP.yaml")
+    t_statistic_distribution(r"config\distribution\compare\prep05_1_maxdev5_COMPR.yaml")
 
     # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new00.yaml")
