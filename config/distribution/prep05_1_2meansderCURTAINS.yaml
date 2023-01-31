@@ -2,14 +2,13 @@ seed: 2
 output_path: "plots/"
 plot_name: "prep05_1_2meansderCURTAINS"
 contamination_style: "mean_std"
-
 # parametetrs for cs_eval
 CSEconf: "config/cs_eval/2meansder.yaml"
 
 xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
 counts_windows_boot_load: "char/v2/k50Trueret0con0W2600_2700_w0.5s1Nboot/binnedW100s16ei30004600boot/"
-title: "$n=0.5,\\sigma=1$, method 1"
+title: "$n=0.5,\\sigma=1$, meansder CURTAINS"
 density: 1
 #Different contaminatations (vertical lines on the plot)
 contaminations:

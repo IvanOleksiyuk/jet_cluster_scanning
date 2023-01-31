@@ -190,10 +190,20 @@ def t_statistic_distribution(config_file_path):
     else:
         plt.ylabel("Tries")
     # plt.axvline(np.mean(chisq_list), color="blue", label=r"Average for $H_0$")
-    print(np.mean(chisq_list))
-    print(np.std(chisq_list))
+    chisq_list = np.array(chisq_list)
+    print("mean", np.mean(chisq_list))
+    print("mean non-0", np.mean(chisq_list[chisq_list > 0]))
+    print("std", np.std(chisq_list))
     ndof = 7  # 2/(np.std(chisq_list))**2
     # plt.plot(x, scipy.stats.chi2.pdf(x*ndof, df=ndof)*ndof)
+
+    if "chi_df" in config.get_dict().keys():
+        df = cfg.chi_df
+        rv = stats.chi2(df)
+        x = np.linspace(np.min(chisq_list), np.max(chisq_list), 100)
+        y = rv.pdf(x * df) * df
+        tr = 1e-3
+        plt.plot(x[y > tr], y[y > tr], lw=2)
 
     #%%
     # Contaminations
@@ -230,13 +240,13 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots ===============================================================
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
     t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
 
     # experiments ==============================================================
