@@ -71,7 +71,7 @@ def perform_binning_directory(directory, override_config=None):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        perform_binning_directory("char/test/", ["config/binning/CURTAINS.yaml"])
+        perform_binning_directory("char/sig_reg/") #, ["config/binning/CURTAINS.yaml"]
     else:
         if sys.argv[1] == "-d":
             if len(sys.argv) >= 4:

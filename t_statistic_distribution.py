@@ -1,5 +1,6 @@
 # imports
 import os
+import scipy.stats as stats
 import matplotlib.pyplot as plt
 import pickle
 from cs_performance_evaluation import cs_performance_evaluation, CS_evaluation_process
@@ -51,8 +52,18 @@ def score_sample(cfg, counts_windows_boot_load):
     return tstat_list
 
 
+def p_value(stat, tstat_list):
+    return (
+        (np.sum(tstat_list >= stat) + np.sum(tstat_list > stat)) / 2 / len(tstat_list)
+    )
+
+
+def p2Z(p):
+    return -stats.norm.ppf(p)
+
+
 def draw_contamination(
-    cfg, c, path, col, tstat_list, old=False, postfix="", style="mean_std"
+    cfg, c, path, col, tstat_list, old=False, postfix="", style="all"
 ):
     arr = []
     ps = []
@@ -80,22 +91,30 @@ def draw_contamination(
         )
         # print(res["chisq_ndof"])
         arr.append(res)
-        ps.append(
-            (np.sum(tstat_list >= res) + np.sum(tstat_list > res)) / 2 / len(tstat_list)
-        )
+        ps.append(p_value(res, tstat_list))
+    meanres_ps = p_value(np.mean(arr), tstat_list)
 
     if np.mean(ps) == 0:
-        label = (
-            "$\epsilon$={:.4f}, $<p><${:.4f}".format(c, 1 / len(tstat_list)) + postfix
+        label = "$\epsilon$={:.4f}, $<p><${:.4f}, Z>{:4f}".format(
+            c, 1 / len(tstat_list), p2Z(np.mean(1 / len(tstat_list)))
         )
     else:
-        label = "$\epsilon$={:.4f}, $<p>=${:.4f}".format(c, np.mean(ps)) + postfix
+        if np.mean(meanres_ps) == 0:
+            label = "$\epsilon$={:.4f}, $<p>=${:.4f}, Z={:2f} \n p(<x>)<{:.4f} Z>{:.2f}".format(
+                c,
+                np.mean(ps),
+                p2Z(np.mean(ps)),
+                1 / len(tstat_list),
+                p2Z(np.mean(1 / len(tstat_list))),
+            )
+        else:
+            label = "$\epsilon$={:.4f} $<p>=${:.4f} Z={:.2f}\n p(<x>)={:.4f} Z={:.2f}".format(
+                c, np.mean(ps), p2Z(np.mean(ps)), meanres_ps, p2Z(np.mean(meanres_ps))
+            )
+    label += " " + postfix
 
     if style[0] == "U":
-        fig = plt.gcf()
-        fig.add_subplot(2, 1, (1, 1))
         style = style[1:]
-
     if style == "mean_std":
         plt.axvline(np.mean(arr), color=col, label=label)
         plt.axvspan(
@@ -107,9 +126,9 @@ def draw_contamination(
     elif style == "all":
         for i, a in enumerate(arr):
             if i == 0:
-                plt.axvline(a, color=col, label=label, alpha=0.2)
+                plt.axvline(a, color=col, label=label, alpha=0.3)
             else:
-                plt.axvline(a, color=col, alpha=0.2)
+                plt.axvline(a, color=col, alpha=0.3)
     elif style == "mean":
         plt.axvline(np.mean(arr), color=col, label=label)
     elif style == "median_quartiles":
@@ -138,7 +157,18 @@ def t_statistic_distribution(config_file_path):
 
     # initialise the main figure:
     plt.close("all")
-    plt.figure(figsize=(4, 3))
+    if cfg.contamination_style[0] == "U":
+        plt.figure()
+        fig, (ax1, ax2) = plt.subplots(
+            nrows=2,
+            ncols=1,
+            sharex=True,
+            gridspec_kw={"height_ratios": [3, 1]},
+            figsize=(6, 5),
+        )
+        plt.sca(ax1)
+    else:
+        plt.figure(figsize=(6, 3))
 
     if isinstance(cfg.counts_windows_boot_load, str):
         chisq_list = score_sample(cfg, cfg.counts_windows_boot_load)
@@ -155,7 +185,6 @@ def t_statistic_distribution(config_file_path):
             else:
                 plt.hist(chisq_list, bins=40, alpha=0.5)
 
-    plt.xlabel(cfg.xlabel)
     if cfg.density:
         plt.ylabel("Density")
     else:
@@ -169,14 +198,27 @@ def t_statistic_distribution(config_file_path):
     #%%
     # Contaminations
     plt.title(cfg.title)
+    plt.yscale("log")
 
+    if cfg.contamination_style[0] == "U":
+        plt.sca(ax2)
     for c, path, col, old, postfix in zip(
         contamiantions, cont_paths, colors, cfg.old_CS, cfg.postfix
     ):
-        draw_contamination(cfg, c, path, col, chisq_list, old=old, postfix=postfix)
+        draw_contamination(
+            cfg,
+            c,
+            path,
+            col,
+            chisq_list,
+            old=old,
+            postfix=postfix,
+            style=cfg.contamination_style,
+        )
 
     plt.legend(loc=1)
-    plt.yscale("log")
+    plt.xlabel(cfg.xlabel)
+
     # plt.xlim((0, 30))
     plt.savefig(
         output_path + cfg.plot_name,
@@ -188,9 +230,11 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots ===============================================================
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
     t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
     t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================

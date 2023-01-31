@@ -379,7 +379,7 @@ def cs_performance_evaluation(*args, **kwargs):
 if __name__ == "__main__":
     config_path = ["config/cs_eval/maxdev5.yaml", "config/cs_eval/plotting.yaml"]
     jj = 0
-    path = "char/test/k50Trueret0con0.05W2600_2700_w0.5s1Nrest/"
+    path = "char/sig_reg/k50Trueret0con0.05W3450_3650_w0.5s1Nrest/"
     # path1 = path + "binnedW100s200ei26006000/"
     path1 = path + "binnedW100s16ei30004600/"
     counts_windows = pickle.load(open(path1 + f"bres{jj}.pickle", "rb"))
@@ -387,7 +387,7 @@ if __name__ == "__main__":
     cs_performance_evaluation(
         counts_windows=counts_windows,
         binning=binning,
-        path=path,
+        path=path1,
         ID=jj,
         config_file_path=config_path,
     )

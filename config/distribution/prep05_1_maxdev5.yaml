@@ -1,7 +1,7 @@
 seed: 2
 output_path: "plots/"
 plot_name: "prep05_1_maxdev5"
-
+contamination_style: "mean_std"
 # parametetrs for cs_eval
 CSEconf: "config/cs_eval/maxdev5.yaml"
 

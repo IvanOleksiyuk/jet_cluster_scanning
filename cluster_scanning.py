@@ -185,6 +185,9 @@ class ClusterScanning:
             self.cfg.train_interval[0], self.cfg.train_interval[1]
         )
         self.kmeans.fit(data)
+        counts = np.bincount(self.kmeans.labels_)
+        counts.sort()
+        print("sorted cluster counts", counts)
         print("trained --- %s seconds ---" % (time.time() - start_time))
 
     def bootstrap_resample(self):
@@ -535,9 +538,9 @@ if __name__ == "__main__":
         config_file_path = [
             "config/s0_0.5_1_MB.yaml",
             "config/sig_frac/0.05.yaml",
-            "config/restart/0_3.yaml",
+            "config/restart/0_10.yaml",
             # "config/binning/CURTAINS.yaml",
-            "config/test.yaml",
+            "config/tra_reg/sig_reg.yaml",
         ]
     else:
         config_file_path = sys.argv[1:]
