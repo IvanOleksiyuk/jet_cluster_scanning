@@ -33,6 +33,7 @@ signal_fraction: 0
 k: 2 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
 MiniBatch: False #recommended to enable when doing bootstrapping
+n_init: "auto"
 
 #Parameters for binning
 W: 100 #Bin width 

@@ -142,33 +142,22 @@ class CS_evaluation_process:
         self.labels = labels
         return labels
 
-    def chi_squared_metric(self):
+    def aggregation_based_TS(self):
+        """calculates several test statistics (TS) based on choosing signal and background clusters, aggregating them and compluting the test statistic on between the two curves"""
 
-        # Parameters that are not given via config
-        binning = self.binning
-
-        # parameters from config file
+        # save options?
         save = self.cfg.save
-        verbous = self.cfg.verbous
         save_path = self.cfg.save_path
-
-        steal_sd_anomalypoor = self.cfg.steal_sd_anomalypoor
-
-        # Create folder if not yet exists
         if save:
             os.makedirs(save_path, exist_ok=True)
-
-        # Useful shortcuts and variables
-        window_centers = (binning.T[1] + binning.T[0]) / 2
-        bin_widths = binning.T[1] - binning.T[0]
 
         # Original spectra
         sp_original = self.prepare_spectra()
 
         labels = self.label_spectra()
         # total width of all (overlaing) bins devided by width of the covered area (approximation for number of time each point is counted)
-        tf = (binning.T[1][-1] - binning.T[0][0]) / np.sum(bin_widths)
-        if verbous:
+        tf = (self.binning.T[1][-1] - self.binning.T[0][0]) / np.sum(self.bin_widths)
+        if self.cfg.verbous:
             print("trial_factor", tf)
 
         # Aggregate clusters using labels
@@ -181,12 +170,12 @@ class CS_evaluation_process:
             anomaly_rich_sp = anomaly_poor_sp
 
         # Steal statistics from poor to rich spectrum if requested
-        if steal_sd_anomalypoor == 1:
+        if self.cfg.steal_sd_anomalypoor == 1:
             # Stal only in low stat regions
             anomaly_rich_sp.make_poiserr_another_sp_sumnorm_where_low_stat(
                 anomaly_poor_sp
             )
-        elif steal_sd_anomalypoor == 2:
+        elif self.cfg.steal_sd_anomalypoor == 2:
             # Stal everywhere
             anomaly_rich_sp.make_poiserr_another_sp_sumnorm(anomaly_poor_sp)
 
@@ -212,10 +201,12 @@ class CS_evaluation_process:
         self.agg_sp["poor"] = anomaly_poor_sp
         self.agg_sp["res"] = res
         # theoretical interpretation
-        mean_repetition = np.sum(bin_widths) / (binning.T[0][-1] - binning.T[0][0])
-        n_dof = len(window_centers) / mean_repetition
+        mean_repetition = np.sum(self.bin_widths) / (
+            self.binning.T[0][-1] - self.binning.T[0][0]
+        )
+        n_dof = len(self.window_centers) / mean_repetition
         res["ndof"] = n_dof
-        if verbous:
+        if self.cfg.verbous:
             print("n_dof=", n_dof)
         res["deviation"] = (chisq_ndof - 1) * n_dof / np.sqrt(2 * n_dof)
 
@@ -228,11 +219,11 @@ class CS_evaluation_process:
     def run(self):
         """function to run the evaluation process of a test statistic or a given metric"""
         if self.cfg.test_statistic == "chisq_ndof":
-            res = self.chi_squared_metric()["chisq_ndof"]
+            res = self.aggregation_based_TS()["chisq_ndof"]
         elif self.cfg.test_statistic == "max-sumnorm-dev":
-            res = self.chi_squared_metric()["max-sumnorm-dev"]
+            res = self.aggregation_based_TS()["max-sumnorm-dev"]
         elif self.cfg.test_statistic == "max-maxnorm-dev":
-            res = self.chi_squared_metric()["max-maxnorm-dev"]
+            res = self.aggregation_based_TS()["max-maxnorm-dev"]
 
         if self.cfg.plotting:
             self.plot()

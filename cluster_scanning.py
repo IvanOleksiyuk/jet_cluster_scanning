@@ -18,13 +18,22 @@ class ClusterScanning:
     def __init__(self, config_file_path):
         self.config_file_path = config_file_path
         self.config = Config(config_file_path)
+        self.cofdict = self.config.get_dict()
+        if not "n_init" in self.cofdict:
+            self.cofdict["n_init"] = "auto"
         self.cfg = self.config.get_dotmap()
         self.reproc = reprocessing.Reprocessing(self.cfg.reproc_arg_string)
         self.cfg.reproc_name = self.reproc.name
 
+        if self.cfg.n_init == "auto":
+            n_init = ""
+        else:
+            n_init = self.cfg.n_init
+
         self.save_path = self.cfg.save_path + (
             f"k{self.cfg.k}"
             f"{self.cfg.MiniBatch}"
+            f"{n_init}"
             f"ret{self.cfg.retrain}"
             f"con{self.cfg.signal_fraction}"
             f"W{self.cfg.train_interval[0]}_{self.cfg.train_interval[1]}_"
@@ -173,14 +182,20 @@ class ClusterScanning:
         return data
 
     def train_k_means(self):
+        start_time = time.time()
         self.seed()
-        if self.cfg.MiniBatch:
-            self.kmeans = MiniBatchKMeans(self.cfg.k)
+        if self.cfg.n_init == "auto":
+            if self.cfg.MiniBatch:
+                self.kmeans = MiniBatchKMeans(self.cfg.k)
+            else:
+                self.kmeans = KMeans(self.cfg.k)
         else:
-            self.kmeans = KMeans(self.cfg.k)
+            if self.cfg.MiniBatch:
+                self.kmeans = MiniBatchKMeans(self.cfg.k, n_init=self.cfg.n_init)
+            else:
+                self.kmeans = KMeans(self.cfg.k, n_init=self.cfg.n_init)
 
         # Train k-means in the training window
-        start_time = time.time()
         data = self.data_mjj_slise(
             self.cfg.train_interval[0], self.cfg.train_interval[1]
         )
@@ -188,7 +203,8 @@ class ClusterScanning:
         counts = np.bincount(self.kmeans.labels_)
         counts.sort()
         print("sorted cluster counts", counts)
-        print("trained --- %s seconds ---" % (time.time() - start_time))
+        print("iterations", self.kmeans.n_iter_)
+        print("training --- %s seconds ---" % (time.time() - start_time))
 
     def bootstrap_resample(self):
         if self.cfg.bootstrap:
@@ -217,6 +233,7 @@ class ClusterScanning:
         np.random.shuffle(self.allowed)
 
     def evaluate_whole_dataset(self):
+        start_time = time.time()
         if self.cfg.memory_intensive:
             self.bg_lab = self.kmeans.predict(
                 self.im_bg.reshape((-1, self.cfg.image_w * self.cfg.image_h))
@@ -265,6 +282,7 @@ class ClusterScanning:
                     ).reshape((-1, self.cfg.jet_per_event))
                 )
             self.sg_lab = np.concatenate(self.sg_lab)
+        print("label_eval --- %s seconds ---" % (time.time() - start_time))
 
     def count_bin(self, mjjmin, mjjmax, allowed, bootstrap_bg):
         """Counts a number of events for all classes in a given Mjj window
@@ -536,11 +554,11 @@ class ClusterScanning:
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
-            "config/s0_0.5_1_MB.yaml",
+            "config/s0_0.5_1_MB10.yaml",
             "config/sig_frac/0.05.yaml",
             "config/restart/0_10.yaml",
             # "config/binning/CURTAINS.yaml",
-            "config/tra_reg/sig_reg.yaml",
+            # "config/tra_reg/sig_reg.yaml",
         ]
     else:
         config_file_path = sys.argv[1:]

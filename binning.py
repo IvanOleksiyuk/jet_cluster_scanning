@@ -58,20 +58,25 @@ def perform_binning_directory(directory, override_config=None):
     """
     for subfolder in os.listdir(directory):
         if os.path.isdir(os.path.join(directory, subfolder)):
-            if override_config is None:
-                perform_binning_all(os.path.join(directory, subfolder, "confsum.yaml"))
-            else:
-                perform_binning_all(
-                    [
-                        os.path.join(directory, subfolder, "confsum.yaml"),
-                    ]
-                    + override_config
-                )
+            if os.path.isfile(os.path.join(directory, subfolder, "confsum.yaml")):
+                if override_config is None:
+                    perform_binning_all(
+                        os.path.join(directory, subfolder, "confsum.yaml")
+                    )
+                else:
+                    perform_binning_all(
+                        [
+                            os.path.join(directory, subfolder, "confsum.yaml"),
+                        ]
+                        + override_config
+                    )
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        perform_binning_directory("char/sig_reg/") #, ["config/binning/CURTAINS.yaml"]
+        perform_binning_directory("char/v2/")
+        perform_binning_directory("char/v2/", ["config/binning/CURTAINS.yaml"])
+
     else:
         if sys.argv[1] == "-d":
             if len(sys.argv) >= 4:

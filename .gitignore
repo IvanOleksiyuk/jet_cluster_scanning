@@ -4,6 +4,7 @@ __pycache__/**
 plots*/**
 char/**
 export/**
+experiments/**
 
 models/**
 test_results/**
