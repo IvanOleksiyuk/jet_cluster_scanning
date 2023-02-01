@@ -554,9 +554,10 @@ class ClusterScanning:
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
-            "config/s0_0.5_1_MB10.yaml",
+            "config/s0_0.5_1_MB.yaml",
             "config/sig_frac/0.05.yaml",
             "config/restart/0_10.yaml",
+            "config/mod/50inits.yaml",
             # "config/binning/CURTAINS.yaml",
             # "config/tra_reg/sig_reg.yaml",
         ]

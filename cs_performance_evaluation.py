@@ -183,18 +183,24 @@ class CS_evaluation_process:
             np.sum(anomaly_rich_sp.y) / np.sum(anomaly_poor_sp.y)
         )
 
+        # Calculate test statistics on aggregated spectra
         chisq_ndof = anomaly_poor_sp.chisq_ndof(anomaly_rich_sp)
-        max_sumnorm_dev = np.max(
-            anomaly_poor_sp.sum_norm().y - anomaly_rich_sp.sum_norm().y
+        max_sumnorm_diff = anomaly_poor_sp.sum_norm().max_diff(
+            anomaly_rich_sp.sum_norm()
         )
-        max_maxnorm_dev = np.max(
-            anomaly_poor_sp.max_norm().y - anomaly_rich_sp.max_norm().y
+        max_sumnorm_dev = anomaly_poor_sp.sum_norm().max_dev(anomaly_rich_sp.sum_norm())
+        max_maxnorm_diff = anomaly_poor_sp.max_norm().max_diff(
+            anomaly_rich_sp.max_norm()
         )
+        max_maxnorm_dev = anomaly_poor_sp.max_norm().max_dev(anomaly_rich_sp.max_norm())
 
+        # Save results
         res = {}
         res["chisq_ndof"] = chisq_ndof
         res["max-sumnorm-dev"] = max_sumnorm_dev
         res["max-maxnorm-dev"] = max_maxnorm_dev
+        res["max-sumnorm-diff"] = max_sumnorm_diff
+        res["max-maxnorm-diff"] = max_maxnorm_diff
         res["tf"] = tf
         self.agg_sp = {}
         self.agg_sp["rich"] = anomaly_rich_sp

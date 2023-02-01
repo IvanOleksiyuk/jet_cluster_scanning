@@ -254,8 +254,14 @@ if __name__ == "__main__":
     #     r"config\distribution\compare\compare_old_to_new0.5_1maxdev5.yaml"
     # )
     # t_statistic_distribution(r"config\distribution\compare\prep05_1_maxdev5_COMP.yaml")
-    t_statistic_distribution(r"config\distribution\compare\prep05_1_maxdev5_COMPR.yaml")
-
+    # t_statistic_distribution(r"config\distribution\compare\prep05_1_maxdev5_COMPR.yaml")
+    t_statistic_distribution(
+        r"config\distribution\compare\prep05_1_maxdev5_0005_inits_copy.yaml"
+    )
+    t_statistic_distribution(
+        r"config\distribution\compare\prep05_1_maxdev5CURTAINS_0005_inits.yaml"
+    )
+    # comparison with old distributions ========================================
     # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new00.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new0.5_1.yaml")

@@ -105,9 +105,7 @@ class Spectra:
         return Spectra(x, y, err, poisson=False)
 
     def standardize_rob(self):  # TODO outlier factor should be a parameter
-        y = (self.y - mean_ignore_outliers(self.y)) / std_ignore_outliers(
-            self.y
-        )
+        y = (self.y - mean_ignore_outliers(self.y)) / std_ignore_outliers(self.y)
         x = self.x
         err = 0  # TODO THIS IS FALSE IMPROVE IT
         return Spectra(x, y, err, poisson=False)
@@ -136,9 +134,7 @@ class Spectra:
             anothr_sp.y / np.sum(anothr_sp.y, axis=1) * np.sum(self.y, axis=1)
         )
 
-    def make_poiserr_another_sp_sumnorm_where_low_stat(
-        self, anothr_sp, low_stat=0
-    ):
+    def make_poiserr_another_sp_sumnorm_where_low_stat(self, anothr_sp, low_stat=0):
         if not self.poisson:
             raise Exception("Self spectrum is not poisson")
         if not anothr_sp.poisson:
@@ -148,6 +144,12 @@ class Spectra:
         )[self.y <= low_stat]
 
     def chisq_ndof(self, another):
-        return np.mean(
-            (self.y - another.y) ** 2 / (self.err**2 + another.err**2)
+        return np.mean((self.y - another.y) ** 2 / (self.err**2 + another.err**2))
+
+    def max_diff(self, another):
+        return np.max(np.abs(self.y - another.y))
+
+    def max_dev(self, another):
+        return np.max(
+            np.abs(self.y - another.y) / (self.err**2 + another.err**2) ** 0.5
         )
