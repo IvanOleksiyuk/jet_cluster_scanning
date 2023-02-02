@@ -65,15 +65,18 @@ def p2Z(p):
 def draw_contamination(
     cfg, c, path, col, tstat_list, old=False, postfix="", style="all"
 ):
-    arr = []
-    ps = []
+
+    # load restarts
     binning = None
-    for jj in range(10):
-        if old == 1:
+    counts_windows_list = []
+    if old == 1:
+        for jj in range(10):
             res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
             counts_windows = np.array(res["counts_windows"][0])
             binning = default_binning()
-        elif old == 2:
+            counts_windows_list.append(counts_windows)
+    elif old == 2:
+        for jj in range(10):
             cs = cluster_scanning.ClusterScanning(path)
             cs.load_mjj()
             cs.ID = jj
@@ -82,10 +85,19 @@ def draw_contamination(
             cs.bootstrap_resample()
             counts_windows = cs.perform_binning()
             binning = default_binning()
-        else:
-            counts_windows = pickle.load(open(path + f"bres{jj}.pickle", "rb"))
-            if binning is None:
-                binning = pickle.load(open(path + "binning.pickle", "rb"))
+            counts_windows_list.append(counts_windows)
+    else:
+        for file in os.listdir(path):
+            if file.startswith("bres"):
+                counts_windows = pickle.load(open(path + file, "rb"))
+                if binning is None:
+                    binning = pickle.load(open(path + "binning.pickle", "rb"))
+                counts_windows_list.append(counts_windows)
+
+    # evaluate TS for each
+    arr = []
+    ps = []
+    for jj, counts_windows in enumerate(counts_windows_list):
         res = cs_performance_evaluation(
             counts_windows=counts_windows, binning=binning, config_file_path=cfg.CSEconf
         )
@@ -115,7 +127,7 @@ def draw_contamination(
 
     if style[0] == "U":
         style = style[1:]
-    if style == "mean_std":
+    if style[:8] == "mean_std":
         plt.axvline(np.mean(arr), color=col, label=label)
         plt.axvspan(
             np.mean(arr) - np.std(arr),
@@ -123,6 +135,16 @@ def draw_contamination(
             color=col,
             alpha=0.15,
         )
+        style = style[8:]
+    if style == "_meanstd":
+        plt.errorbar(
+            np.mean(arr),
+            0,
+            xerr=np.std(arr) / np.sqrt(len(arr)),
+            capsize=2,
+            color=col,
+        )
+
     elif style == "all":
         for i, a in enumerate(arr):
             if i == 0:
@@ -155,14 +177,9 @@ def t_statistic_distribution(config_file_path):
     # initialise the main figure:
     plt.close("all")
     if cfg.contamination_style[0] == "U":
-        plt.figure()
-        fig, (ax1, ax2) = plt.subplots(
-            nrows=2,
-            ncols=1,
-            sharex=True,
-            gridspec_kw={"height_ratios": [3, 1]},
-            figsize=(6, 5),
-        )
+        fig = plt.figure(figsize=(6, 5))
+        gs = fig.add_gridspec(2, hspace=0, height_ratios=[4, 1])
+        (ax1, ax2) = gs.subplots(sharex=True)
         plt.sca(ax1)
     else:
         plt.figure(figsize=(6, 3))
@@ -225,7 +242,13 @@ def t_statistic_distribution(config_file_path):
                 style=cfg.contamination_style,
             )
 
-    plt.legend(loc=1)
+    if cfg.contamination_style[0] == "U":
+        handles, labels = ax2.get_legend_handles_labels()
+        plt.sca(ax1)
+        plt.legend(handles, labels, loc=1)
+        plt.sca(ax2)
+    else:
+        plt.legend(loc=1)
     plt.xlabel(cfg.xlabel)
 
     # plt.xlim((0, 30))
@@ -262,6 +285,22 @@ if __name__ == "__main__":
         r"config\distribution\compare\prep05_1_maxdev5CURTAINS_0005_inits.yaml"
     )
     # comparison with old distributions ========================================
+
+    # max diff and dev TS's ====================================================
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MMD_CURTAINS_0005.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MMDiff_CURTAINS_0005.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MSD_CURTAINS_0005.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MSDiff_CURTAINS_0005.yaml"
+    # )
+    # max diff and dev TS's ====================================================
+
     # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new00.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new0.5_1.yaml")

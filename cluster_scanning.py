@@ -25,15 +25,15 @@ class ClusterScanning:
         self.reproc = reprocessing.Reprocessing(self.cfg.reproc_arg_string)
         self.cfg.reproc_name = self.reproc.name
 
-        if self.cfg.n_init == "auto":
-            n_init = ""
+        if self.cfg.MiniBatch:
+            MB_str = f"MB{self.cfg.batch_size}"
         else:
-            n_init = self.cfg.n_init
+            MB_str = "Lloyd"
 
         self.save_path = self.cfg.save_path + (
             f"k{self.cfg.k}"
-            f"{self.cfg.MiniBatch}"
-            f"{n_init}"
+            f"{MB_str}"
+            f"_{self.cfg.n_init}i"
             f"ret{self.cfg.retrain}"
             f"con{self.cfg.signal_fraction}"
             f"W{self.cfg.train_interval[0]}_{self.cfg.train_interval[1]}_"
@@ -184,16 +184,12 @@ class ClusterScanning:
     def train_k_means(self):
         start_time = time.time()
         self.seed()
-        if self.cfg.n_init == "auto":
-            if self.cfg.MiniBatch:
-                self.kmeans = MiniBatchKMeans(self.cfg.k)
-            else:
-                self.kmeans = KMeans(self.cfg.k)
+        if self.cfg.MiniBatch:
+            self.kmeans = MiniBatchKMeans(
+                self.cfg.k, batch_size=self.cfg.n_init, n_init=self.cfg.n_init
+            )
         else:
-            if self.cfg.MiniBatch:
-                self.kmeans = MiniBatchKMeans(self.cfg.k, n_init=self.cfg.n_init)
-            else:
-                self.kmeans = KMeans(self.cfg.k, n_init=self.cfg.n_init)
+            self.kmeans = KMeans(self.cfg.k, n_init=self.cfg.n_init)
 
         # Train k-means in the training window
         data = self.data_mjj_slise(
@@ -556,8 +552,8 @@ if __name__ == "__main__":
         config_file_path = [
             "config/s0_0.5_1_MB.yaml",
             "config/sig_frac/0.05.yaml",
-            "config/restart/0_10.yaml",
-            "config/mod/50inits.yaml",
+            "config/restart/0_20.yaml",
+            "config/mod/10inits.yaml",
             # "config/binning/CURTAINS.yaml",
             # "config/tra_reg/sig_reg.yaml",
         ]

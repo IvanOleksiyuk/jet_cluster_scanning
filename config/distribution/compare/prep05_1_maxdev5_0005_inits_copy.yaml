@@ -1,7 +1,7 @@
 seed: 2
 output_path: "plots/compare/"
 plot_name: "prep05_1_maxdev5_0005-1-10i"
-contamination_style: "Umean_std"
+contamination_style: "Umean_std_meanstd"
 # parametetrs for cs_eval
 CSEconf: "config/cs_eval/maxdev5.yaml"
 

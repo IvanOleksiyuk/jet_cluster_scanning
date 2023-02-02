@@ -1,0 +1,2 @@
+MiniBatch: True #recommended to enable when doing bootstrapping
+batch_size: 1024

@@ -1,9 +1,9 @@
 seed: 2
-output_path: "plots/compare/"
-plot_name: "prep05_1_maxdev5CURTAINS_0005-1-10i"
-contamination_style: "Umean_std_meanstd"
+output_path: "plots/"
+plot_name: "prep05_1_maxdev5_MMD_CURTAINS_0005"
+contamination_style: "Uall"
 # parametetrs for cs_eval
-CSEconf: "config/cs_eval/maxdev5.yaml"
+CSEconf: ["config/cs_eval/maxdev5.yaml", "config/cs_eval/test_stat/max-maxnorm-dev.yaml"]
 
 xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
@@ -13,21 +13,11 @@ density: 1
 #Different contaminatations (vertical lines on the plot)
 contaminations:
   - 0.005
-  - 0.005
-  - 0.005
 old_CS:
-  - 0
-  - 0
   - 0
 cont_paths:
   - "char/v2/k50Trueret0con0.05W2600_2700_w0.5s1Nrest/binnedW100s16ei30004600/"
-  - "char/v2/k50True10ret0con0.05W2600_2700_w0.5s1Nrest/binnedW100s16ei30004600/"
-  - "char/v2/k50True50ret0con0.05W2600_2700_w0.5s1Nrest/binnedW100s16ei30004600/"
 colors:
   - "orange"
-  - "green"
-  - "blue"
 postfix:
   - "MB"
-  - "MB10i"
-  - "MB50i"

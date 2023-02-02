@@ -230,6 +230,10 @@ class CS_evaluation_process:
             res = self.aggregation_based_TS()["max-sumnorm-dev"]
         elif self.cfg.test_statistic == "max-maxnorm-dev":
             res = self.aggregation_based_TS()["max-maxnorm-dev"]
+        elif self.cfg.test_statistic == "max-sumnorm-diff":
+            res = self.aggregation_based_TS()["max-sumnorm-diff"]
+        elif self.cfg.test_statistic == "max-maxnorm-diff":
+            res = self.aggregation_based_TS()["max-maxnorm-diff"]
 
         if self.cfg.plotting:
             self.plot()

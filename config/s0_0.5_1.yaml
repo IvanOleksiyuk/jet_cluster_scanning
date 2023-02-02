@@ -33,7 +33,7 @@ signal_fraction: 0 #THIS IS THE SIGNAL FRACTION OF THE SIGNAL DATASET TO USE DUR
 k: 50 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
 MiniBatch: False #recommended to enable when doing bootstrapping
-n_init: "auto"
+n_init: 10
 
 #Parameters for binning
 W: 100 #Bin width 
