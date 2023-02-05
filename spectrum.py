@@ -95,7 +95,7 @@ class Spectra:
     def subtract_sp(self, another):
         y = self.y - another.y
         x = self.x
-        err = np.sqrt(self.err**2)
+        err = self.err
         return Spectra(x, y, err, poisson=False)
 
     def standardize(self):

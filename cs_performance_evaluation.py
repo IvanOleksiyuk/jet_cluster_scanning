@@ -310,7 +310,7 @@ class CS_evaluation_process:
             plt.savefig(self.eval_path + "comb.png", bbox_inches="tight")
             csp.plot_aggregation(
                 self.agg_sp["poor"].subtract_sp(self.agg_sp["poor"]),
-                self.agg_sp["poor"].subtract_sp(self.agg_sp["rich"]),
+                self.agg_sp["rich"].subtract_sp(self.agg_sp["poor"]),
                 self.figsize,
                 self.agg_sp["res"],
             )

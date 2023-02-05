@@ -28,12 +28,13 @@ def score_sample(cfg, counts_windows_boot_load):
         binning = default_binning()
     else:
         print(len(os.listdir(counts_windows_boot_load)))
+        files_list = os.listdir(counts_windows_boot_load)
+        bres_files = [file for file in files_list if file.startswith("bres")]
         counts_windows_boot = []
-        for file in os.listdir(counts_windows_boot_load):
-            if file.startswith("bres"):
-                counts_windows_boot.append(
-                    pickle.load(open(counts_windows_boot_load + file, "rb"))
-                )
+        for file in bres_files:
+            counts_windows_boot.append(
+                pickle.load(open(counts_windows_boot_load + file, "rb"))
+            )
         binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
     tstat_list = []
     for i, counts_windows in enumerate(counts_windows_boot):
@@ -49,6 +50,25 @@ def score_sample(cfg, counts_windows_boot_load):
             print(i)
 
     tstat_list = np.array(tstat_list)
+
+    # plot the worst cases
+    if cfg.evaluate_the_worst_cases:
+        worst_cases = np.argsort(tstat_list)[-10:]
+        bres_files = np.array(bres_files)
+        print("worsdt_cases", bres_files[worst_cases], tstat_list[worst_cases])
+        for i in worst_cases:
+            counts_windows = pickle.load(
+                open(counts_windows_boot_load + bres_files[i], "rb")
+            )
+            os.makedirs(counts_windows_boot_load + "worst_cases/", exist_ok=True)
+            cs_performance_evaluation(
+                counts_windows=counts_windows,
+                binning=binning,
+                config_file_path=[cfg.CSEconf, "config/cs_eval/plotting.yaml"],
+                ID=bres_files[i],
+                path=counts_windows_boot_load + "worst_cases/",
+            )
+
     return tstat_list
 
 
@@ -63,7 +83,15 @@ def p2Z(p):
 
 
 def draw_contamination(
-    cfg, c, path, col, tstat_list, old=False, postfix="", style="all"
+    cfg,
+    c,
+    path,
+    col,
+    tstat_list,
+    old=False,
+    postfix="",
+    style="all",
+    fig=None,
 ):
 
     # load restarts
@@ -87,20 +115,33 @@ def draw_contamination(
             binning = default_binning()
             counts_windows_list.append(counts_windows)
     else:
-        for file in os.listdir(path):
-            if file.startswith("bres"):
-                counts_windows = pickle.load(open(path + file, "rb"))
-                if binning is None:
-                    binning = pickle.load(open(path + "binning.pickle", "rb"))
-                counts_windows_list.append(counts_windows)
+        files_list = os.listdir(path)
+        bres_files = [file for file in files_list if file.startswith("bres")]
+        for file in bres_files:
+            counts_windows = pickle.load(open(path + file, "rb"))
+            if binning is None:
+                binning = pickle.load(open(path + "binning.pickle", "rb"))
+            counts_windows_list.append(counts_windows)
 
     # evaluate TS for each
     arr = []
     ps = []
+    os.makedirs(path + "evalutions/", exist_ok=True)
     for jj, counts_windows in enumerate(counts_windows_list):
-        res = cs_performance_evaluation(
-            counts_windows=counts_windows, binning=binning, config_file_path=cfg.CSEconf
-        )
+        if cfg.do_plotting_in_contamination_evaluation:
+            res = cs_performance_evaluation(
+                counts_windows=counts_windows,
+                binning=binning,
+                config_file_path=[cfg.CSEconf, "config/cs_eval/plotting.yaml"],
+                path=path + "evalutions/",
+                ID=bres_files[jj],
+            )
+        else:
+            res = cs_performance_evaluation(
+                counts_windows=counts_windows,
+                binning=binning,
+                config_file_path=cfg.CSEconf,
+            )
         # print(res["chisq_ndof"])
         arr.append(res)
         ps.append(p_value(res, tstat_list))
@@ -125,6 +166,8 @@ def draw_contamination(
             )
     label += " " + postfix
 
+    # the actual plotting
+    plt.figure(fig)
     if style[0] == "U":
         style = style[1:]
     if style[:8] == "mean_std":
@@ -182,10 +225,11 @@ def t_statistic_distribution(config_file_path):
         (ax1, ax2) = gs.subplots(sharex=True)
         plt.sca(ax1)
     else:
-        plt.figure(figsize=(6, 3))
+        fig = plt.figure(figsize=(6, 3))
 
     if isinstance(cfg.counts_windows_boot_load, str):
         chisq_list = score_sample(cfg, cfg.counts_windows_boot_load)
+        plt.figure(fig)
         if cfg.density:
             plt.hist(chisq_list, bins=40, density=True)
         else:
@@ -193,12 +237,13 @@ def t_statistic_distribution(config_file_path):
     else:
         for counts_windows_boot_load in cfg.counts_windows_boot_load:
             chisq_list = score_sample(cfg, counts_windows_boot_load)
-            # chisq_list_lists.append(chisq_list)
+            plt.figure(fig)
             if cfg.density:
                 plt.hist(chisq_list, bins=40, density=True, alpha=0.5)
             else:
                 plt.hist(chisq_list, bins=40, alpha=0.5)
 
+    plt.figure(fig)
     if cfg.density:
         plt.ylabel("Density")
     else:
@@ -240,6 +285,7 @@ def t_statistic_distribution(config_file_path):
                 old=old,
                 postfix=postfix,
                 style=cfg.contamination_style,
+                fig=fig,
             )
 
     if cfg.contamination_style[0] == "U":
@@ -262,13 +308,13 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots ===============================================================
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
 
     # comparison with old distributions ========================================
@@ -278,28 +324,44 @@ if __name__ == "__main__":
     # )
     # t_statistic_distribution(r"config\distribution\compare\prep05_1_maxdev5_COMP.yaml")
     # t_statistic_distribution(r"config\distribution\compare\prep05_1_maxdev5_COMPR.yaml")
-    t_statistic_distribution(
-        r"config\distribution\compare\prep05_1_maxdev5_0005_inits_copy.yaml"
-    )
-    t_statistic_distribution(
-        r"config\distribution\compare\prep05_1_maxdev5CURTAINS_0005_inits.yaml"
-    )
+    # t_statistic_distribution(
+    #     r"config\distribution\compare\prep05_1_maxdev5_0005_inits_copy.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\compare\prep05_1_maxdev5CURTAINS_0005_inits.yaml"
+    # )
     # comparison with old distributions ========================================
 
-    # max diff and dev TS's ====================================================
+    # ========== max diff and dev TS's =========================================
+    t_statistic_distribution(
+        r"config\distribution\prep05_1_maxdev5_MMD_CURTAINS_0005.yaml"
+    )
+    t_statistic_distribution(
+        r"config\distribution\prep05_1_maxdev5_MMDiff_CURTAINS_0005.yaml"
+    )
+    t_statistic_distribution(
+        r"config\distribution\prep05_1_maxdev5_MSD_CURTAINS_0005.yaml"
+    )
+    t_statistic_distribution(
+        r"config\distribution\prep05_1_maxdev5_MSDiff_CURTAINS_0005.yaml"
+    )
+    # ========== max diff and dev TS's =========================================
+
+    # ========== With all the plots =========================================
     # t_statistic_distribution(
-    #     r"config\distribution\prep05_1_maxdev5_MMD_CURTAINS_0005.yaml"
+    #     [
+    #         "config/distribution/prep05_1_maxdev5_0005.yaml",
+    #         "config/distribution/plot.yaml",
+    #     ]
     # )
     # t_statistic_distribution(
-    #     r"config\distribution\prep05_1_maxdev5_MMDiff_CURTAINS_0005.yaml"
+    #     [
+    #         "config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml",
+    #         "config/distribution/plot.yaml",
+    #     ]
     # )
-    # t_statistic_distribution(
-    #     r"config\distribution\prep05_1_maxdev5_MSD_CURTAINS_0005.yaml"
-    # )
-    # t_statistic_distribution(
-    #     r"config\distribution\prep05_1_maxdev5_MSDiff_CURTAINS_0005.yaml"
-    # )
-    # max diff and dev TS's ====================================================
+
+    # ========== With all the plots =========================================
 
     # t_statistic_distribution("config/distribution/prep0_0_LABkmeans_der.yaml")
     # t_statistic_distribution("config/distribution/compare/compare_old_to_new00.yaml")
