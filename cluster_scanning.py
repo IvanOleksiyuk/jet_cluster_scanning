@@ -354,7 +354,8 @@ class ClusterScanning:
             self.counts_windows_bg = np.stack([x[0] for x in counts_windows])
             self.counts_windows_sg = np.stack([x[1] for x in counts_windows])
             self.counts_windows = [self.counts_windows_bg, self.counts_windows_sg]
-        self.counts_windows = np.stack(counts_windows)
+        else:
+            self.counts_windows = np.stack(counts_windows)
         return self.counts_windows
 
     def make_plots(self):
