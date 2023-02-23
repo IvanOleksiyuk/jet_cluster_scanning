@@ -312,7 +312,7 @@ if __name__ == "__main__":
     # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
@@ -355,12 +355,12 @@ if __name__ == "__main__":
     #         "config/distribution/plot.yaml",
     #     ]
     # )
-    t_statistic_distribution(
-        [
-            "config/distribution/prep05_1_maxdev5CURTAINS.yaml",
-            "config/distribution/plot.yaml",
-        ]
-    )
+    # t_statistic_distribution(
+    #     [
+    #         "config/distribution/prep05_1_maxdev5CURTAINS.yaml",
+    #         "config/distribution/plot.yaml",
+    #     ]
+    # )
 
     # ========== With all the plots =========================================
 
