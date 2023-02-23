@@ -41,7 +41,12 @@ class CS_evaluation_process:
             self.config = Config(config_file_path)
         self.cfg = self.config.get_dotmap()
 
-        self.counts_windows = counts_windows.T
+        if isinstance(counts_windows, list):
+            self.counts_windows = counts_windows[0] + counts_windows[1]
+            self.counts_windows = self.counts_windows.T
+        else:
+            self.counts_windows = counts_windows.T
+
         self.binning = binning
         self.ID = ID
 

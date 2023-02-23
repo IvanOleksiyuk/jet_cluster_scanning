@@ -320,10 +320,18 @@ class ClusterScanning:
                 allowed[indexing_sg[0] : indexing_sg[-1]],
                 axis=0,
             )
-            all_lab = np.concatenate((bg, sg))
+
+            if self.cfg.separate_binning:
+                return [
+                    np.array([np.sum(bg == j) for j in range(self.cfg.k)]),
+                    np.array([np.sum(sg == j) for j in range(self.cfg.k)]),
+                ]
+            else:
+                all_lab = np.concatenate((bg, sg))
+                return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
         else:
             all_lab = bg
-        return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
+            return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
 
     def perform_binning(self):
         counts_windows = []
@@ -338,6 +346,10 @@ class ClusterScanning:
             )
 
         # print(len(counts_windows))
+        if self.cfg.separate_binning:
+            self.counts_windows_bg = np.stack([x[0] for x in counts_windows])
+            self.counts_windows_sg = np.stack([x[1] for x in counts_windows])
+            self.counts_windows = [self.counts_windows_bg, self.counts_windows_sg]
         self.counts_windows = np.stack(counts_windows)
         return self.counts_windows
 

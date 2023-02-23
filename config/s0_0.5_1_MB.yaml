@@ -42,6 +42,7 @@ steps: 200 #Number of bins
 eval_interval: #Histogram window
   - 2600
   - 6000
+separate_binning: False
 
 #Retraining option not yet implemented - requires binning to be specified
 retrain: 0

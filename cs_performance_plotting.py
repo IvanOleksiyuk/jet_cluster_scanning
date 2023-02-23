@@ -119,11 +119,10 @@ def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
         )
 
 
-def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res):
+def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1):
     window_centers = anomaly_poor_sp.x
     plt.figure(figsize=figsize)
     plt.grid()
-    sigmas = 2
     plt.fill_between(
         window_centers,
         anomaly_rich_sp.y[0] - anomaly_rich_sp.err[0] * sigmas,

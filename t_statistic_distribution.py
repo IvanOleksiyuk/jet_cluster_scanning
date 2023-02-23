@@ -308,13 +308,13 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots ===============================================================
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
 
     # comparison with old distributions ========================================
@@ -333,18 +333,19 @@ if __name__ == "__main__":
     # comparison with old distributions ========================================
 
     # ========== max diff and dev TS's =========================================
-    t_statistic_distribution(
-        r"config\distribution\prep05_1_maxdev5_MMD_CURTAINS_0005.yaml"
-    )
-    t_statistic_distribution(
-        r"config\distribution\prep05_1_maxdev5_MMDiff_CURTAINS_0005.yaml"
-    )
-    t_statistic_distribution(
-        r"config\distribution\prep05_1_maxdev5_MSD_CURTAINS_0005.yaml"
-    )
-    t_statistic_distribution(
-        r"config\distribution\prep05_1_maxdev5_MSDiff_CURTAINS_0005.yaml"
-    )
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MMD_CURTAINS_0005.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MMDiff_CURTAINS_0005.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MSD_CURTAINS_0005.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\prep05_1_maxdev5_MSDiff_CURTAINS_0005.yaml"
+    # )
+    # t_statistic_distribution(r"config\distribution\prep05_1_maxdev5_MSD_CURTAINS.yaml")
     # ========== max diff and dev TS's =========================================
 
     # ========== With all the plots =========================================
@@ -354,12 +355,12 @@ if __name__ == "__main__":
     #         "config/distribution/plot.yaml",
     #     ]
     # )
-    # t_statistic_distribution(
-    #     [
-    #         "config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml",
-    #         "config/distribution/plot.yaml",
-    #     ]
-    # )
+    t_statistic_distribution(
+        [
+            "config/distribution/prep05_1_maxdev5CURTAINS.yaml",
+            "config/distribution/plot.yaml",
+        ]
+    )
 
     # ========== With all the plots =========================================
 
