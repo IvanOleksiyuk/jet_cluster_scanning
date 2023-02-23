@@ -1,6 +1,9 @@
 import os
 import sys
 from cluster_scanning import ClusterScanning
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 def perform_binning_ID(config, ID, override_config=None):
@@ -57,6 +60,7 @@ def perform_binning_directory(directory, override_config=None):
     HINT: if you want to override some of the parameters in the config file, you can pass a list of config files each overriding the previous one.
     """
     for subfolder in os.listdir(directory):
+        logging.info(subfolder)
         if os.path.isdir(os.path.join(directory, subfolder)):
             if os.path.isfile(os.path.join(directory, subfolder, "confsum.yaml")):
                 if override_config is None:

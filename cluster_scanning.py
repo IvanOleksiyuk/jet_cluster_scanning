@@ -12,6 +12,9 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 import reprocessing
 from config_utils import Config
 import shutil
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class ClusterScanning:
@@ -122,25 +125,25 @@ class ClusterScanning:
         Returns:
             _type_: _description_
         """
-        print("loading window", Mjjmin, Mjjmax)
+        logging.info(f"loading window {Mjjmin} {Mjjmax}")
         indexing_bg = np.logical_and(self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax)
         indexing_bg = np.where(indexing_bg)[0]
 
         indexing_sg = np.logical_and(self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax)
         indexing_sg = np.where(indexing_sg)[0]
 
-        # TODO: DELETE prints  below
-        # print(len(indexing_bg), "bg events found in interval")
-        # print(len(indexing_sg), "sg events found in interval")
+        # TODO: DELETE logs below
+        # logging.info(len(indexing_bg), "bg events found in interval")
+        # logging.info(len(indexing_sg), "sg events found in interval")
 
         start_time = time.time()
-        print("start data extraction")
+        logging.info("start data extraction")
         if self.bootstrap_bg is None:
             bg = self.im_bg[indexing_bg[0] : indexing_bg[-1]]
         else:
             if self.cfg.verbose:
-                print(len(self.im_bg[indexing_bg[0] : indexing_bg[-1]]))
-                print(len(self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
+                logging.info(len(self.im_bg[indexing_bg[0] : indexing_bg[-1]]))
+                logging.info(len(self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
             bg = np.repeat(
                 self.im_bg[indexing_bg[0] : indexing_bg[-1]],
                 self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
@@ -153,12 +156,12 @@ class ClusterScanning:
                 self.allowed[indexing_sg[0] : indexing_sg[-1]],
                 axis=0,
             )
-            print("only", len(sg), "sg events taken")
+            logging.info(f"only {len(sg)} sg events taken")
         # test if chnaging to this spares some time
         # sg=im_sg[indexing_sg[0]:indexing_sg[-1]]
         # sg=sg[allowed[indexing_sg[0]:indexing_sg[-1]]]
-        print("only", len(bg), "bg events taken")
-        print("load --- %s seconds ---" % (time.time() - start_time))
+        logging.info(f"only {len(bg)} bg events taken")
+        logging.debug("load --- %s seconds ---" % (time.time() - start_time))
         start_time = time.time()
 
         if self.allowed is not None:
@@ -174,11 +177,11 @@ class ClusterScanning:
             )
         )
         if not self.cfg.memory_intensive:
-            print("concat --- %s seconds ---" % (time.time() - start_time))
+            logging.debug("concat --- %s seconds ---" % (time.time() - start_time))
             start_time = time.time()
             data = self.reproc(data)
         data = data.reshape((len(data), self.cfg.image_size**2))
-        print("reproc --- %s seconds ---" % (time.time() - start_time))
+        logging.info("reproc --- %s seconds ---" % (time.time() - start_time))
         return data
 
     def train_k_means(self):
@@ -198,9 +201,9 @@ class ClusterScanning:
         self.kmeans.fit(data)
         counts = np.bincount(self.kmeans.labels_)
         counts.sort()
-        print("sorted cluster counts", counts)
-        print("iterations", self.kmeans.n_iter_)
-        print("training --- %s seconds ---" % (time.time() - start_time))
+        logging.info(f"sorted cluster counts {counts}")
+        logging.info(f"iterations {self.kmeans.n_iter_}")
+        logging.info("training --- %s seconds ---" % (time.time() - start_time))
 
     def bootstrap_resample(self):
         if self.cfg.bootstrap:
@@ -212,7 +215,9 @@ class ClusterScanning:
             a = np.arange(n)
             self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
         else:
-            print("bootstrap is not set to true in config file => ignoring bootstrap")
+            logging.debug(
+                "bootstrap is not set to true in config file => ignoring bootstrap"
+            )
 
     def cancel_bootstrap_resampling(self):
         self.bg_bootstrap = None
@@ -241,8 +246,9 @@ class ClusterScanning:
             self.bg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_bg) / batch_size))):
-                if self.cfg.verbose:
-                    print(i * batch_size, min((i + 1) * batch_size, len(self.im_bg)))
+                logging.debug(
+                    i * batch_size, min((i + 1) * batch_size, len(self.im_bg))
+                )
                 self.bg_lab.append(
                     self.kmeans.predict(
                         self.reproc(
@@ -260,11 +266,10 @@ class ClusterScanning:
             self.sg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_sg) / batch_size))):
-                if self.cfg.verbose:
-                    print(
-                        i * batch_size,
-                        min((i + 1) * batch_size, len(self.im_bg)),
-                    )
+                logging.debug(
+                    i * batch_size,
+                    min((i + 1) * batch_size, len(self.im_bg)),
+                )
                 self.sg_lab.append(
                     self.kmeans.predict(
                         self.reproc(
@@ -278,7 +283,7 @@ class ClusterScanning:
                     ).reshape((-1, self.cfg.jet_per_event))
                 )
             self.sg_lab = np.concatenate(self.sg_lab)
-        print("label_eval --- %s seconds ---" % (time.time() - start_time))
+        logging.info("label_eval --- %s seconds ---" % (time.time() - start_time))
 
     def count_bin(self, mjjmin, mjjmax, allowed, bootstrap_bg):
         """Counts a number of events for all classes in a given Mjj window
@@ -299,15 +304,15 @@ class ClusterScanning:
         indexing_sg = np.logical_and(self.mjj_sg >= mjjmin, self.mjj_sg <= mjjmax)
         indexing_sg = np.where(indexing_sg)[0]
 
-        # TODO: DELETE prints  below
-        # print(len(indexing_bg), "bg events found in interval")
-        # print(len(indexing_sg), "sg events found in interval")
+        # TODO: DELETE logs  below
+        # logging.info(len(indexing_bg), "bg events found in interval")
+        # logging.info(len(indexing_sg), "sg events found in interval")
 
         if bootstrap_bg is None:
             bg = self.bg_lab[indexing_bg[0] : indexing_bg[-1]]
         else:
-            print(len(self.bg_lab[indexing_bg[0] : indexing_bg[-1]]))
-            print(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
+            logging.debug(len(self.bg_lab[indexing_bg[0] : indexing_bg[-1]]))
+            logging.debug(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
             bg = np.repeat(
                 self.bg_lab[indexing_bg[0] : indexing_bg[-1]],
                 bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
@@ -345,7 +350,6 @@ class ClusterScanning:
                 )
             )
 
-        # print(len(counts_windows))
         if self.cfg.separate_binning:
             self.counts_windows_bg = np.stack([x[0] for x in counts_windows])
             self.counts_windows_sg = np.stack([x[1] for x in counts_windows])
@@ -500,7 +504,7 @@ class ClusterScanning:
         self.perform_binning()
         self.make_plots()
         # plt.show()
-        print("All done ### %s seconds ###" % (time.time() - start_time))
+        logging.info("Run completed in ### %s seconds ###" % (time.time() - start_time))
 
     def multi_run(self):
         start_time = time.time()
@@ -508,7 +512,7 @@ class ClusterScanning:
         self.load_data()
         for IDb in range(self.cfg.restart_ID_start, self.cfg.restart_ID_finish):
             if os.path.exists(self.save_path + f"lab{IDb}.pickle"):
-                print(f"IDb {IDb} already exists")
+                logging.info(f"IDb {IDb} already exists")
                 continue
             self.ID = IDb
             self.sample_signal_events()
@@ -517,7 +521,9 @@ class ClusterScanning:
             self.train_k_means()
             self.evaluate_whole_dataset()
             self.save_results()
-            print(f"Done IDb {IDb} ### %s seconds ###" % (time.time() - start_time))
+            logging.info(
+                f"Done IDb {IDb} ### %s seconds ###" % (time.time() - start_time)
+            )
 
     def counts_windows_path(self, directory=False):
         pathh = (
@@ -571,6 +577,6 @@ if __name__ == "__main__":
         ]
     else:
         config_file_path = sys.argv[1:]
-    print("sarting", config_file_path)
+    logging.info("sarting", config_file_path)
     cs = ClusterScanning(config_file_path)
     cs.run()
