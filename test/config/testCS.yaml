@@ -25,7 +25,7 @@ restart_ID_start: 0
 restart_ID_finish: 3
 
 #Parameters of the training
-memory_intensive: False
+memory_intensive: True
 train_interval:
   - 2000
   - 2100

@@ -239,9 +239,11 @@ class ClusterScanning:
             self.bg_lab = self.kmeans.predict(
                 self.im_bg.reshape((-1, self.cfg.image_w * self.cfg.image_h))
             )
+            self.bg_lab = self.bg_lab.reshape((-1, self.cfg.jet_per_event))
             self.sg_lab = self.kmeans.predict(
                 self.im_sg.reshape((-1, self.cfg.image_w * self.cfg.image_h))
             )
+            self.sg_lab = self.sg_lab.reshape((-1, self.cfg.jet_per_event))
         else:
             self.bg_lab = []
             batch_size = 10000
