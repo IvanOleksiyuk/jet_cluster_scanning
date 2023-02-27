@@ -15,7 +15,8 @@
  
 ### Request the amount of memory you need for your job. 
 ### You can specify this in either MB (1024M) or GB (4G).
-#SBATCH --mem-per-cpu=32G
+#SBATCH -c 1
+#SBATCH --mem-per-cpu=64G
  
 ### Load modules
 
