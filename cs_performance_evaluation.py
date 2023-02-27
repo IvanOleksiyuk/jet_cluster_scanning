@@ -238,14 +238,18 @@ class CS_evaluation_process:
 
         # Calculate test statistics on aggregated spectra
         chisq_ndof = anomaly_poor_sp.chisq_ndof(anomaly_rich_sp)
-        max_sumnorm_diff = anomaly_poor_sp.sum_norm().max_diff(
+        max_sumnorm_diff = anomaly_poor_sp.sum_norm().max_diff_abs(
             anomaly_rich_sp.sum_norm()
         )
-        max_sumnorm_dev = anomaly_poor_sp.sum_norm().max_dev(anomaly_rich_sp.sum_norm())
-        max_maxnorm_diff = anomaly_poor_sp.max_norm().max_diff(
+        max_sumnorm_dev = anomaly_poor_sp.sum_norm().max_dev_abs(
+            anomaly_rich_sp.sum_norm()
+        )
+        max_maxnorm_diff = anomaly_poor_sp.max_norm().max_diff_abs(
             anomaly_rich_sp.max_norm()
         )
-        max_maxnorm_dev = anomaly_poor_sp.max_norm().max_dev(anomaly_rich_sp.max_norm())
+        max_maxnorm_dev = anomaly_poor_sp.max_norm().max_dev_abs(
+            anomaly_rich_sp.max_norm()
+        )
 
         # Save results
         res = {}
@@ -286,7 +290,10 @@ class CS_evaluation_process:
         if cluster_sc == "max":
             return np.max(per_cluster_score)
         elif cluster_sc == "chi":
-            return np.mean(per_cluster_score)
+            if mjj_sc == "max":
+                return np.mean(per_cluster_score**2)
+            elif mjj_sc == "chi":
+                return np.mean(per_cluster_score)
 
     def run(self):
         """function to run the evaluation process of a test statistic or a given metric"""

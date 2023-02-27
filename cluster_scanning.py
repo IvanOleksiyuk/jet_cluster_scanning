@@ -570,11 +570,11 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
             "config/s0_0.5_1_MB.yaml",
-            "config/sig_frac/0.05.yaml",
-            "config/restart/0_20.yaml",
-            "config/mod/10inits.yaml",
-            # "config/binning/CURTAINS.yaml",
-            # "config/tra_reg/sig_reg.yaml",
+            #            "config/sig_frac/0.05.yaml",
+            #            "config/restart/0_20.yaml",
+            #            "config/mod/10inits.yaml",
+            "config/binning/CURTAINS.yaml",
+            "config/tra_reg/3000_3100.yaml",
         ]
     else:
         config_file_path = sys.argv[1:]

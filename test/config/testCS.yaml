@@ -34,6 +34,7 @@ k: 2 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
 MiniBatch: False #recommended to enable when doing bootstrapping
 n_init: 10
+batch_size: 100
 
 #Parameters for binning
 W: 100 #Bin width 
@@ -41,6 +42,7 @@ steps: 4 #Number of bins
 eval_interval: #Histogram window
   - 2000
   - 6000
+separate_binning: False #binn background and signal separately
 
 #Retraining option not yet implemented - requires binning to be specified
 retrain: 0
