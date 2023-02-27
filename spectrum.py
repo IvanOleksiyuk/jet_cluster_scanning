@@ -139,17 +139,58 @@ class Spectra:
             raise Exception("Self spectrum is not poisson")
         if not anothr_sp.poisson:
             raise Exception("Another spectrum is not poisson")
-        self.err[self.y <= low_stat] = np.sqrt(
-            anothr_sp.y / np.sum(anothr_sp.y, axis=1) * np.sum(self.y, axis=1)
-        )[self.y <= low_stat]
+        if len(anothr_sp.y) == 1:
+            for i in range(self.y.shape[0]):
+                self.err[i][self.y[i] <= low_stat] = np.sqrt(
+                    anothr_sp.y[0] / np.sum(anothr_sp.y[0]) * np.sum(self.y[i])
+                )[self.y[i] <= low_stat]
+        else:
+            for i in range(self.y.shape[0]):
+                self.err[i][self.y[i] <= low_stat] = np.sqrt(
+                    anothr_sp.y[i] / np.sum(anothr_sp.y[i]) * np.sum(self.y[i])
+                )[self.y[i] <= low_stat]
 
-    def chisq_ndof(self, another):
-        return np.mean((self.y - another.y) ** 2 / (self.err**2 + another.err**2))
+    def chisq_ndof(self, another=None):
+        if len(self.y) > 1:
+            axis = 1
+        else:
+            axis = None
+        if another is None:
+            return np.mean(self.y**2 / self.err**2, axis=axis)
+        else:
+            return np.mean(
+                (self.y - another.y) ** 2 / (self.err**2 + another.err**2),
+                axis=axis,
+            )
 
-    def max_diff(self, another):
+    def max_diff_abs(self, another):
         return np.max(np.abs(self.y - another.y))
 
-    def max_dev(self, another):
-        return np.max(
-            np.abs(self.y - another.y) / (self.err**2 + another.err**2) ** 0.5
-        )
+    def max_diff(self, another):
+        return np.max(self.y - another.y)
+
+    def max_dev_abs(self, another=None):
+        if len(self.y) > 1:
+            axis = 1
+        else:
+            axis = None
+        if another is None:
+            return np.max(np.abs(self.y) / self.err, axis=axis)
+        else:
+            return np.max(
+                np.abs(self.y - another.y) / (self.err**2 + another.err**2) ** 0.5,
+                axis=axis,
+            )
+
+    def max_dev(self, another=None):
+        if len(self.y) > 1:
+            axis = 1
+        else:
+            axis = None
+        if another is None:
+            return np.max(self.y / self.err, axis=axis)
+        else:
+            return np.max(
+                (self.y - another.y) / (self.err**2 + another.err**2) ** 0.5,
+                axis=axis,
+            )

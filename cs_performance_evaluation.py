@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, Birch
 import time
@@ -14,7 +15,9 @@ from squeeze_array import squeeze
 from curvefit_eval import curvefit_eval
 from binning_utils import default_binning
 from config_utils import Config
+import logging
 
+logging.basicConfig(level=logging.INFO)
 # mpl.rcParams.update(mpl.rcParamsDefault)
 plt.close("all")
 
@@ -42,10 +45,14 @@ class CS_evaluation_process:
         self.cfg = self.config.get_dotmap()
 
         if isinstance(counts_windows, list):
+            self.counts_windows_bg = counts_windows[0].T
+            self.counts_windows_sg = counts_windows[1].T
+            self.separate_binning = True
             self.counts_windows = counts_windows[0] + counts_windows[1]
             self.counts_windows = self.counts_windows.T
         else:
             self.counts_windows = counts_windows.T
+            self.separate_binning = False
 
         self.binning = binning
         self.ID = ID
@@ -75,7 +82,12 @@ class CS_evaluation_process:
         sp_original = Spectra(self.window_centers, self.counts_windows)
         previous = sp_original
         for i, action in enumerate(prepare_spectra):
-            if action == "sumn":
+            if action == "fix_low_stat_error":
+                new = copy.deepcopy(previous)
+                new.make_poiserr_another_sp_sumnorm_where_low_stat(
+                    sp_original.sum_sp(), low_stat=10
+                )
+            elif action == "sumn":
                 new = previous.sum_norm()
             elif action == "maxn":
                 new = previous.max_norm()
@@ -115,6 +127,33 @@ class CS_evaluation_process:
 
         return labels
 
+    def significance_improvement(self, cluster=None):
+        if cluster is None:
+            cluster = self.labels == 1
+        initial_significance = np.sum(self.counts_windows_sg) / np.sqrt(
+            np.sum(self.counts_windows_bg)
+        )
+        final_significance = np.sum(self.counts_windows_sg[cluster]) / np.sqrt(
+            np.sum(self.counts_windows_bg[cluster])
+        )
+        return final_significance / initial_significance
+
+    def signal_efficiency(self):
+        """function to calculate the purity of the labels"""
+        # Calculate purity
+        fraction_signal = np.sum(self.counts_windows_sg[self.labels == 1]) / np.sum(
+            self.counts_windows_sg
+        )
+        return fraction_signal
+
+    def background_efficiency(self):
+        """function to calculate the purity of the labels"""
+        # Calculate purity
+        fraction_signal = np.sum(self.counts_windows_bg[self.labels == 1]) / np.sum(
+            self.counts_windows_bg
+        )
+        return fraction_signal
+
     def label_spectra(self):
         """function to label the spectra for the evaluation process"""
 
@@ -145,6 +184,16 @@ class CS_evaluation_process:
         else:
             raise ValueError("labeling method not recognized")
         self.labels = labels
+
+        if self.separate_binning:
+            SIs = []
+            for i in range(self.k):
+                SIs.append(self.significance_improvement(cluster=[i]))
+            # logging.info("-------------------------------------------------")
+            # logging.info(f"{SIs} max of SI's of separate clusters")
+            # logging.info(f"{int(np.sum(labels))} clusters were chosen for signal, aggregation gives SI of {self.significance_improvement():.4f}")
+            # print(f"{self.background_efficiency():},")
+            # logging.info(f"signal efficiency: {self.signal_efficiency():.4f},, background efficiency: {self.background_efficiency():.4f}")
         return labels
 
     def aggregation_based_TS(self):
@@ -162,8 +211,7 @@ class CS_evaluation_process:
         labels = self.label_spectra()
         # total width of all (overlaing) bins devided by width of the covered area (approximation for number of time each point is counted)
         tf = (self.binning.T[1][-1] - self.binning.T[0][0]) / np.sum(self.bin_widths)
-        if self.cfg.verbous:
-            print("trial_factor", tf)
+        logging.debug(f"trial_factor {tf}")
 
         # Aggregate clusters using labels
         anomaly_poor_sp = sp_original.sum_sp(np.logical_not(labels)).pscale(tf)
@@ -217,18 +265,33 @@ class CS_evaluation_process:
         )
         n_dof = len(self.window_centers) / mean_repetition
         res["ndof"] = n_dof
-        if self.cfg.verbous:
-            print("n_dof=", n_dof)
+        logging.debug(f"n_dof={n_dof}")
         res["deviation"] = (chisq_ndof - 1) * n_dof / np.sqrt(2 * n_dof)
 
         if np.any(anomaly_rich_sp.err < 0):
-            print("WARNING: rich anomaly error has negative values")
+            logging.warning("rich anomaly error has negative values")
         elif np.any(anomaly_rich_sp.err == 0):
-            print("WARNING: rich anomaly error has zero values")
+            logging.warning("rich anomaly error has zero values")
         return res
+
+    def non_aggregation_based_TS(self, prepare_sp, cluster_sc, mjj_sc):
+
+        sp_sumnorm = self.prepare_spectra(prepare_spectra=prepare_sp)
+
+        if mjj_sc == "max":
+            per_cluster_score = sp_sumnorm.max_dev()
+        elif mjj_sc == "chi":
+            per_cluster_score = sp_sumnorm.chisq_ndof()
+
+        if cluster_sc == "max":
+            return np.max(per_cluster_score)
+        elif cluster_sc == "chi":
+            return np.mean(per_cluster_score)
 
     def run(self):
         """function to run the evaluation process of a test statistic or a given metric"""
+        prepr = ["fix_low_stat_error", "sumn", "-bsumsumn"]
+
         if self.cfg.test_statistic == "chisq_ndof":
             res = self.aggregation_based_TS()["chisq_ndof"]
         elif self.cfg.test_statistic == "max-sumnorm-dev":
@@ -239,6 +302,22 @@ class CS_evaluation_process:
             res = self.aggregation_based_TS()["max-sumnorm-diff"]
         elif self.cfg.test_statistic == "max-maxnorm-diff":
             res = self.aggregation_based_TS()["max-maxnorm-diff"]
+        elif self.cfg.test_statistic == "NA-sumnorm-maxC-maxM":
+            res = self.non_aggregation_based_TS(
+                prepare_sp=prepr, cluster_sc="max", mjj_sc="max"
+            )
+        elif self.cfg.test_statistic == "NA-sumnorm-maxC-chiM":
+            res = self.non_aggregation_based_TS(
+                prepare_sp=prepr, cluster_sc="max", mjj_sc="chi"
+            )
+        elif self.cfg.test_statistic == "NA-sumnorm-chiC-maxM":
+            res = self.non_aggregation_based_TS(
+                prepare_sp=prepr, cluster_sc="chi", mjj_sc="max"
+            )
+        elif self.cfg.test_statistic == "NA-sumnorm-chiC-chiM":
+            res = self.non_aggregation_based_TS(
+                prepare_sp=prepr, cluster_sc="chi", mjj_sc="chi"
+            )
 
         if self.cfg.plotting:
             self.plot()
@@ -320,6 +399,21 @@ class CS_evaluation_process:
                 self.agg_sp["res"],
             )
             plt.savefig(self.eval_path + "comb_dev.png", bbox_inches="tight")
+        else:
+            prepr = ["fix_low_stat_error", "sumn", "-bsumsumn"]
+            plt.figure()
+            sp = self.prepare_spectra(prepr)
+            for i in range(len(sp.y)):
+                plt.plot(sp.x, sp.y[i])
+            plt.savefig(self.eval_path + "spectra_diffs.png", bbox_inches="tight")
+
+            plt.figure()
+            for i in range(len(sp.y)):
+                plt.plot(
+                    sp.x,
+                    sp.y[i] / sp.err[i],
+                )
+            plt.savefig(self.eval_path + "spectra_devs.png", bbox_inches="tight")
 
     def redo_cs_plots(self):
         # Duplicate plots from the cluster scanning OBSOLETE

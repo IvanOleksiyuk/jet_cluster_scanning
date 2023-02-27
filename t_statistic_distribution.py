@@ -61,10 +61,14 @@ def score_sample(cfg, counts_windows_boot_load):
                 open(counts_windows_boot_load + bres_files[i], "rb")
             )
             os.makedirs(counts_windows_boot_load + "worst_cases/", exist_ok=True)
+            if isinstance(cfg.CSEconf, str):
+                config_file_path = [cfg.CSEconf, "config/cs_eval/plotting.yaml"]
+            else:
+                config_file_path = cfg.CSEconf + ["config/cs_eval/plotting.yaml"]
             cs_performance_evaluation(
                 counts_windows=counts_windows,
                 binning=binning,
-                config_file_path=[cfg.CSEconf, "config/cs_eval/plotting.yaml"],
+                config_file_path=config_file_path,
                 ID=bres_files[i],
                 path=counts_windows_boot_load + "worst_cases/",
             )
@@ -129,10 +133,14 @@ def draw_contamination(
     os.makedirs(path + "evalutions/", exist_ok=True)
     for jj, counts_windows in enumerate(counts_windows_list):
         if cfg.do_plotting_in_contamination_evaluation:
+            if isinstance(cfg.CSEconf, str):
+                config_file_path = [cfg.CSEconf, "config/cs_eval/plotting.yaml"]
+            else:
+                config_file_path = cfg.CSEconf + ["config/cs_eval/plotting.yaml"]
             res = cs_performance_evaluation(
                 counts_windows=counts_windows,
                 binning=binning,
-                config_file_path=[cfg.CSEconf, "config/cs_eval/plotting.yaml"],
+                config_file_path=config_file_path,
                 path=path + "evalutions/",
                 ID=bres_files[jj],
             )
@@ -228,38 +236,38 @@ def t_statistic_distribution(config_file_path):
         fig = plt.figure(figsize=(6, 3))
 
     if isinstance(cfg.counts_windows_boot_load, str):
-        chisq_list = score_sample(cfg, cfg.counts_windows_boot_load)
+        TS_list = score_sample(cfg, cfg.counts_windows_boot_load)
         plt.figure(fig)
         if cfg.density:
-            plt.hist(chisq_list, bins=40, density=True)
+            plt.hist(TS_list, bins=40, density=True)
         else:
-            plt.hist(chisq_list, bins=40)
+            plt.hist(TS_list, bins=40)
     else:
         for counts_windows_boot_load in cfg.counts_windows_boot_load:
-            chisq_list = score_sample(cfg, counts_windows_boot_load)
+            TS_list = score_sample(cfg, counts_windows_boot_load)
             plt.figure(fig)
             if cfg.density:
-                plt.hist(chisq_list, bins=40, density=True, alpha=0.5)
+                plt.hist(TS_list, bins=40, density=True, alpha=0.5)
             else:
-                plt.hist(chisq_list, bins=40, alpha=0.5)
+                plt.hist(TS_list, bins=40, alpha=0.5)
 
     plt.figure(fig)
     if cfg.density:
         plt.ylabel("Density")
     else:
         plt.ylabel("Tries")
-    # plt.axvline(np.mean(chisq_list), color="blue", label=r"Average for $H_0$")
-    chisq_list = np.array(chisq_list)
-    print("mean", np.mean(chisq_list))
-    print("mean non-0", np.mean(chisq_list[chisq_list > 0]))
-    print("std", np.std(chisq_list))
-    ndof = 7  # 2/(np.std(chisq_list))**2
+    # plt.axvline(np.mean(TS_list), color="blue", label=r"Average for $H_0$")
+    TS_list = np.array(TS_list)
+    print("mean", np.mean(TS_list))
+    print("mean non-0", np.mean(TS_list[TS_list > 0]))
+    print("std", np.std(TS_list))
+    ndof = 7  # 2/(np.std(TS_list))**2
     # plt.plot(x, scipy.stats.chi2.pdf(x*ndof, df=ndof)*ndof)
 
     if "chi_df" in config.get_dict().keys():
         df = cfg.chi_df
         rv = stats.chi2(df)
-        x = np.linspace(np.min(chisq_list), np.max(chisq_list), 100)
+        x = np.linspace(np.min(TS_list), np.max(TS_list), 100)
         y = rv.pdf(x * df) * df
         tr = 1e-3
         plt.plot(x[y > tr], y[y > tr], lw=2)
@@ -281,7 +289,7 @@ def t_statistic_distribution(config_file_path):
                 c,
                 path,
                 col,
-                chisq_list,
+                TS_list,
                 old=old,
                 postfix=postfix,
                 style=cfg.contamination_style,
@@ -312,7 +320,7 @@ if __name__ == "__main__":
     # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
     # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
@@ -331,6 +339,22 @@ if __name__ == "__main__":
     #     r"config\distribution\compare\prep05_1_maxdev5CURTAINS_0005_inits.yaml"
     # )
     # comparison with old distributions ========================================
+
+    # ========== no Aggregation TS =========================================
+    t_statistic_distribution(
+        r"config\distribution\NA\prep05_1_NA-sumnorm-maxC-maxM.yaml"
+    )
+    t_statistic_distribution(
+        r"config\distribution\NA\prep05_1_NA-sumnorm-chiC-chiM.yaml"
+    )
+    t_statistic_distribution(
+        r"config\distribution\NA\prep05_1_NA-sumnorm-chiC-maxM.yaml"
+    )
+    t_statistic_distribution(
+        r"config\distribution\NA\prep05_1_NA-sumnorm-maxC-chiM.yaml"
+    )
+
+    # ========== no Aggregation TS =========================================
 
     # ========== max diff and dev TS's =========================================
     # t_statistic_distribution(
