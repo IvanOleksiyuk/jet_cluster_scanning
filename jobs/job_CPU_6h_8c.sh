@@ -15,10 +15,10 @@
  
 ### Request the amount of memory you need for your job. 
 ### You can specify this in either MB (1024M) or GB (4G).
-#SBATCH --mem-per-cpu=32G
+#SBATCH --mem-per-cpu=8G
 
 ### Request the amount of cores you need for your job.
-#SBATCH -c 1 
+#SBATCH -c 8 
 ### Load modules
 
 module load GCC/10.2.0 CUDA/11.1.1 OpenMPI/4.0.5
