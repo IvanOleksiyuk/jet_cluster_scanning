@@ -574,7 +574,7 @@ if __name__ == "__main__":
             #            "config/restart/0_20.yaml",
             #            "config/mod/10inits.yaml",
             "config/binning/CURTAINS.yaml",
-            "config/tra_reg/3000_3100.yaml",
+            "config/tra_reg/sig_reg.yaml",
         ]
     else:
         config_file_path = sys.argv[1:]
