@@ -22,7 +22,9 @@ Short algorythm on how to use the prject:
 3.	Use cluster_scanning.py funcion with a base config and a bootstrap config 
 e.g. $python cluster_scanning.py config/s0_0.5_1_MB.yaml config/bootstrap/0_300.yaml
 to bootstrap resample a lot of background only samples and perform clustering on each resampling in order to later get a background hypothesis distribution of the 
-SLURM: If you are working on cluster I recommend using jobs/start_bootstrap_jobs.py script that will automatically start 5 jobs for 6h with 300 resamplings each (depending on the specifications of your cluster nodes I might not be able to train all 300 at once, you may restart the same script to continue training)
+SLURM: If you are working on cluster I recommend using jobs/start_bootstrap_jobs.py script that will automatically start 5 jobs for 6h with 300 resamplings each (depending on the specifications of your cluster nodes I might not be able to train all 300 at once, you may restart the same script to continue training) e.g.
+cd jobs
+python start_bootstrap_jobs.py config/s0_0.5_1_MB.yaml config/tra_reg/3000_3100.yaml
 4.1	Use cluster_scanning.py funcion with base config and a sig_frac config 
 e.g. $python cluster_scanning.py config/s0_0.5_1_MB.yaml config/bootstrap/0_300.yaml
 to simmulare analysis in case of signal contamination
