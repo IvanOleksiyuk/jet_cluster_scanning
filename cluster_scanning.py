@@ -356,26 +356,28 @@ class ClusterScanning:
             self.counts_windows_bg = np.stack([x[0] for x in counts_windows])
             self.counts_windows_sg = np.stack([x[1] for x in counts_windows])
             self.counts_windows = [self.counts_windows_bg, self.counts_windows_sg]
+            self.counts_windows_sum = sum(self.counts_windows)
         else:
-            self.counts_windows = np.stack(counts_windows)
+            self.counts_windows = [np.stack(counts_windows)]
+            self.counts_windows_sum = np.stack(counts_windows)
         return self.counts_windows
 
     def make_plots(self):
         # Some plotting
         plots_path = self.save_path + f"plots{self.ID}/"
         os.makedirs(plots_path, exist_ok=True)
-
+        
         window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
         min_allowed_count = 100
         min_min_allowed_count = 10
         plt.figure()
         plt.grid()
         for j in range(self.cfg.k):
-            plt.plot(window_centers, self.counts_windows[:, j])
+            plt.plot(window_centers, self.counts_windows_sum[:, j])
         plt.xlabel("m_jj")
         plt.ylabel("n points from window")
         plt.savefig(plots_path + "kmeans_ni_mjj_total.png")
-        smallest_cluster_count_window = np.min(self.counts_windows, axis=1)
+        smallest_cluster_count_window = np.min(self.counts_windows_sum, axis=1)
         for i in range(len(window_centers)):
             if smallest_cluster_count_window[i] < min_allowed_count:
                 if smallest_cluster_count_window[i] < min_min_allowed_count:
@@ -385,10 +387,10 @@ class ClusterScanning:
 
         plt.savefig(plots_path + "kmeans_ni_mjj_total_statAllowed.png")
 
-        partials_windows = np.zeros(self.counts_windows.shape)
+        partials_windows = np.zeros(self.counts_windows_sum.shape)
         for i in range(len(self.Mjjmin_arr)):
-            partials_windows[i, :] = self.counts_windows[i, :] / np.sum(
-                self.counts_windows[i, :]
+            partials_windows[i, :] = self.counts_windows_sum[i, :] / np.sum(
+                self.counts_windows_sum[i, :]
             )
 
         plt.figure()
@@ -399,10 +401,10 @@ class ClusterScanning:
         plt.ylabel("fraction of points in window")
         plt.savefig(plots_path + "kmeans_xi_mjj_total.png")
 
-        countmax_windows = np.zeros(self.counts_windows.shape)
+        countmax_windows = np.zeros(self.counts_windows_sum.shape)
         for i in range(self.cfg.k):
-            countmax_windows[:, i] = self.counts_windows[:, i] / np.max(
-                self.counts_windows[:, i]
+            countmax_windows[:, i] = self.counts_windows_sum[:, i] / np.max(
+                self.counts_windows_sum[:, i]
             )
 
         plt.figure()
@@ -441,10 +443,10 @@ class ClusterScanning:
 
         plt.savefig(plots_path + "kmeans_xi_mjj_maxn_statAllowed.png")
 
-        countnrm_windows = np.zeros(self.counts_windows.shape)
+        countnrm_windows = np.zeros(self.counts_windows_sum.shape)
         for i in range(self.cfg.k):
-            countnrm_windows[:, i] = self.counts_windows[:, i] / np.sum(
-                self.counts_windows[:, i]
+            countnrm_windows[:, i] = self.counts_windows_sum[:, i] / np.sum(
+                self.counts_windows_sum[:, i]
             )
 
         plt.figure()
@@ -572,7 +574,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
             "config/s0_0.5_1_MB.yaml",
-            #            "config/sig_frac/0.05.yaml",
+            "config/sig_frac/0.05.yaml",
             #            "config/restart/0_20.yaml",
             #            "config/mod/10inits.yaml",
             "config/binning/CURTAINS.yaml",
@@ -580,6 +582,6 @@ if __name__ == "__main__":
         ]
     else:
         config_file_path = sys.argv[1:]
-    logging.info("sarting", config_file_path)
+    logging.info("starting" + str(config_file_path))
     cs = ClusterScanning(config_file_path)
     cs.run()

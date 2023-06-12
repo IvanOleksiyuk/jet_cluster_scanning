@@ -316,13 +316,13 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots ===============================================================
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
-    # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
+    t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
 
     # comparison with old distributions ========================================
@@ -341,18 +341,18 @@ if __name__ == "__main__":
     # comparison with old distributions ========================================
 
     # ========== no Aggregation TS =========================================
-    t_statistic_distribution(
-        r"config\distribution\NA\prep05_1_NA-sumnorm-maxC-maxM.yaml"
-    )
-    t_statistic_distribution(
-        r"config\distribution\NA\prep05_1_NA-sumnorm-chiC-chiM.yaml"
-    )
-    t_statistic_distribution(
-        r"config\distribution\NA\prep05_1_NA-sumnorm-chiC-maxM.yaml"
-    )
-    t_statistic_distribution(
-        r"config\distribution\NA\prep05_1_NA-sumnorm-maxC-chiM.yaml"
-    )
+    # t_statistic_distribution(
+    #     r"config\distribution\NA\prep05_1_NA-sumnorm-maxC-maxM.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\NA\prep05_1_NA-sumnorm-chiC-chiM.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\NA\prep05_1_NA-sumnorm-chiC-maxM.yaml"
+    # )
+    # t_statistic_distribution(
+    #     r"config\distribution\NA\prep05_1_NA-sumnorm-maxC-chiM.yaml"
+    # )
 
     # ========== no Aggregation TS =========================================
 

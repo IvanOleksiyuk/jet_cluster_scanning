@@ -5,6 +5,7 @@ plots*/**
 char/**
 export/**
 experiments/**
+**experiments**/**
 
 models/**
 test_results/**
