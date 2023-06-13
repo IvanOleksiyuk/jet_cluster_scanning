@@ -10,7 +10,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 from sklearn.cluster import KMeans, MiniBatchKMeans
 import reprocessing
-from config_utils import Config
+from utils.config_utils import Config
 
 # Loading configuration
 config_file = "config/test.yml"
@@ -22,26 +22,21 @@ reproc = reprocessing.Reprocessing(cfg.reproc_arg_string)
 cfg.reproc_name = reproc.name
 
 # Creating a path to save results
-save_path = (
-    "char/0kmeans_scan/k{:}{:}ret{:}con{:}"
-    "W{:}ste{:}_{:}_ID{:}/".format(
-        cfg.k,
-        cfg.MiniBatch,
-        cfg.retrain,
-        cfg.signal_fraction,
-        cfg.W,
-        cfg.steps,
-        cfg.reproc_name,
-        cfg.ID,
-    )
+save_path = "char/0kmeans_scan/k{:}{:}ret{:}con{:}" "W{:}ste{:}_{:}_ID{:}/".format(
+    cfg.k,
+    cfg.MiniBatch,
+    cfg.retrain,
+    cfg.signal_fraction,
+    cfg.W,
+    cfg.steps,
+    cfg.reproc_name,
+    cfg.ID,
 )
 os.makedirs(save_path, exist_ok=True)
 
 
 # Transform some config arguments into useful stuff
-Mjjmin_arr = np.linspace(
-    cfg.eval_interval[0], cfg.eval_interval[1] - cfg.W, cfg.steps
-)
+Mjjmin_arr = np.linspace(cfg.eval_interval[0], cfg.eval_interval[1] - cfg.W, cfg.steps)
 Mjjmax_arr = Mjjmin_arr + cfg.W
 HP = config.get_dict()
 random.seed(a=cfg.ID, version=2)  # set a seed corresponding to the ID
@@ -239,9 +234,7 @@ plt.savefig(save_path + "kmeans_ni_mjj_total_statAllowed.png")
 
 partials_windows = np.zeros(counts_windows.shape)
 for i in range(len(Mjjmin_arr)):
-    partials_windows[i, :] = counts_windows[i, :] / np.sum(
-        counts_windows[i, :]
-    )
+    partials_windows[i, :] = counts_windows[i, :] / np.sum(counts_windows[i, :])
 
 plt.figure()
 plt.grid()
@@ -253,9 +246,7 @@ plt.savefig(save_path + "kmeans_xi_mjj_total.png")
 
 countmax_windows = np.zeros(counts_windows.shape)
 for i in range(cfg.k):
-    countmax_windows[:, i] = counts_windows[:, i] / np.max(
-        counts_windows[:, i]
-    )
+    countmax_windows[:, i] = counts_windows[:, i] / np.max(counts_windows[:, i])
 
 plt.figure()
 plt.grid()
@@ -268,9 +259,7 @@ for Mjjmin, Mjjmax in zip(Mjjmin_arr, Mjjmax_arr):
     conts_bg.append(np.sum(np.logical_and(mjj_bg >= Mjjmin, mjj_bg <= Mjjmax)))
     conts_sg.append(
         np.sum(
-            np.logical_and(
-                np.logical_and(mjj_sg >= Mjjmin, mjj_sg <= Mjjmax), allowed
-            )
+            np.logical_and(np.logical_and(mjj_sg >= Mjjmin, mjj_sg <= Mjjmax), allowed)
         )
     )
 conts_bg = np.array(conts_bg)

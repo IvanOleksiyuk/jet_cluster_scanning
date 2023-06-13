@@ -1,7 +1,7 @@
 import numpy as np
 import copy
-from robust_estimators import std_ignore_outliers, mean_ignore_outliers
-from lowpasfilter import butter_lowpass_filter
+from utils.robust_estimators import std_ignore_outliers, mean_ignore_outliers
+from utils.lowpasfilter import butter_lowpass_filter
 import scipy.signal
 
 

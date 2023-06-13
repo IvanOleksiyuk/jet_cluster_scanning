@@ -7,7 +7,8 @@ import scipy.stats as sts
 from matplotlib import pyplot as plt
 from scipy.special import gammainc
 import pickle
-from utils import p2Z
+from utils.utils import p2Z
+from utils.os_utils import list_files
 
 # %% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Load the data block + define some parameters
@@ -18,13 +19,6 @@ mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
 mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
 
 # Choose the binning
-binning = "CURTAINS"
-if binning == "CURTAINS":
-    n_bins = 16
-    bins = np.linspace(3000, 4600, n_bins + 1)
-elif binning == "BH":
-    n_bins = 60
-    bins = np.linspace(3000, 4600, n_bins + 1)
 
 
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,29 +45,46 @@ def get_hunter_scheme(hunter) -> np.ndarray:
     return sig_str
 
 
-hunter = BH.BumpHunter1D(
-    rang=[3000, 4600],
-    width_min=2,
-    width_max=10,
-    width_step=2,
-    scan_step=1,
-    npe=100000,
-    nworker=6,
-    seed=42,
-    use_sideband=True,
-    str_min=-4,
-    sigma_limit=10,
-    str_scale="log",
-    bins=bins,
-)
+BHsettings = {
+    "rang": [3000, 4600],
+    "width_min": 2,
+    "width_max": 10,
+    "width_step": 2,
+    "scan_step": 1,
+    "npe": 100000,
+    "nworker": 6,
+    "seed": 42,
+    "use_sideband": True,
+    "str_min": -4,
+    "sigma_limit": 10,
+    "str_scale": "log",
+    "bins": np.linspace(3000, 4600, 16),
+}
 
-# Run the bump hunter without any cuts
-hunter.signal_inject(mjj_sg, mjj_bg)
-raw_str = get_hunter_scheme(hunter)
-raw_sens = hunter.sigma_ar.copy()
-min_l = min(len(raw_sens), len(raw_str))  # Sometimes the hunter lengths dont match
-raw_sens = raw_sens[:min_l]
-raw_str = raw_str[:min_l]
+BH_set_name = "CURTAINS"
+if BH_set_name == "CURTAINS":
+    n_bins = 16
+    bins = np.linspace(3000, 4600, n_bins + 1)
+    BHsettings["bins"] = bins
+elif BH_set_name == "BHD":
+    n_bins = 60
+    bins = np.linspace(3000, 4600, n_bins + 1)
+    BHsettings["bins"] = bins
+
+files_list = list_files("BHcache")
+if BH_set_name + ".pickle" in files_list:
+    raw_str, raw_sens = pickle.load(open(f"BHcache/{BH_set_name}.pickle", "rb"))
+else:
+    hunter = BH.BumpHunter1D(**BHsettings)
+    # Run the bump hunter without any cuts
+    hunter.signal_inject(mjj_sg, mjj_bg)
+    raw_str = get_hunter_scheme(hunter)
+    raw_sens = hunter.sigma_ar.copy()
+    min_l = min(len(raw_sens), len(raw_str))  # Sometimes the hunter lengths dont match
+    raw_sens = raw_sens[:min_l]
+    raw_str = raw_str[:min_l]
+    pickle.dump((raw_str, raw_sens), open(f"BHcache/{BH_set_name}.pickle", "wb"))
+
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Cluster scanning block
 # Load significances from the results of t_statistic_distribution.py

@@ -10,7 +10,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 from sklearn.cluster import KMeans, MiniBatchKMeans
 import reprocessing
-from config_utils import Config
+from utils.config_utils import Config
 import shutil
 import logging
 
@@ -366,7 +366,7 @@ class ClusterScanning:
         # Some plotting
         plots_path = self.save_path + f"plots{self.ID}/"
         os.makedirs(plots_path, exist_ok=True)
-        
+
         window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
         min_allowed_count = 100
         min_min_allowed_count = 10

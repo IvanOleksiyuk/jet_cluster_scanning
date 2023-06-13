@@ -5,16 +5,16 @@ from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, Birch
 import time
 import os
 import pickle
-import set_matplotlib_default as smd
 import cs_performance_plotting as csp
 import cluster_scanning
-from robust_estimators import std_ignore_outliers, mean_ignore_outliers
-from spectrum import Spectra
+from utils.robust_estimators import std_ignore_outliers, mean_ignore_outliers
+import utils.set_matplotlib_default as smd
+from utils.spectrum import Spectra
+from utils.squeeze_array import squeeze
 import matplotlib as mpl
-from squeeze_array import squeeze
 from curvefit_eval import curvefit_eval
-from binning_utils import default_binning
-from config_utils import Config
+from utils.binning_utils import default_binning
+from utils.config_utils import Config
 import logging
 
 logging.basicConfig(level=logging.INFO)

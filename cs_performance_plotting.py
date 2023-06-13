@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.manifold import TSNE
-import set_matplotlib_default as smd
-from robust_estimators import std_ignore_outliers, mean_ignore_outliers
+import utils.set_matplotlib_default as smd
+from utils.robust_estimators import std_ignore_outliers, mean_ignore_outliers
 
 
 def CS_TSNE(num_der_counts_windows, labels, eval_path):

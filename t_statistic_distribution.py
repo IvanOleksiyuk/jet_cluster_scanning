@@ -10,14 +10,14 @@ import random
 import time
 from matplotlib.ticker import MaxNLocator
 import cluster_scanning
-import set_matplotlib_default as smd
+import utils.set_matplotlib_default as smd
 from load_old_bootstrap_experiments import (
     load_old_bootstrap_experiments05_1,
     load_old_bootstrap_experiments00,
 )
-from config_utils import Config
-from binning_utils import default_binning
-from utils import (
+from utils.config_utils import Config
+from utils.binning_utils import default_binning
+from utils.utils import (
     add_lists_in_dicts,
     p2Z,
     ensamble_means,

@@ -11,7 +11,7 @@ class TestClusterScanning(unittest.TestCase):
     def test_run(self):
         cs = ClusterScanning("test/config/testCS.yaml")
         cs.run()
-        self.assertAlmostEqual(cs.counts_windows[0, 1], 12358)
+        self.assertAlmostEqual(cs.counts_windows_sum[0, 1], 12358)
 
 
 if __name__ == "__main__":
