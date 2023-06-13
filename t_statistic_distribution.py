@@ -1,5 +1,6 @@
 # imports
 import os
+import copy
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 import pickle
@@ -16,6 +17,11 @@ from load_old_bootstrap_experiments import (
 )
 from config_utils import Config
 from binning_utils import default_binning
+from utils import (
+    add_lists_in_dicts,
+    p2Z,
+    ensamble_means,
+)
 
 
 def score_sample(cfg, counts_windows_boot_load):
@@ -80,10 +86,6 @@ def p_value(stat, tstat_list):
     return (
         (np.sum(tstat_list >= stat) + np.sum(tstat_list > stat)) / 2 / len(tstat_list)
     )
-
-
-def p2Z(p):
-    return -stats.norm.ppf(p)
 
 
 def draw_contamination(
@@ -152,26 +154,40 @@ def draw_contamination(
             )
         # print(res["chisq_ndof"])
         arr.append(res)
+
+    # use ensamble if needed
+    arr = np.array(arr)
+    if cfg.ensamble != 0 and cfg.ensamble != None:
+        arr = ensamble_means(arr, cfg.ensamble)
+
+    for res in arr:
         ps.append(p_value(res, tstat_list))
     meanres_ps = p_value(np.mean(arr), tstat_list)
-
-    if np.mean(ps) == 0:
-        label = "$\epsilon$={:.4f}, $<p><${:.4f}, Z>{:4f}".format(
-            c, 1 / len(tstat_list), p2Z(np.mean(1 / len(tstat_list)))
+    mean_ps = np.mean(ps)
+    label = "$\epsilon$={:.4f}".format(c)
+    if mean_ps == 0:
+        label += ", $<p><${:.4f}, Z>{:2f}".format(
+            1 / len(tstat_list), p2Z(np.mean(1 / len(tstat_list)))
         )
+        mean_ps = 1 / len(tstat_list)
+        upper_bound_mps = True
     else:
-        if np.mean(meanres_ps) == 0:
-            label = "$\epsilon$={:.4f}, $<p>=${:.4f}, Z={:2f} \n p(<x>)<{:.4f} Z>{:.2f}".format(
-                c,
-                np.mean(ps),
-                p2Z(np.mean(ps)),
-                1 / len(tstat_list),
-                p2Z(np.mean(1 / len(tstat_list))),
-            )
-        else:
-            label = "$\epsilon$={:.4f} $<p>=${:.4f} Z={:.2f}\n p(<x>)={:.4f} Z={:.2f}".format(
-                c, np.mean(ps), p2Z(np.mean(ps)), meanres_ps, p2Z(np.mean(meanres_ps))
-            )
+        label += ", $<p>=${:.4f}, Z={:2f}".format(np.mean(ps), p2Z(np.mean(ps)))
+        upper_bound_mps = False
+
+    if np.mean(meanres_ps) == 0:
+        label += "\n p(<x>)<{:.4f} Z>{:.2f}".format(
+            1 / len(tstat_list),
+            p2Z(np.mean(1 / len(tstat_list))),
+        )
+        meanres_ps = 1 / len(tstat_list)
+        upper_bound_mrps = True
+    else:
+        label += "\n p(<x>)={:.4f} Z={:.2f}".format(
+            meanres_ps, p2Z(np.mean(meanres_ps))
+        )
+        upper_bound_mrps = False
+
     label += " " + postfix
 
     # the actual plotting
@@ -213,10 +229,30 @@ def draw_contamination(
             alpha=0.15,
         )
 
+    results = {}
+    results["ps"] = ps
+    results["p_upper_bound"] = 1 / len(tstat_list)
+    results["mean_ps"] = mean_ps
+    results["upper_bound_mps"] = upper_bound_mps
+    results["meanres_ps"] = meanres_ps
+    results["upper_bound_mrps"] = upper_bound_mrps
+    results["Zs"] = p2Z(ps)
+    results["Z_mean_ps"] = p2Z(mean_ps)
+    results["Z_meanres_ps"] = p2Z(meanres_ps)
+
+    for key in copy.deepcopy(list(results.keys())):
+        results[key + "Z"] = [p2Z(results[key])]
+        results[key] = [results[key]]
+    return results
+
 
 def t_statistic_distribution(config_file_path):
     config = Config(config_file_path)
     cfg = config.get_dotmap()
+
+    # set defaults if not given in config
+    if not hasattr(cfg, "ensamble"):
+        cfg.ensamble = 0
 
     # set seed
     random.seed(a=cfg.seed, version=2)
@@ -235,21 +271,27 @@ def t_statistic_distribution(config_file_path):
     else:
         fig = plt.figure(figsize=(6, 3))
 
+    # load the restarts
     if isinstance(cfg.counts_windows_boot_load, str):
+        # if one location is given
         TS_list = score_sample(cfg, cfg.counts_windows_boot_load)
-        plt.figure(fig)
-        if cfg.density:
-            plt.hist(TS_list, bins=40, density=True)
-        else:
-            plt.hist(TS_list, bins=40)
     else:
+        # if multiple locations are given
+        TS_list = []
         for counts_windows_boot_load in cfg.counts_windows_boot_load:
-            TS_list = score_sample(cfg, counts_windows_boot_load)
-            plt.figure(fig)
-            if cfg.density:
-                plt.hist(TS_list, bins=40, density=True, alpha=0.5)
-            else:
-                plt.hist(TS_list, bins=40, alpha=0.5)
+            TS_list += score_sample(cfg, counts_windows_boot_load)
+
+    # ensamble if needed
+    TS_list = np.array(TS_list)
+    if cfg.ensamble != 0 and cfg.ensamble != None:
+        TS_list = ensamble_means(TS_list, cfg.ensamble)
+
+    # plot the TS distribution
+    plt.figure(fig)
+    if cfg.density:
+        plt.hist(TS_list, bins=40, density=True, alpha=0.5)
+    else:
+        plt.hist(TS_list, bins=40, alpha=0.5)
 
     plt.figure(fig)
     if cfg.density:
@@ -280,11 +322,12 @@ def t_statistic_distribution(config_file_path):
     if cfg.contamination_style[0] == "U":
         plt.sca(ax2)
 
+    results = {}
     if "contaminations" in config.get_dict().keys():
         for c, path, col, old, postfix in zip(
             cfg.contaminations, cfg.cont_paths, cfg.colors, cfg.old_CS, cfg.postfix
         ):
-            draw_contamination(
+            results_1con = draw_contamination(
                 cfg,
                 c,
                 path,
@@ -295,6 +338,8 @@ def t_statistic_distribution(config_file_path):
                 style=cfg.contamination_style,
                 fig=fig,
             )
+            results_1con["contaminations"] = [c]
+            results = add_lists_in_dicts(results, results_1con)
 
     if cfg.contamination_style[0] == "U":
         handles, labels = ax2.get_legend_handles_labels()
@@ -313,17 +358,30 @@ def t_statistic_distribution(config_file_path):
     )
     # plt.show()
 
+    # Dump some results
+    results["TS_list"] = TS_list
+    pickle.dump(results, open(output_path + cfg.plot_name + "_results.pickle", "wb"))
+
 
 if __name__ == "__main__":
+    # main plots ensambling ===============================================================
+    t_statistic_distribution(
+        "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E20.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E5.yaml"
+    )
     # main plots ===============================================================
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
 
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
-    t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
     # main plots ===============================================================
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5_0005.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_2meansder.yaml")
+
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS_0005.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_maxdev5CURTAINS.yaml")
+    # t_statistic_distribution("config/distribution/prep05_1_2meansderCURTAINS.yaml")
+    # main plots ensismbling ===============================================================
 
     # comparison with old distributions ========================================
 
