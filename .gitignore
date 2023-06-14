@@ -20,3 +20,5 @@ try**
 
 try_code.py
 look_pickle.py
+**.npy
+**.h5

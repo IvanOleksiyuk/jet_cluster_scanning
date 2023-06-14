@@ -21,8 +21,7 @@ ID: 100
 #Enable batched bootstrap training and evaluation for a range of ID's
 restart: False
 bootstrap: False
-restart_ID_start: 0
-restart_ID_finish: 3
+resample_signal: False
 
 #Parameters of the training
 memory_intensive: True

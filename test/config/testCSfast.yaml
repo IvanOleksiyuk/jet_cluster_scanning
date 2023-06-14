@@ -6,7 +6,7 @@
 #
 #
 verbose: False
-data_path: "../../DATA/LHCO/"
+data_path: "test/test_materials/"
 save_path: "char/test/"
 
 # Some general properties of the datasets provided
@@ -21,14 +21,13 @@ ID: 100
 #Enable batched bootstrap training and evaluation for a range of ID's
 restart: False
 bootstrap: False
-restart_ID_start: 0
-restart_ID_finish: 3
+resample_signal: False
 
 #Parameters of the training
 memory_intensive: True
 train_interval:
   - 2000
-  - 2100
+  - 3000
 signal_fraction: 0
 k: 2 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
@@ -37,11 +36,11 @@ n_init: 1
 batch_size: 100
 
 #Parameters for binning
-W: 100 #Bin width 
-steps: 4 #Number of bins
+W: 1000 #Bin width 
+steps: 10 #Number of bins
 eval_interval: #Histogram window
-  - 2000
-  - 6000
+  - 0
+  - 10000
 separate_binning: False #binn background and signal separately
 
 #Retraining option not yet implemented - requires binning to be specified

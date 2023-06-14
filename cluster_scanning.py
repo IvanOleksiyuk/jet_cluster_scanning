@@ -43,6 +43,7 @@ handler.setFormatter(ColoredFormatter())
 # Add the colored handler to the logger
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 class ClusterScanning:
@@ -130,6 +131,12 @@ class ClusterScanning:
     def load_mjj(self):
         self.mjj_bg = np.load(self.cfg.data_path + "mjj_bkg_sort.npy")
         self.mjj_sg = np.load(self.cfg.data_path + "mjj_sig_sort.npy")
+        if not np.all(self.mjj_bg[:-1] <= self.mjj_bg[1:]):
+            logging.error("background masses are not sorted!")
+            sys.exit()
+        if not np.all(self.mjj_sg[:-1] <= self.mjj_sg[1:]):
+            logging.error("signal masses are not sorted!")
+            sys.exit()
 
     def stack_event(self, x):
         print("NOT IMPLEMENTED YET")  # TODO
@@ -285,6 +292,7 @@ class ClusterScanning:
             self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
             logging.debug(f"performed bootstrap resampling with ID {ID}")
         else:
+            self.__bsID = -1
             if not self.cfg.bootstrap:
                 logging.debug(
                     "bootstrap is not set to true in config file => ignoring bootstrap"
@@ -312,6 +320,8 @@ class ClusterScanning:
                 )
             )
             np.random.shuffle(self.allowed)
+        else:
+            self.allowed = None
 
     def evaluate_whole_dataset(self):
         start_time = time.time()
@@ -381,25 +391,29 @@ class ClusterScanning:
         Returns:
             np.array(dtype=int): number of jets in each cluster in this bin.
         """
-        indexing_bg = np.logical_and(self.mjj_bg >= mjjmin, self.mjj_bg <= mjjmax)
+        indexing_bg = np.logical_and(self.mjj_bg >= mjjmin, self.mjj_bg < mjjmax)
         indexing_bg = np.where(indexing_bg)[0]
-        indexing_sg = np.logical_and(self.mjj_sg >= mjjmin, self.mjj_sg <= mjjmax)
+        indexing_sg = np.logical_and(self.mjj_sg >= mjjmin, self.mjj_sg < mjjmax)
         indexing_sg = np.where(indexing_sg)[0]
 
         # TODO: DELETE logs  below
         # logging.info(len(indexing_bg), "bg events found in interval")
         # logging.info(len(indexing_sg), "sg events found in interval")
 
-        if bootstrap_bg is None:
-            bg = self.bg_lab[indexing_bg[0] : indexing_bg[-1]]
+        if indexing_bg != []:
+            if bootstrap_bg is None:
+                bg = self.bg_lab[indexing_bg[0] : indexing_bg[-1] + 1]
+            else:
+                logging.debug(len(self.bg_lab[indexing_bg[0] : indexing_bg[-1]]))
+                logging.debug(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
+                bg = np.repeat(
+                    self.bg_lab[indexing_bg[0] : indexing_bg[-1]],
+                    bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
+                    axis=0,
+                )
         else:
-            logging.debug(len(self.bg_lab[indexing_bg[0] : indexing_bg[-1]]))
-            logging.debug(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
-            bg = np.repeat(
-                self.bg_lab[indexing_bg[0] : indexing_bg[-1]],
-                bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
-                axis=0,
-            )
+            bg = np.array([])
+            logger.warning("no background events in this window")
 
         if allowed is not None:
             sg = np.repeat(
@@ -498,14 +512,19 @@ class ClusterScanning:
             conts_bg.append(
                 np.sum(np.logical_and(self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax))
             )
-            conts_sg.append(
-                np.sum(
-                    np.logical_and(
-                        np.logical_and(self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax),
-                        self.allowed,
+            if self.allowed is not None:
+                conts_sg.append(
+                    np.sum(
+                        np.logical_and(
+                            np.logical_and(
+                                self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax
+                            ),
+                            self.allowed,
+                        )
                     )
                 )
-            )
+            else:
+                conts_sg.append(0)
         conts_bg = np.array(conts_bg)
         conts_sg = np.array(conts_sg)
         conts = conts_bg + conts_sg
@@ -585,13 +604,12 @@ class ClusterScanning:
         start_time = time.time()
         self.load_mjj()
         self.load_data()
-        self.bootstrap_resample(
-            self.def_IDb
-        )  # will do nothing if self.cfg.bootstrap=False or self.def_IDb=-1
-        self.sample_signal_events(
-            self.def_IDs
-        )  # will do nothing if self.cfg.resample_signal=False
-        self.train_k_means(self.def_IDi)
+        self.bootstrap_resample(self.def_IDb)
+        # will do nothing if self.cfg.bootstrap=False or self.def_IDb=-1
+        self.sample_signal_events(self.def_IDs)
+        # will do nothing if self.cfg.resample_signal=False
+        IDs = [self.def_IDb, self.def_IDs, self.def_IDi]
+        self.train_k_means(IDs)
         self.evaluate_whole_dataset()
         self.save_results()
         self.perform_binning()
