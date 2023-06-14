@@ -26,7 +26,7 @@ class Spectra:
     def copy(self):
         return copy.deepcopy(self)
 
-    # None of the following methods showld modify x, or y of this class but only return copy with modifications
+    # None of the following methods should modify x, or y of this class but only return copy with modifications
     def scale(self, scale):
         y = self.y * scale
         err = self.err * scale

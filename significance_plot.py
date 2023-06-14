@@ -45,45 +45,51 @@ def get_hunter_scheme(hunter) -> np.ndarray:
     return sig_str
 
 
-BHsettings = {
-    "rang": [3000, 4600],
-    "width_min": 2,
-    "width_max": 10,
-    "width_step": 2,
-    "scan_step": 1,
-    "npe": 100000,
-    "nworker": 6,
-    "seed": 42,
-    "use_sideband": True,
-    "str_min": -4,
-    "sigma_limit": 10,
-    "str_scale": "log",
-    "bins": np.linspace(3000, 4600, 16),
-}
+BH_list = []
+BH_set_list = ["CURTAINS", "BHD"]
+BH_color_list = ["black", "indigo"]
+for BH_set_name in BH_set_list:
+    BHsettings = {
+        "rang": [3000, 4600],
+        "width_min": 2,
+        "width_max": 10,
+        "width_step": 2,
+        "scan_step": 1,
+        "npe": 100000,
+        "nworker": 6,
+        "seed": 42,
+        "use_sideband": True,
+        "str_min": -4,
+        "sigma_limit": 10,
+        "str_scale": "log",
+        "bins": np.linspace(3000, 4600, 16),
+    }
 
-BH_set_name = "CURTAINS"
-if BH_set_name == "CURTAINS":
-    n_bins = 16
-    bins = np.linspace(3000, 4600, n_bins + 1)
-    BHsettings["bins"] = bins
-elif BH_set_name == "BHD":
-    n_bins = 60
-    bins = np.linspace(3000, 4600, n_bins + 1)
-    BHsettings["bins"] = bins
+    if BH_set_name == "CURTAINS":
+        n_bins = 16
+        bins = np.linspace(3000, 4600, n_bins + 1)
+        BHsettings["bins"] = bins
+    elif BH_set_name == "BHD":
+        n_bins = 60
+        bins = np.linspace(3000, 4600, n_bins + 1)
+        BHsettings["bins"] = bins
 
-files_list = list_files("BHcache")
-if BH_set_name + ".pickle" in files_list:
-    raw_str, raw_sens = pickle.load(open(f"BHcache/{BH_set_name}.pickle", "rb"))
-else:
-    hunter = BH.BumpHunter1D(**BHsettings)
-    # Run the bump hunter without any cuts
-    hunter.signal_inject(mjj_sg, mjj_bg)
-    raw_str = get_hunter_scheme(hunter)
-    raw_sens = hunter.sigma_ar.copy()
-    min_l = min(len(raw_sens), len(raw_str))  # Sometimes the hunter lengths dont match
-    raw_sens = raw_sens[:min_l]
-    raw_str = raw_str[:min_l]
-    pickle.dump((raw_str, raw_sens), open(f"BHcache/{BH_set_name}.pickle", "wb"))
+    files_list = list_files("BHcache")
+    if BH_set_name + ".pickle" in files_list:
+        raw_str, raw_sens = pickle.load(open(f"BHcache/{BH_set_name}.pickle", "rb"))
+    else:
+        hunter = BH.BumpHunter1D(**BHsettings)
+        # Run the bump hunter without any cuts
+        hunter.signal_inject(mjj_sg, mjj_bg)
+        raw_str = get_hunter_scheme(hunter)
+        raw_sens = hunter.sigma_ar.copy()
+        min_l = min(
+            len(raw_sens), len(raw_str)
+        )  # Sometimes the hunter lengths dont match
+        raw_sens = raw_sens[:min_l]
+        raw_str = raw_str[:min_l]
+        pickle.dump((raw_str, raw_sens), open(f"BHcache/{BH_set_name}.pickle", "wb"))
+    BH_list.append((raw_str, raw_sens))
 
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Cluster scanning block
@@ -100,16 +106,18 @@ print(results.keys())
 # Plot
 # Create the figure
 fig = plt.figure(figsize=(5, 5))
-plt.errorbar(
-    raw_str,
-    raw_sens[:, 0],
-    xerr=0,
-    yerr=[raw_sens[:, 1], raw_sens[:, 2]],
-    marker="x",
-    color="k",
-    uplims=raw_sens[:, 2] == 0,
-    label="pyBumpHunter" + str(n_bins),
-)
+for i, r in enumerate(BH_list):
+    raw_str, raw_sens = r
+    plt.errorbar(
+        raw_str,
+        raw_sens[:, 0],
+        xerr=0,
+        yerr=[raw_sens[:, 1], raw_sens[:, 2]],
+        marker="x",
+        color=BH_color_list[i],
+        uplims=raw_sens[:, 2] == 0,
+        label="pyBumpHunter" + BH_set_list[i],
+    )
 results["Zs"] = np.array(results["Zs"])
 print(results["Zs"])
 results["Zs"][np.isinf(results["Zs"])] = p2Z(results["p_upper_bound"][0])

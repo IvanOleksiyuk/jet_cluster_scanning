@@ -1,0 +1,1 @@
+python start_bootstrap_jobs.py /config/s0_0.5_1_MB.yaml /config/v3.yaml config/tra_reg/3000_3100.yaml

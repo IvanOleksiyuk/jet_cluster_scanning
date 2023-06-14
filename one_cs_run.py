@@ -2,26 +2,31 @@ from cluster_scanning import ClusterScanning
 from cs_performance_evaluation import cs_performance_evaluation
 from utils.binning_utils import default_binning
 import pickle
+import time
 
 
 def one_cs_run():
-    Cluster scanning part
+    # Cluster scanning part
     cs = ClusterScanning(
         [
-            "config/s0_1_0_MB.yaml",
+            "config/s0_0.5_1_MB.yaml",
             "config/sig_frac/0.05.yaml",
             "config/restart/0.yaml",
             "config/binning/CURTAINS.yaml",
+            "config/tra_reg/3000_3100.yaml",
             "config/one_run_experiments.yaml",
         ]
     )
 
-    cs.run()
-    cs.perform_binning()
     start_time = time.time()
-    my_function()
+    cs.run()
     end_time = time.time()
+    execution_time = end_time - start_time
+    print("Execution time:", execution_time, "seconds")
 
+    start_time = time.time()
+    cs.perform_binning()
+    end_time = time.time()
     execution_time = end_time - start_time
     print("Execution time:", execution_time, "seconds")
 

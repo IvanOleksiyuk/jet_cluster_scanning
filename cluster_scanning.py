@@ -13,8 +13,36 @@ import reprocessing
 from utils.config_utils import Config
 import shutil
 import logging
+import re
 
-logging.basicConfig(level=logging.INFO)
+
+class ColoredFormatter(logging.Formatter):
+    COLOR_CODE = {
+        logging.DEBUG: "\033[36m",  # Cyan
+        logging.INFO: "\033[32m",  # Green
+        logging.WARNING: "\033[33m",  # Yellow
+        logging.ERROR: "\033[31m",  # Red
+        logging.CRITICAL: "\033[35m",  # Magenta
+    }
+    RESET_CODE = "\033[0m"  # Reset color
+
+    def format(self, record):
+        color = self.COLOR_CODE.get(record.levelno, "")
+        reset = self.RESET_CODE
+        message = super().format(record)
+        return f"{color}{message}{reset}"
+
+
+# Configure the logger
+logger = logging.getLogger()
+
+# Create a custom colored handler
+handler = logging.StreamHandler()
+handler.setFormatter(ColoredFormatter())
+
+# Add the colored handler to the logger
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 
 class ClusterScanning:
@@ -61,27 +89,65 @@ class ClusterScanning:
 
         self.bootstrap_bg = None  # by default when bootstrap resampling is needed a corresponding function will be called
 
-    def seed(self):
-        random.seed(a=self.ID, version=2)  # set a seed corresponding to the ID
-        np.random.seed(self.ID)
+        if hasattr(self.cfg, "bootstrap_ID"):
+            self.def_IDb = self.cfg.bootstrap_ID  # bootstrap ID
+        else:
+            self.def_IDb = -1
+
+        if hasattr(self.cfg, "signal_sample_ID"):
+            self.def_IDs = self.cfg.signal_sample_ID  # signal sample ID
+        else:
+            self.def_IDs = 0
+
+        if hasattr(self.cfg, "ID"):
+            self.def_IDi = self.cfg.ID
+        else:
+            self.def_IDi = 0  # signal ID
+
+    def get_bsID(self):
+        return self.__bsID
+
+    @staticmethod
+    def seed(ID):
+        if isinstance(ID, int):
+            random.seed(a=ID, version=2)  # set a seed corresponding to the ID
+            np.random.seed(ID)
+        else:
+            # a simple way of generating a seed from a list of IDs
+            # UNFORTUNATELY HASHES ARE NOT UNIQUE TO THE LIST OF IDS but should do for now
+            isinstance(ID, list)
+            sum_hash = 0
+            for i in ID:
+                random.seed(a=ID[0], version=2)
+                sum_hash += random.randint(0, 10e6)
+            random.seed(sum_hash)
+            np.random.seed(sum_hash)
+
+    @staticmethod
+    def IDstr(IDb, IDs, IDi):
+        return f"_b{IDb}_s{IDs}_i{IDi}"
 
     def load_mjj(self):
         self.mjj_bg = np.load(self.cfg.data_path + "mjj_bkg_sort.npy")
         self.mjj_sg = np.load(self.cfg.data_path + "mjj_sig_sort.npy")
 
     def stack_event(self, x):
+        print("NOT IMPLEMENTED YET")  # TODO
         return
 
     def flatten_event(self, x):
+        print("NOT IMPLEMENTED YET")  # TODO
         return x.reshape()
 
     def flatten_image(self):
+        print("NOT IMPLEMENTED YET")  # TODO
         pass
 
     def de_flatten_image(self):
         pass
 
     def load_data(self, show_example=True):
+        logging.info("loading data")
         im_bg_file = h5py.File(self.cfg.data_path + "v2JetImSort_bkg.h5", "r")
         im_sg_file = h5py.File(self.cfg.data_path + "v2JetImSort_sig.h5", "r")
         self.im_bg = im_bg_file["data"]
@@ -115,6 +181,7 @@ class ClusterScanning:
                     )[0]
                 )
         self.bootstrap_bg = None
+        logging.info("loading data complete")
 
     def data_mjj_slise(self, Mjjmin, Mjjmax):
         """Returns the background an signal jets in a given Mjj window
@@ -184,9 +251,10 @@ class ClusterScanning:
         logging.info("reproc --- %s seconds ---" % (time.time() - start_time))
         return data
 
-    def train_k_means(self):
+    def train_k_means(self, ID):
         start_time = time.time()
-        self.seed()
+        self.seed(ID)
+        self.ID = ID[-1]
         if self.cfg.MiniBatch:
             self.kmeans = MiniBatchKMeans(
                 self.cfg.k, batch_size=self.cfg.n_init, n_init=self.cfg.n_init
@@ -205,33 +273,45 @@ class ClusterScanning:
         logging.info(f"iterations {self.kmeans.n_iter_}")
         logging.info("training --- %s seconds ---" % (time.time() - start_time))
 
-    def bootstrap_resample(self):
-        if self.cfg.bootstrap:
-            self.seed()
+    def bootstrap_resample(self, ID):
+        if self.cfg.bootstrap and ID != -1:
+            self.seed(ID)
+            self.__bsID = ID
             n = len(self.mjj_bg)
             np.sort(
                 np.random.randint(0, n, (n,))
             )  # this is the line that takes time and does nothing but if I remove it the incosistensies will begin because the random seed will be different
             a = np.arange(n)
             self.bootstrap_bg = np.bincount(np.random.choice(a, (n,)), minlength=n)
+            logging.debug(f"performed bootstrap resampling with ID {ID}")
         else:
-            logging.debug(
-                "bootstrap is not set to true in config file => ignoring bootstrap"
-            )
+            if not self.cfg.bootstrap:
+                logging.debug(
+                    "bootstrap is not set to true in config file => ignoring bootstrap"
+                )
+            else:
+                if ID < -1:
+                    logging.error("bootstrap ID is smaller -1 which is not allowed!")
+                elif ID == -1:
+                    logging.debug(
+                        "bootstrap ID is set to -1 in config file => ignoring bootstrap"
+                    )
 
     def cancel_bootstrap_resampling(self):
         self.bg_bootstrap = None
 
-    def sample_signal_events(self):
-        self.seed()
-        num_true = int(np.rint(self.cfg.signal_fraction * len(self.mjj_sg)))
-        self.allowed = np.concatenate(
-            (
-                np.zeros(len(self.mjj_sg) - num_true, dtype=bool),
-                np.ones(num_true, dtype=bool),
+    def sample_signal_events(self, ID):
+        self.seed(ID)
+        self.__sigID = ID
+        if self.cfg.signal_fraction > 0:
+            num_true = int(np.rint(self.cfg.signal_fraction * len(self.mjj_sg)))
+            self.allowed = np.concatenate(
+                (
+                    np.zeros(len(self.mjj_sg) - num_true, dtype=bool),
+                    np.ones(num_true, dtype=bool),
+                )
             )
-        )
-        np.random.shuffle(self.allowed)
+            np.random.shuffle(self.allowed)
 
     def evaluate_whole_dataset(self):
         start_time = time.time()
@@ -477,33 +557,41 @@ class ClusterScanning:
                 shutil.copy2(path, self.save_path + f"config_{i}.yaml")
         self.config.write(self.save_path + "confsum.yaml")
 
-        if self.cfg.restart:
+        if self.cfg.restart or self.cfg.bootstrap or self.cfg.resample_signal:
             self.multi_run()
         else:
             self.single_run()
 
     def save_results(self):
-        with open(self.save_path + f"lab{self.ID}.pickle", "wb") as file:
+        with open(self.save_path + f"lab{self.get_IDstr()}.pickle", "wb") as file:
             pickle.dump(
                 {"bg": self.bg_lab, "sg": self.sg_lab, "k_means": self.kmeans},
                 file,
             )
+        logging.debug(f"saved results to {self.save_path}")
 
-    def load_results(self, IDb=""):
-        with open(self.save_path + f"lab{IDb}.pickle", "rb") as file:
+    def load_results(self, IDb, IDs, IDi):
+        self.ID = IDi
+        self.__bsID = IDb
+        self.__sigID = IDs
+        with open(self.save_path + f"lab{self.get_IDstr()}.pickle", "rb") as file:
             res = pickle.load(file)
         self.bg_lab = res["bg"]
         self.sg_lab = res["sg"]
+        self.kmeans = res["k_means"]
         # TODO add loading of trained k-means
 
     def single_run(self):
         start_time = time.time()
         self.load_mjj()
         self.load_data()
-        self.sample_signal_events()
-        if self.cfg.bootstrap:
-            self.bootstrap_resample()
-        self.train_k_means()
+        self.bootstrap_resample(
+            self.def_IDb
+        )  # will do nothing if self.cfg.bootstrap=False or self.def_IDb=-1
+        self.sample_signal_events(
+            self.def_IDs
+        )  # will do nothing if self.cfg.resample_signal=False
+        self.train_k_means(self.def_IDi)
         self.evaluate_whole_dataset()
         self.save_results()
         self.perform_binning()
@@ -515,20 +603,67 @@ class ClusterScanning:
         start_time = time.time()
         self.load_mjj()
         self.load_data()
-        for IDb in range(self.cfg.restart_ID_start, self.cfg.restart_ID_finish):
-            if os.path.exists(self.save_path + f"lab{IDb}.pickle"):
-                logging.info(f"IDb {IDb} already exists")
-                continue
-            self.ID = IDb
-            self.sample_signal_events()
-            if self.cfg.bootstrap:
-                self.bootstrap_resample()
-            self.train_k_means()
+        logging.info(
+            f"Starting multirun with {len(self.list_runs_to_be_done())} runs to be done"
+        )
+        for IDs in self.list_runs_to_be_done():
+            logging.debug(
+                f"Starting {self.IDstr(*IDs)} ### %s seconds ###"
+                % (time.time() - start_time)
+            )
+            self.bootstrap_resample(
+                IDs[0]
+            )  # will do nothing if IDs[0]=-1 or self.cfg.bootstrap=False
+            self.sample_signal_events(
+                IDs[1]
+            )  # will do nothing if IDs[1]=0 or self.cfg.resample_signal=False
+            self.train_k_means(IDs)
             self.evaluate_whole_dataset()
             self.save_results()
             logging.info(
-                f"Done IDb {IDb} ### %s seconds ###" % (time.time() - start_time)
+                f"Done {self.get_IDstr()} ### %s seconds ###"
+                % (time.time() - start_time)
             )
+
+    def list_runs_to_be_done(self):
+        ID_tuple_list = []
+
+        if self.cfg.bootstrap:
+            IDb_arr = [i for i in range(self.cfg.IDb_start, self.cfg.IDb_finish)]
+        else:
+            IDb_arr = [self.def_IDb]
+
+        if self.cfg.resample_signal:
+            IDs_arr = [i for i in range(self.cfg.IDs_start, self.cfg.IDs_finish)]
+        else:
+            IDs_arr = [self.def_IDs]
+
+        if self.cfg.restart:
+            IDi_arr = [i for i in range(self.cfg.IDi_start, self.cfg.IDi_finish)]
+        else:
+            IDi_arr = [self.def_IDi]
+
+        for IDb in IDb_arr:
+            for IDs in IDs_arr:
+                for IDi in IDi_arr:
+                    if not os.path.exists(
+                        self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
+                    ):
+                        ID_tuple_list.append([IDb, IDs, IDi])
+        if len(ID_tuple_list) == 0:
+            logging.info("No runs to be done")
+        else:
+            logging.debug(f"First in the list to do is {ID_tuple_list[0]}")
+            logging.debug(f"Last in the list to do is {ID_tuple_list[-1]}")
+        return ID_tuple_list
+
+    def IDstr_to_IDs(self, IDstr):
+        IDs = re.findall(r"\d+", string)
+        integers = [int(num) for num in integers]
+        return integers
+
+    def get_IDstr(self):
+        return self.IDstr(self.__bsID, self.__sigID, self.ID)
 
     def counts_windows_path(self, directory=False):
         pathh = (
@@ -549,13 +684,13 @@ class ClusterScanning:
         with open(self.counts_windows_path(), "wb") as file:
             pickle.dump(self.counts_windows, file)
 
-    def available_IDs(self):
+    def available_IDstr(self):
         # TODO redo with glob.glob?
-        IDs = []
+        IDstr_avail = []
         for file in os.listdir(self.save_path):
             if file.startswith("lab"):
-                IDs.append(int(file[3:-7]))
-        return IDs
+                IDstr_avail.append(file[3:-7])
+        return IDstr_avail
 
     def check_if_binning_exist(self):
         pathh = self.counts_windows_path()
@@ -573,12 +708,13 @@ class ClusterScanning:
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
-            "config/s0_0.5_1_MB.yaml",
+            "config/s0_0.5_1_MB_new.yaml",
             "config/sig_frac/0.05.yaml",
-            #            "config/restart/0_20.yaml",
+            "config/multirun/b0_3i0_2.yaml",
             #            "config/mod/10inits.yaml",
             "config/binning/CURTAINS.yaml",
             "config/tra_reg/sig_reg.yaml",
+            "config/v4.yaml",
         ]
     else:
         config_file_path = sys.argv[1:]

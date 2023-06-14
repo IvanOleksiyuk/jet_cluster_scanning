@@ -3,6 +3,7 @@ __pycache__/**
 
 plots*/**
 char/**
+BHcache/**
 export/**
 experiments/**
 **experiments**/**
