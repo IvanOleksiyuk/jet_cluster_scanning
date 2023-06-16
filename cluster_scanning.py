@@ -77,9 +77,6 @@ class ClusterScanning:
         else:
             self.save_path += "rest/"
 
-        if not self.cfg.restart:
-            self.ID = self.cfg.ID
-
         self.Mjjmin_arr = np.linspace(
             self.cfg.eval_interval[0],
             self.cfg.eval_interval[1] - self.cfg.W,
@@ -104,9 +101,6 @@ class ClusterScanning:
             self.def_IDi = self.cfg.ID
         else:
             self.def_IDi = 0  # signal ID
-
-    def get_bsID(self):
-        return self.__bsID
 
     @staticmethod
     def seed(ID):
@@ -151,6 +145,7 @@ class ClusterScanning:
         pass
 
     def de_flatten_image(self):
+        print("NOT IMPLEMENTED YET")  # TODO
         pass
 
     def load_data(self, show_example=True):
@@ -261,7 +256,7 @@ class ClusterScanning:
     def train_k_means(self, ID):
         start_time = time.time()
         self.seed(ID)
-        self.ID = ID[-1]
+        self.__ID = ID[-1]
         if self.cfg.MiniBatch:
             self.kmeans = MiniBatchKMeans(
                 self.cfg.k, batch_size=self.cfg.n_init, n_init=self.cfg.n_init
@@ -458,7 +453,7 @@ class ClusterScanning:
 
     def make_plots(self):
         # Some plotting
-        plots_path = self.save_path + f"plots{self.ID}/"
+        plots_path = self.save_path + f"plots{self.get_IDstr()}/"
         os.makedirs(plots_path, exist_ok=True)
 
         window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
@@ -589,10 +584,20 @@ class ClusterScanning:
             )
         logging.debug(f"saved results to {self.save_path}")
 
-    def load_results(self, IDb, IDs, IDi):
-        self.ID = IDi
-        self.__bsID = IDb
-        self.__sigID = IDs
+    def load_results(self, IDb=None, IDs=None, IDi=None):
+        if IDb is None:
+            self.__bsID = self.def_IDb
+        else:
+            self.__bsID = IDb
+
+        if IDs is None:
+            self.__sigID = self.def_IDs
+        else:
+            self.__sigID = IDs
+        if IDi is None:
+            self.__ID = self.def_IDi
+        else:
+            self.__ID = IDi
         with open(self.save_path + f"lab{self.get_IDstr()}.pickle", "rb") as file:
             res = pickle.load(file)
         self.bg_lab = res["bg"]
@@ -626,7 +631,7 @@ class ClusterScanning:
         )
         for IDs in self.list_runs_to_be_done():
             logging.debug(
-                f"Starting {self.IDstr(*IDs)} ### %s seconds ###"
+                f"Starting {self.__IDstr(*IDs)} ### %s seconds ###"
                 % (time.time() - start_time)
             )
             self.bootstrap_resample(
@@ -665,7 +670,7 @@ class ClusterScanning:
             for IDs in IDs_arr:
                 for IDi in IDi_arr:
                     if not os.path.exists(
-                        self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
+                        self.save_path + f"lab{self.__IDstr(IDb, IDs, IDi)}.pickle"
                     ):
                         ID_tuple_list.append([IDb, IDs, IDi])
         if len(ID_tuple_list) == 0:
@@ -681,7 +686,7 @@ class ClusterScanning:
         return integers
 
     def get_IDstr(self):
-        return self.IDstr(self.__bsID, self.__sigID, self.ID)
+        return self.IDstr(self.__bsID, self.__sigID, self.__ID)
 
     def counts_windows_path(self, directory=False):
         pathh = (
@@ -695,7 +700,7 @@ class ClusterScanning:
         if directory:
             return pathh
         else:
-            return pathh + f"bres{self.ID}.pickle"
+            return pathh + f"bres{self.get_IDstr()}.pickle"
 
     def save_counts_windows(self):
         os.makedirs(self.counts_windows_path(directory=True), exist_ok=True)

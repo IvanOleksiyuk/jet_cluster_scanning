@@ -1,0 +1,7 @@
+restart: False
+bootstrap: False
+resample_signal: False
+
+bootstrap_ID: -1
+signal_sample_ID: 0
+ID: 0

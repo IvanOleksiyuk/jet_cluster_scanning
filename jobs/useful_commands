@@ -1,1 +1,3 @@
-python start_bootstrap_jobs.py /config/s0_0.5_1_MB.yaml /config/v3.yaml config/tra_reg/3000_3100.yaml
+python start_bootstrap_jobs.py /config/s0_0.5_1_MB_new.yaml /config/v4.yaml config/tra_reg/3000_3100.yaml, "config/binning/CURTAINS.yaml"
+python start_bootstrap_jobs.py /config/s0_0.5_1_new.yaml /config/v4.yaml config/tra_reg/3000_3100.yaml, "config/binning/CURTAINS.yaml"
+python start_bootstrap_jobs.py /config/s0_0.5_1_MB_new.yaml /config/v4.yaml, "config/binning/CURTAINS.yaml"

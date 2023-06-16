@@ -54,6 +54,12 @@ class CS_evaluation_process:
             self.counts_windows = counts_windows.T
             self.separate_binning = False
 
+        non_empty_bins = np.sum(self.counts_windows, axis=1) > 0
+        self.counts_windows = self.counts_windows[non_empty_bins]
+        if self.separate_binning:
+            self.counts_windows_bg = self.counts_windows_bg[non_empty_bins]
+            self.counts_windows_sg = self.counts_windows_sg[non_empty_bins]
+
         self.binning = binning
         self.ID = ID
 

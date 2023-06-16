@@ -1,6 +1,0 @@
-ID: 0
-
-restart: False
-bootstrap: False
-restart_ID_start: 0
-restart_ID_finish: 10
