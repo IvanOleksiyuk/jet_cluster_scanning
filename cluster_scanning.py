@@ -259,10 +259,13 @@ class ClusterScanning:
         self.__ID = ID[-1]
         if self.cfg.MiniBatch:
             self.kmeans = MiniBatchKMeans(
-                self.cfg.k, batch_size=self.cfg.n_init, n_init=self.cfg.n_init
+                self.cfg.k,
+                batch_size=self.cfg.batch_size,
+                n_init=self.cfg.n_init,
+                init="k-means++",
             )
         else:
-            self.kmeans = KMeans(self.cfg.k, n_init=self.cfg.n_init)
+            self.kmeans = KMeans(self.cfg.k, n_init=self.cfg.n_init, init="k-means++")
 
         # Train k-means in the training window
         data = self.data_mjj_slise(
