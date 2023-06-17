@@ -155,6 +155,7 @@ class ClusterScanning:
         self.im_bg = im_bg_file["data"]
         self.im_sg = im_sg_file["data"]
         if self.cfg.memory_intensive:
+            # if self.load_record and os.path.exists("data_record"+self.cfg.reproc_arg_string+".npy"
             self.im_bg = self.reproc(
                 im_bg_file["data"][:].reshape((-1, self.cfg.image_w, self.cfg.image_h))
             ).reshape(
@@ -164,6 +165,7 @@ class ClusterScanning:
                     self.cfg.image_w * self.cfg.image_h,
                 )
             )
+            # np.save("data_record"+self.cfg.reproc_arg_string, self.im_bg)
             self.im_sg = self.reproc(
                 im_sg_file["data"][:].reshape((-1, self.cfg.image_w, self.cfg.image_h))
             ).reshape(
@@ -173,6 +175,7 @@ class ClusterScanning:
                     self.cfg.image_size * self.cfg.image_size,
                 )
             )
+            # np.save("data_record"+self.cfg.reproc_arg_string, self.im_sg)
             im_bg_file.close()
             im_sg_file.close()
             if show_example:
@@ -673,7 +676,7 @@ class ClusterScanning:
             for IDs in IDs_arr:
                 for IDi in IDi_arr:
                     if not os.path.exists(
-                        self.save_path + f"lab{self.__IDstr(IDb, IDs, IDi)}.pickle"
+                        self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
                     ):
                         ID_tuple_list.append([IDb, IDs, IDi])
         if len(ID_tuple_list) == 0:
@@ -735,9 +738,9 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
             "config/s0_0.5_1_MB_new.yaml",
-            "config/sig_frac/0.05.yaml",
-            "config/multirun/b0_3i0_2.yaml",
-            #            "config/mod/10inits.yaml",
+            "config/multirun/b0_300i0_5.yaml",
+            "config/multirun/i5_10.yaml",
+            "config/tra_reg/3000_3100.yaml",
             "config/binning/CURTAINS.yaml",
             "config/tra_reg/sig_reg.yaml",
             "config/v4.yaml",
