@@ -637,7 +637,7 @@ class ClusterScanning:
         )
         for IDs in self.list_runs_to_be_done():
             logging.debug(
-                f"Starting {self.__IDstr(*IDs)} ### %s seconds ###"
+                f"Starting {self.IDstr(*IDs)} ### %s seconds ###"
                 % (time.time() - start_time)
             )
             self.bootstrap_resample(
