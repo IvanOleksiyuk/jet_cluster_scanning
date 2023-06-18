@@ -45,11 +45,15 @@ class CS_evaluation_process:
         self.cfg = self.config.get_dotmap()
 
         if isinstance(counts_windows, list):
-            self.counts_windows_bg = counts_windows[0].T
-            self.counts_windows_sg = counts_windows[1].T
             self.separate_binning = True
-            self.counts_windows = counts_windows[0] + counts_windows[1]
-            self.counts_windows = self.counts_windows.T
+            if len(counts_windows) == 2:
+                self.counts_windows_bg = counts_windows[0].T
+                self.counts_windows_sg = counts_windows[1].T
+                self.counts_windows = self.counts_windows_bg + self.counts_windows_sg
+            elif len(counts_windows) == 1:
+                self.counts_windows_bg = counts_windows[0].T
+                self.counts_windows_sg = np.zeros_like(self.counts_windows_bg)
+                self.counts_windows = self.counts_windows_bg
         else:
             self.counts_windows = counts_windows.T
             self.separate_binning = False

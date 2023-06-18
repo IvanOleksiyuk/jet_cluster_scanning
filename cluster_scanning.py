@@ -113,7 +113,7 @@ class ClusterScanning:
             isinstance(ID, list)
             sum_hash = 0
             for i in ID:
-                random.seed(a=ID[0], version=2)
+                random.seed(a=ID[i], version=2)
                 sum_hash += random.randint(0, 10e6)
             random.seed(sum_hash)
             np.random.seed(sum_hash)
@@ -695,7 +695,7 @@ class ClusterScanning:
         return ID_tuple_list
 
     def IDstr_to_IDs(self, IDstr):
-        integers = re.findall(r"\d+", IDstr)
+        integers = re.findall(r"-?\d+", IDstr)
         integers = [int(num) for num in integers]
         return integers
 
@@ -752,8 +752,8 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
             "config/s0_0.5_1_MB_new.yaml",
-            "config/multirun/b0_300i0_5.yaml",
-            "config/multirun/i5_10.yaml",
+            "config/sig_frac/0.01.yaml",
+            "config/multirun/i0_10.yaml",
             "config/tra_reg/3000_3100.yaml",
             "config/binning/CURTAINS.yaml",
             # "config/tra_reg/sig_reg.yaml",

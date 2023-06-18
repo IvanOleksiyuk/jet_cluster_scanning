@@ -1,6 +1,7 @@
 # imports
 import os
 import copy
+import logging
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 import pickle
@@ -23,6 +24,17 @@ from utils.utils import (
     ensamble_means,
 )
 
+logger = logging.getLogger()
+logger.setLevel(logging.WARNING)
+
+
+def load_counts_windows(path):
+    res = pickle.load(open(path, "rb"))
+    if isinstance(res, list) or isinstance(res, np.ndarray):
+        return res
+    else:
+        return res["counts_windows"]
+
 
 def score_sample(cfg, counts_windows_boot_load):
 
@@ -39,12 +51,12 @@ def score_sample(cfg, counts_windows_boot_load):
         counts_windows_boot = []
         for file in bres_files:
             counts_windows_boot.append(
-                pickle.load(open(counts_windows_boot_load + file, "rb"))
+                load_counts_windows(counts_windows_boot_load + file)
             )
         binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
     tstat_list = []
     for i, counts_windows in enumerate(counts_windows_boot):
-        counts_windows = np.array(counts_windows)
+        # counts_windows = np.array(counts_windows) #DELETE THIS
         tstat_list.append(
             cs_performance_evaluation(
                 counts_windows=counts_windows,
@@ -124,7 +136,7 @@ def draw_contamination(
         files_list = os.listdir(path)
         bres_files = [file for file in files_list if file.startswith("bres")]
         for file in bres_files:
-            counts_windows = pickle.load(open(path + file, "rb"))
+            counts_windows = load_counts_windows(path + file)
             if binning is None:
                 binning = pickle.load(open(path + "binning.pickle", "rb"))
             counts_windows_list.append(counts_windows)
@@ -157,8 +169,8 @@ def draw_contamination(
 
     # use ensamble if needed
     arr = np.array(arr)
-    if cfg.ensamble != 0 and cfg.ensamble != None:
-        arr = ensamble_means(arr, cfg.ensamble)
+    # if cfg.ensamble != 0 and cfg.ensamble != None:
+    #    arr = ensamble_means(arr, cfg.ensamble)
 
     for res in arr:
         ps.append(p_value(res, tstat_list))
@@ -364,13 +376,16 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
+    # main plots v4 ===============================================================
+    t_statistic_distribution("config/distribution/v4/prep05_1_maxdev5CURTAINS.yaml")
+
     # main plots ensambling ===============================================================
-    t_statistic_distribution(
-        "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E20.yaml"
-    )
-    t_statistic_distribution(
-        "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E5.yaml"
-    )
+    # t_statistic_distribution(
+    #     "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E20.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E5.yaml"
+    # )
     # main plots ===============================================================
 
     # main plots ===============================================================
