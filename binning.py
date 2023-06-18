@@ -78,8 +78,8 @@ def perform_binning_directory(directory, override_config=None):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        perform_binning_directory("char/v2/")
-        perform_binning_directory("char/v2/", ["config/binning/CURTAINS.yaml"])
+        perform_binning_directory("char/v4/")
+        perform_binning_directory("char/v4/", ["config/binning/CURTAINS.yaml"])
 
     else:
         if sys.argv[1] == "-d":
