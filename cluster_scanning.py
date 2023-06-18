@@ -721,8 +721,11 @@ class ClusterScanning:
 
     def save_counts_windows(self):
         os.makedirs(self.counts_windows_path(directory=True), exist_ok=True)
+        res = {}
+        res["counts_windows"] = self.counts_windows
+        res["inertia"] = self.kmeans.inertia_
         with open(self.counts_windows_path(), "wb") as file:
-            pickle.dump(self.counts_windows, file)
+            pickle.dump(res, file)
 
     def available_IDstr(self):
         # TODO redo with glob.glob?
