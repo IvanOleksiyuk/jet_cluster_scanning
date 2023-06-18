@@ -742,7 +742,7 @@ if __name__ == "__main__":
             "config/multirun/i5_10.yaml",
             "config/tra_reg/3000_3100.yaml",
             "config/binning/CURTAINS.yaml",
-            "config/tra_reg/sig_reg.yaml",
+            # "config/tra_reg/sig_reg.yaml",
             "config/v4.yaml",
         ]
     else:

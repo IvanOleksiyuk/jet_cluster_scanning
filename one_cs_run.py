@@ -9,9 +9,9 @@ def one_cs_run():
     # Cluster scanning part
     cs = ClusterScanning(
         [
-            "config/s0_0.5_1_new.yaml",
+            "config/s0_0.5_1_MB_new.yaml",
             "config/sig_frac/0.05.yaml",
-            "config/restart/-1_0_0.yaml",
+            "config/multirun/-1_0_0.yaml",
             "config/binning/CURTAINS.yaml",
             "config/tra_reg/3000_3100.yaml",
             "config/one_run_experiments.yaml",

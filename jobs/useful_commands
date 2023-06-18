@@ -1,4 +1,10 @@
+module load GCC/10.2.0 CUDA/11.1.1 OpenMPI/4.0.5
+module load Python/3.8.6
 python start_multirun_jobs.py config/s0_0.5_1_MB_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
 python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
 python start_multirun_jobs.py config/s0_0.5_1_MB_new.yaml config/v4.yaml config/binning/CURTAINS.yaml
 python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/binning/CURTAINS.yaml
+
+python start_multirun_jobs.py config/s0_0.5_1_MB_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/i5_10.yaml
+python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/i1.yaml
+python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/i2.yaml

@@ -15,12 +15,7 @@ class StepByStepKmeans:
     def fit(self, X):
         self.X = X
         # Initialize K-means with 3 clusters
-        kmeans = KMeans(
-            n_clusters=self.n_clusters,
-            init="k-means++",
-            random_state=0,
-            max_iter=1,
-        )
+
 
         # Perform k-means clustering
         centroids_history = []
@@ -29,6 +24,13 @@ class StepByStepKmeans:
         sil_score_history = []
 
         for i in range(self.max_iter):  # Number of iterations
+            
+			kmeans = MiniBatchKMeans(
+				n_clusters=self.n_clusters,
+				init="k-means++",
+				random_state=0,
+				max_iter=1,
+				)
             kmeans.fit(self.X)
             # Save centroid positions and labels at each iteration
             centroids_history.append(kmeans.cluster_centers_)
