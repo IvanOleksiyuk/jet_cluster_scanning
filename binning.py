@@ -37,12 +37,11 @@ def perform_binning_all(config):
     cs = ClusterScanning(config)
     cs.load_mjj()
     cs.save_binning_array()
-    for jj in cs.available_IDs():
-        cs.ID = jj
-        if cs.check_if_binning_exist():
+    for IDstr in cs.available_IDstr():
+        if cs.check_if_binning_exist(IDstr=IDstr):
             # print("checked_exist: ", cs.counts_windows_path())
             continue
-        cs.load_results(jj)
+        cs.load_results(IDstr=IDstr)
         cs.sample_signal_events()
         cs.bootstrap_resample()
         cs.perform_binning()

@@ -281,7 +281,10 @@ class ClusterScanning:
         logging.info(f"iterations {self.kmeans.n_iter_}")
         logging.info("training --- %s seconds ---" % (time.time() - start_time))
 
-    def bootstrap_resample(self, ID):
+    def bootstrap_resample(self, ID=None):
+        if ID is None:
+            ID = self.__bsID
+
         if self.cfg.bootstrap and ID != -1:
             self.seed(ID)
             self.__bsID = ID
@@ -309,7 +312,9 @@ class ClusterScanning:
     def cancel_bootstrap_resampling(self):
         self.bg_bootstrap = None
 
-    def sample_signal_events(self, ID):
+    def sample_signal_events(self, ID=None):
+        if ID is None:
+            ID = self.__sigID
         self.seed(ID)
         self.__sigID = ID
         if self.cfg.signal_fraction > 0:
@@ -590,7 +595,10 @@ class ClusterScanning:
             )
         logging.debug(f"saved results to {self.save_path}")
 
-    def load_results(self, IDb=None, IDs=None, IDi=None):
+    def load_results(self, IDb=None, IDs=None, IDi=None, IDstr=None):
+        if IDstr is not None:
+            IDb, IDs, IDi = self.IDstr_to_IDs(IDstr)
+
         if IDb is None:
             self.__bsID = self.def_IDb
         else:
@@ -687,14 +695,14 @@ class ClusterScanning:
         return ID_tuple_list
 
     def IDstr_to_IDs(self, IDstr):
-        IDs = re.findall(r"\d+", string)
+        integers = re.findall(r"\d+", IDstr)
         integers = [int(num) for num in integers]
         return integers
 
     def get_IDstr(self):
         return self.IDstr(self.__bsID, self.__sigID, self.__ID)
 
-    def counts_windows_path(self, directory=False):
+    def counts_windows_path(self, directory=False, IDstr=None):
         pathh = (
             self.save_path
             + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}"
@@ -706,7 +714,10 @@ class ClusterScanning:
         if directory:
             return pathh
         else:
-            return pathh + f"bres{self.get_IDstr()}.pickle"
+            if IDstr is None:
+                return pathh + f"bres{self.get_IDstr()}.pickle"
+            else:
+                return pathh + f"bres{IDstr}.pickle"
 
     def save_counts_windows(self):
         os.makedirs(self.counts_windows_path(directory=True), exist_ok=True)
@@ -721,8 +732,8 @@ class ClusterScanning:
                 IDstr_avail.append(file[3:-7])
         return IDstr_avail
 
-    def check_if_binning_exist(self):
-        pathh = self.counts_windows_path()
+    def check_if_binning_exist(self, IDstr):
+        pathh = self.counts_windows_path(IDstr=IDstr)
         return os.path.exists(pathh)
 
     def save_binning_array(self):
