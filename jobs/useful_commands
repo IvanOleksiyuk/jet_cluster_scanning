@@ -1,5 +1,10 @@
 module load GCC/10.2.0 CUDA/11.1.1 OpenMPI/4.0.5
 module load Python/3.8.6
+module load matplotlib/3.3.3
+module load scikit-learn/0.23.2
+
+python binning.py
+
 python start_multirun_jobs.py config/s0_0.5_1_MB_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
 python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
 python start_multirun_jobs.py config/s0_0.5_1_MB_new.yaml config/v4.yaml config/binning/CURTAINS.yaml
@@ -12,8 +17,11 @@ python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tr
 python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/i3.yaml
 python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/i4.yaml
 
-# Real v4
+# Real v4 background
 python start_multirun_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
 python start_multirun_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml -p config/multirun/i5_10.yaml
 python start_multirun_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml -p config/multirun/i10_15.yaml
 python start_multirun_jobs2.py config/v4/s0_0.5_1_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
+
+#signal contaminations
+python start_sig_frac_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/i0_15.yaml
