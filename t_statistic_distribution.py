@@ -108,14 +108,20 @@ def score_sample(cfg, counts_windows_boot_load):
             if i % 100 == 0:
                 print(i)
 
-        ensampbling = 15
+        ensampbling = cfg.ensambling_num
         tstat_ensembled = []
         valid_bootstraps = np.sum(~np.isnan(tstat_array), axis=1) >= ensampbling
         for val in np.where(valid_bootstraps)[0]:
-            tstat_ensembled.append(
-                np.mean(tstat_array[val][~np.isnan(tstat_array[val])][:ensampbling])
-            )
-
+            if cfg.ensambling_type == "mean":
+                tstat_ensembled.append(
+                    np.mean(tstat_array[val][~np.isnan(tstat_array[val])][:ensampbling])
+                )
+            elif cfg.ensambling_type == "median":
+                tstat_ensembled.append(
+                    np.median(
+                        tstat_array[val][~np.isnan(tstat_array[val])][:ensampbling]
+                    )
+                )
         tstat_ensembled = np.array(tstat_ensembled)
 
     # plot the worst cases
@@ -421,11 +427,17 @@ if __name__ == "__main__":
     # t_statistic_distribution(
     #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002.yaml"
     # )
-    t_statistic_distribution("config/distribution/v4/prep05_1_maxdev3CURTAINS.yaml")
-    t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002.yaml"
-    )
+    # t_statistic_distribution("config/distribution/v4/prep05_1_maxdev3CURTAINS.yaml")
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002.yaml"
+    # )
 
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
+    )
     # main plots ensambling ===============================================================
     # t_statistic_distribution(
     #     "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E20.yaml"
