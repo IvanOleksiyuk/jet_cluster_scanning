@@ -25,14 +25,14 @@ jnames = [
 
 if "-p" in sys.argv[1:]:
     listt = sys.argv[1:]
-    listt2 = [list(group) for k, group in groupby(listt, lambda x: x == "") if not k]
+    listt2 = [list(group) for k, group in groupby(listt, lambda x: x == "-p") if not k]
+    print(listt2)
     list_suf = listt2[0]
     list_postfix = listt2[1]
 else:
     list_suf = sys.argv[1:]
     list_postfix = [""]
 
-postfix_config = "config/multirun/i5_10.yaml"
 # copy a job template to scripted folder
 for jname, config_file in zip(jnames, config_files):
     path = "scripted/" + f"job_{jname}.sh"

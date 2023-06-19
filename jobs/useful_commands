@@ -14,4 +14,6 @@ python start_multirun_jobs2.py config/s0_0.5_1_new.yaml config/v4.yaml config/tr
 
 # Real v4
 python start_multirun_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
+python start_multirun_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml -p config/multirun/i5_10.yaml
+python start_multirun_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml -p config/multirun/i10_15.yaml
 python start_multirun_jobs2.py config/v4/s0_0.5_1_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml
