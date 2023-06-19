@@ -1,7 +1,7 @@
 seed: 2
 output_path: "plots/"
-plot_name: "V4prep05_1_maxdev5CURTAINS_0002_15mean"
-contamination_style: "Uall"
+plot_name: "V4prep05_1_maxdev5CURTAINS_15mean"
+contamination_style: "mean_std"
 evaluate_the_worst_cases: False
 do_plotting_in_contamination_evaluation: False
 # parametetrs for cs_eval
@@ -10,10 +10,10 @@ CSEconf: "config/cs_eval/maxdev5.yaml"
 xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
 counts_windows_boot_load: "char/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600boot/"
-title: "$n=0.5,\\sigma=1$, maxdev5 CURTAINS ensamble 15 mean"
+title: "$n=0.5,\\sigma=1$, maxdev5 CURTAINS ensamble 1 mean"
 density: 0
 
-ensambling_num: 15
+ensambling_num: 1
 ensambling_type: mean
 #Different contaminatations (vertical lines on the plot)
 contaminations:

@@ -37,78 +37,69 @@ def load_counts_windows(path):
         return res["counts_windows"]
 
 
-def score_sample(cfg, counts_windows_boot_load):
+def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
 
-    if counts_windows_boot_load == "old00":
-        counts_windows_boot = load_old_bootstrap_experiments00()
-        binning = default_binning()
-        tstat_list = []
+    print(len(os.listdir(counts_windows_boot_load)))
+    files_list = os.listdir(counts_windows_boot_load)
+    bres_files = [file for file in files_list if file.startswith("bres")]
+    counts_windows_boot = []
+    IDs_array = []
+    for file in bres_files:
+        counts_windows_boot.append(load_counts_windows(counts_windows_boot_load + file))
+        IDs = ClusterScanning.IDstr_to_IDs(os.path.basename(file))
+        IDs_array.append([IDs[0], IDs[2]])  # ignore the signal ID here
+    IDs_array = np.stack(IDs_array)
+    print(
+        f"bootstrap indices go from {np.min(IDs_array[:,0])} to {np.max(IDs_array[:,0])}"
+    )
+    print(
+        f"initialisation indices go from {np.min(IDs_array[:,1])} to {np.max(IDs_array[:,1])}"
+    )
+
+    binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
+
+    ensampbling = cfg.ensambling_num
+    if ensampbling == "desamble":
+        tstat_array = []
         for i, counts_windows in enumerate(counts_windows_boot):
             # counts_windows = np.array(counts_windows) #DELETE THIS
-            tstat_list.append(
+            tstat_array.append(
                 cs_performance_evaluation(
                     counts_windows=counts_windows,
                     binning=binning,
                     config_file_path=cfg.CSEconf,
                 )
             )
-        if i % 100 == 0:
-            print(i)
-        tstat_list = np.array(tstat_list)
-
-    elif counts_windows_boot_load == "old05_1":
-        counts_windows_boot = load_old_bootstrap_experiments05_1()
-        binning = default_binning()
-        tstat_list = []
-        for i, counts_windows in enumerate(counts_windows_boot):
-            # counts_windows = np.array(counts_windows) #DELETE THIS
-            tstat_list.append(
-                cs_performance_evaluation(
-                    counts_windows=counts_windows,
-                    binning=binning,
-                    config_file_path=cfg.CSEconf,
-                )
-            )
-        if i % 100 == 0:
-            print(i)
-        tstat_list = np.array(tstat_list)
-
+            if i % 100 == 0:
+                print(i)
+            # if i > 1000:  # DELETE THIS
+            #    break
+        tstat_array = np.array(tstat_array)
+        tstat_ensembled = tstat_array
+        print("There are ", len(tstat_ensembled), " valid tstats")
+        print("There are ", sum(tstat_ensembled == 0), " 0 stats")
+        print("There are ", sum(tstat_ensembled > 0), " >0 stats")
     else:
-        print(len(os.listdir(counts_windows_boot_load)))
-        files_list = os.listdir(counts_windows_boot_load)
-        bres_files = [file for file in files_list if file.startswith("bres")]
-        counts_windows_boot = []
-        IDs_array = []
-        for file in bres_files:
-            counts_windows_boot.append(
-                load_counts_windows(counts_windows_boot_load + file)
-            )
-            IDs = ClusterScanning.IDstr_to_IDs(os.path.basename(file))
-            IDs_array.append([IDs[0], IDs[2]])  # ignore the signal ID here
-        IDs_array = np.stack(IDs_array)
-        print(
-            f"bootstrap indices go from {np.min(IDs_array[:,0])} to {np.max(IDs_array[:,0])}"
-        )
-        print(
-            f"initialisation indices go from {np.min(IDs_array[:,1])} to {np.max(IDs_array[:,1])}"
-        )
         tstat_array = np.full(
-            (np.max(IDs_array[:, 0]) + 1, np.max(IDs_array[:, 1]) + 1), np.nan
+            (
+                np.max(IDs_array[:, 0]) + 1 - np.min(IDs_array[:, 0]),
+                np.max(IDs_array[:, 1]) + 1,
+            ),
+            np.nan,
         )
-        binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
-
         for i, counts_windows in enumerate(counts_windows_boot):
             # counts_windows = np.array(counts_windows) #DELETE THIS
-            tstat_array[IDs_array[i, 0], IDs_array[i, 1]] = cs_performance_evaluation(
+            tstat_array[
+                IDs_array[i, 0] - np.min(IDs_array[:, 0]), IDs_array[i, 1]
+            ] = cs_performance_evaluation(
                 counts_windows=counts_windows,
                 binning=binning,
                 config_file_path=cfg.CSEconf,
             )
-
             if i % 100 == 0:
                 print(i)
-
-        ensampbling = cfg.ensambling_num
+            # if i > 1000:  # DELETE THIS
+            #    break
         tstat_ensembled = []
         valid_bootstraps = np.sum(~np.isnan(tstat_array), axis=1) >= ensampbling
         for val in np.where(valid_bootstraps)[0]:
@@ -125,26 +116,35 @@ def score_sample(cfg, counts_windows_boot_load):
         tstat_ensembled = np.array(tstat_ensembled)
 
     # plot the worst cases
-    # if cfg.evaluate_the_worst_cases:
-    #     worst_cases = np.argsort(tstat_list)[-10:]
-    #     bres_files = np.array(bres_files)
-    #     print("worsdt_cases", bres_files[worst_cases], tstat_list[worst_cases])
-    #     for i in worst_cases:
-    #         counts_windows = pickle.load(
-    #             open(counts_windows_boot_load + bres_files[i], "rb")
-    #         )
-    #         os.makedirs(counts_windows_boot_load + "worst_cases/", exist_ok=True)
-    #         if isinstance(cfg.CSEconf, str):
-    #             config_file_path = [cfg.CSEconf, "config/cs_eval/plotting.yaml"]
-    #         else:
-    #             config_file_path = cfg.CSEconf + ["config/cs_eval/plotting.yaml"]
-    #         cs_performance_evaluation(
-    #             counts_windows=counts_windows,
-    #             binning=binning,
-    #             config_file_path=config_file_path,
-    #             ID=bres_files[i],
-    #             path=counts_windows_boot_load + "worst_cases/",
-    #         )
+    if (
+        cfg.evaluate_the_worst_cases
+        and cfg.ensambling_num == "desamble"
+        and do_wors_cases
+    ):
+        worst_cases = np.argsort(tstat_array)[-10:]
+        bres_files = np.array(bres_files)
+        print("worsdt_cases", bres_files[worst_cases], tstat_array[worst_cases])
+        for i in worst_cases:
+            counts_windows = pickle.load(
+                open(counts_windows_boot_load + bres_files[i], "rb")
+            )["counts_windows"]
+            os.makedirs(
+                counts_windows_boot_load
+                + f"worst_cases{os.path.basename(cfg.CSEconf)[:-5]}/",
+                exist_ok=True,
+            )
+            if isinstance(cfg.CSEconf, str):
+                config_file_path = [cfg.CSEconf, "config/cs_eval/plotting.yaml"]
+            else:
+                config_file_path = cfg.CSEconf + ["config/cs_eval/plotting.yaml"]
+            cs_performance_evaluation(
+                counts_windows=counts_windows,
+                binning=binning,
+                config_file_path=config_file_path,
+                ID=bres_files[i],
+                path=counts_windows_boot_load
+                + f"worst_cases{os.path.basename(cfg.CSEconf)[:-5]}/",
+            )
 
     return tstat_ensembled
 
@@ -161,72 +161,13 @@ def draw_contamination(
     path,
     col,
     tstat_list,
-    old=False,
     postfix="",
     style="all",
     fig=None,
 ):
 
-    # load restarts
-    binning = None
-    counts_windows_list = []
-    if old == 1:
-        for jj in range(10):
-            res = pickle.load(open(path + "res{0:04d}.pickle".format(jj), "rb"))
-            counts_windows = np.array(res["counts_windows"][0])
-            binning = default_binning()
-            counts_windows_list.append(counts_windows)
-    elif old == 2:
-        for jj in range(10):
-            cs = cluster_scanning.ClusterScanning(path)
-            cs.load_mjj()
-            cs.ID = jj
-            cs.load_results(jj)
-            cs.sample_signal_events()
-            cs.bootstrap_resample()
-            counts_windows = cs.perform_binning()
-            binning = default_binning()
-            counts_windows_list.append(counts_windows)
-    else:
-        files_list = os.listdir(path)
-        bres_files = [file for file in files_list if file.startswith("bres")]
-        for file in bres_files:
-            counts_windows = load_counts_windows(path + file)
-            if binning is None:
-                binning = pickle.load(open(path + "binning.pickle", "rb"))
-            counts_windows_list.append(counts_windows)
-
-    # evaluate TS for each
-    arr = []
+    arr = score_sample(cfg, path, do_wors_cases=False)
     ps = []
-    os.makedirs(path + "evalutions/", exist_ok=True)
-    for jj, counts_windows in enumerate(counts_windows_list):
-        if cfg.do_plotting_in_contamination_evaluation:
-            if isinstance(cfg.CSEconf, str):
-                config_file_path = [cfg.CSEconf, "config/cs_eval/plotting.yaml"]
-            else:
-                config_file_path = cfg.CSEconf + ["config/cs_eval/plotting.yaml"]
-            res = cs_performance_evaluation(
-                counts_windows=counts_windows,
-                binning=binning,
-                config_file_path=config_file_path,
-                path=path + "evalutions/",
-                ID=bres_files[jj],
-            )
-        else:
-            res = cs_performance_evaluation(
-                counts_windows=counts_windows,
-                binning=binning,
-                config_file_path=cfg.CSEconf,
-            )
-        # print(res["chisq_ndof"])
-        arr.append(res)
-
-    # use ensamble if needed
-    arr = np.array(arr)
-    # if cfg.ensamble != 0 and cfg.ensamble != None:
-    #    arr = ensamble_means(arr, cfg.ensamble)
-
     for res in arr:
         ps.append(p_value(res, tstat_list))
     meanres_ps = p_value(np.mean(arr), tstat_list)
@@ -243,16 +184,16 @@ def draw_contamination(
         upper_bound_mps = False
 
     if np.mean(meanres_ps) == 0:
-        label += "\n p(<x>)<{:.4f} Z>{:.2f}".format(
-            1 / len(tstat_list),
-            p2Z(np.mean(1 / len(tstat_list))),
-        )
+        # label += "\n p(<x>)<{:.4f} Z>{:.2f}".format(
+        #     1 / len(tstat_list),
+        #     p2Z(np.mean(1 / len(tstat_list))),
+        # )
         meanres_ps = 1 / len(tstat_list)
         upper_bound_mrps = True
     else:
-        label += "\n p(<x>)={:.4f} Z={:.2f}".format(
-            meanres_ps, p2Z(np.mean(meanres_ps))
-        )
+        # label += "\n p(<x>)={:.4f} Z={:.2f}".format(
+        #     meanres_ps, p2Z(np.mean(meanres_ps))
+        # )
         upper_bound_mrps = False
 
     label += " " + postfix
@@ -327,12 +268,12 @@ def t_statistic_distribution(config_file_path):
     # initialise the main figure:
     plt.close("all")
     if cfg.contamination_style[0] == "U":
-        fig = plt.figure(figsize=(6, 5))
+        fig = plt.figure(figsize=(8, 5))
         gs = fig.add_gridspec(2, hspace=0, height_ratios=[4, 1])
         (ax1, ax2) = gs.subplots(sharex=True)
         plt.sca(ax1)
     else:
-        fig = plt.figure(figsize=(6, 3))
+        fig = plt.figure(figsize=(8, 3))
 
     # load the restarts
     if isinstance(cfg.counts_windows_boot_load, str):
@@ -382,8 +323,8 @@ def t_statistic_distribution(config_file_path):
 
     results = {}
     if "contaminations" in config.get_dict().keys():
-        for c, path, col, old, postfix in zip(
-            cfg.contaminations, cfg.cont_paths, cfg.colors, cfg.old_CS, cfg.postfix
+        for c, path, col, postfix in zip(
+            cfg.contaminations, cfg.cont_paths, cfg.colors, cfg.postfix
         ):
             results_1con = draw_contamination(
                 cfg,
@@ -391,7 +332,6 @@ def t_statistic_distribution(config_file_path):
                 path,
                 col,
                 TS_list,
-                old=old,
                 postfix=postfix,
                 style=cfg.contamination_style,
                 fig=fig,
@@ -402,12 +342,17 @@ def t_statistic_distribution(config_file_path):
     if cfg.contamination_style[0] == "U":
         handles, labels = ax2.get_legend_handles_labels()
         plt.sca(ax1)
-        plt.legend(handles, labels, loc=1)
+        plt.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))
+        # plt.tight_layout(rect=[0, 0, 0.8, 1])
         plt.sca(ax2)
     else:
-        plt.legend(loc=1)
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+        # plt.tight_layout(rect=[0, 0, 0.8, 1])
     plt.xlabel(cfg.xlabel)
-
+    plt.xlim(
+        min(TS_list) - 0.1 * (max(TS_list) - min(TS_list)),
+        max(TS_list) + 0.1 * (max(TS_list) - min(TS_list)),
+    )
     # plt.xlim((0, 30))
     plt.savefig(
         output_path + cfg.plot_name,
@@ -423,20 +368,36 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots v4 ===============================================================
-    t_statistic_distribution("config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml")
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml"
+    # )
     t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml"
+        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml"
     )
-    t_statistic_distribution("config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml")
-    t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml"
-    )
-    t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
-    )
-    t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
-    )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
+    # )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
+    # )
     # main plots ensambling ===============================================================
     # t_statistic_distribution(
     #     "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E20.yaml"
