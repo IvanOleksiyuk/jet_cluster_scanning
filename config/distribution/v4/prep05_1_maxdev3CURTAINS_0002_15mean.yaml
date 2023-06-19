@@ -1,6 +1,6 @@
 seed: 2
 output_path: "plots/"
-plot_name: "V4prep05_1_maxdev3CURTAINS_0002"
+plot_name: "V4prep05_1_maxdev3CURTAINS_0002_15mean"
 contamination_style: "Uall"
 evaluate_the_worst_cases: False
 do_plotting_in_contamination_evaluation: False

@@ -423,15 +423,14 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots v4 ===============================================================
-    # t_statistic_distribution("config/distribution/v4/prep05_1_maxdev5CURTAINS.yaml")
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002.yaml"
-    # )
-    # t_statistic_distribution("config/distribution/v4/prep05_1_maxdev3CURTAINS.yaml")
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002.yaml"
-    # )
-
+    t_statistic_distribution("config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml")
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml"
+    )
+    t_statistic_distribution("config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml")
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml"
+    )
     t_statistic_distribution(
         "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
     )
