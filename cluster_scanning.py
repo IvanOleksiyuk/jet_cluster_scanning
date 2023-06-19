@@ -113,7 +113,7 @@ class ClusterScanning:
             isinstance(ID, list)
             sum_hash = 0
             for i in ID:
-                random.seed(a=ID[i], version=2)
+                random.seed(a=i, version=2)
                 sum_hash += random.randint(0, 10e6)
             random.seed(sum_hash)
             np.random.seed(sum_hash)
@@ -751,7 +751,7 @@ class ClusterScanning:
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         config_file_path = [
-            "config/s0_0.5_1_MB_new.yaml",
+            "config/v4/s0_0.5_1_MB_i1.yaml",
             "config/sig_frac/0.01.yaml",
             "config/multirun/i0_10.yaml",
             "config/tra_reg/3000_3100.yaml",

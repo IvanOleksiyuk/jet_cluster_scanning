@@ -27,7 +27,7 @@ cont_paths:
   - "char/v4/k50MB2048_3iret0con0.1W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
   - "char/v4/k50MB2048_3iret0con0.05W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
   - "char/v4/k50MB2048_3iret0con0.025W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
-  - "char/v4/k50MB2048_3iret0con0.01W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
+  - "char/v4/k50MB2048_1iret0con0.01W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
 colors:
   - "red"
   - "orange"

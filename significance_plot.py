@@ -109,7 +109,7 @@ fig = plt.figure(figsize=(5, 5))
 for i, r in enumerate(BH_list):
     raw_str, raw_sens = r
     plt.errorbar(
-        raw_str,
+        raw_str * len(mjj_sg),
         raw_sens[:, 0],
         xerr=0,
         yerr=[raw_sens[:, 1], raw_sens[:, 2]],
@@ -122,10 +122,20 @@ results["Zs"] = np.array(results["Zs"])
 print(results["Zs"])
 results["Zs"][np.isinf(results["Zs"])] = p2Z(results["p_upper_bound"][0])
 print(results["Zs"])
-plt.plot(results["contaminations"], results["Z_mean_ps"], label="Cluster Scanning")
-plt.plot(results["contaminations"], results["Z_meanres_ps"], label="Cluster Scanning")
 plt.plot(
-    results["contaminations"], np.mean(results["Zs"], axis=1), label="Cluster Scanning"
+    np.array(results["contaminations"]) * len(mjj_bg),
+    results["Z_mean_ps"],
+    label="Cluster Scanning",
+)
+plt.plot(
+    np.array(results["contaminations"]) * len(mjj_bg),
+    results["Z_meanres_ps"],
+    label="Cluster Scanning",
+)
+plt.plot(
+    np.array(results["contaminations"]) * len(mjj_bg),
+    np.mean(results["Zs"], axis=1),
+    label="Cluster Scanning",
 )
 print(results["contaminations"])
 print(results["Z_mean_ps"])
@@ -134,7 +144,7 @@ print(np.mean(results["Zs"], axis=1))
 plt.legend()
 plt.grid()
 plt.xscale("log")
-plt.xlabel("N signal * 10^(-5)")
+plt.xlabel("N signal")
 plt.ylabel("significance [sigma]")
 
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
