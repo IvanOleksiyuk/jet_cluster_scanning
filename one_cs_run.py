@@ -9,9 +9,10 @@ def one_cs_run():
     # Cluster scanning part
     cs = ClusterScanning(
         [
-            "config/s0_0.5_1_MB_new.yaml",
-            "config/sig_frac/0.05.yaml",
+            "config/v4/s0_0.5_1_MB_i1.yaml",
+            # "config/sig_frac/0.02.yaml",
             "config/multirun/-1_0_0.yaml",
+            # "config/multirun/i2.yaml",
             "config/binning/CURTAINS.yaml",
             "config/tra_reg/3000_3100.yaml",
             "config/one_run_experiments.yaml",
@@ -35,9 +36,11 @@ def one_cs_run():
     cs.load_results()
 
     # # Evaluation part
-    config_path = ["config/cs_eval/maxdev5.yaml", "config/cs_eval/plotting.yaml"]
+    config_path = ["config/cs_eval/maxdev3.yaml", "config/cs_eval/plotting.yaml"]
     path1 = cs.counts_windows_path(directory=True)
-    counts_windows = pickle.load(open(path1 + f"bres{cs.get_IDstr()}.pickle", "rb"))
+    counts_windows = pickle.load(open(path1 + f"bres{cs.get_IDstr()}.pickle", "rb"))[
+        "counts_windows"
+    ]
     binning = pickle.load(open(path1 + "binning.pickle", "rb"))
     cs_performance_evaluation(
         counts_windows=counts_windows,

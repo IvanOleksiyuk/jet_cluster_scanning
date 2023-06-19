@@ -122,6 +122,12 @@ class ClusterScanning:
     def IDstr(IDb, IDs, IDi):
         return f"_b{IDb}_s{IDs}_i{IDi}"
 
+    @staticmethod
+    def IDstr_to_IDs(IDstr):
+        integers = re.findall(r"-?\d+", IDstr)
+        integers = [int(num) for num in integers]
+        return integers
+
     def load_mjj(self):
         self.mjj_bg = np.load(self.cfg.data_path + "mjj_bkg_sort.npy")
         self.mjj_sg = np.load(self.cfg.data_path + "mjj_sig_sort.npy")
@@ -693,11 +699,6 @@ class ClusterScanning:
             logging.debug(f"First in the list to do is {ID_tuple_list[0]}")
             logging.debug(f"Last in the list to do is {ID_tuple_list[-1]}")
         return ID_tuple_list
-
-    def IDstr_to_IDs(self, IDstr):
-        integers = re.findall(r"-?\d+", IDstr)
-        integers = [int(num) for num in integers]
-        return integers
 
     def get_IDstr(self):
         return self.IDstr(self.__bsID, self.__sigID, self.__ID)

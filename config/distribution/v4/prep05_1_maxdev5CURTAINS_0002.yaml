@@ -1,7 +1,7 @@
 seed: 2
 output_path: "plots/"
-plot_name: "V4prep05_1_maxdev5CURTAINS"
-contamination_style: "mean_std"
+plot_name: "V4prep05_1_maxdev5CURTAINS_0002"
+contamination_style: "Uall"
 evaluate_the_worst_cases: False
 do_plotting_in_contamination_evaluation: False
 # parametetrs for cs_eval
@@ -14,32 +14,12 @@ title: "$n=0.5,\\sigma=1$, maxdev5 CURTAINS"
 density: 0
 #Different contaminatations (vertical lines on the plot)
 contaminations:
-  - 0.0025
-  - 0.001
   - 0.002
-  # - 0.01
-  # - 0.005
 old_CS:
   - 0
-  - 0
-  - 0
-  # - 0
-  # - 0
 cont_paths:
-  - "char/v4/k50MB2048_1iret0con0.025W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
-  - "char/v4/k50MB2048_1iret0con0.01W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
   - "char/v4/k50MB2048_1iret0con0.02W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
-  # - "char/v4/k50MB2048_1iret0con0.1W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
-  # - "char/v4/k50MB2048_1iret0con0.05W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
 colors:
-  - "gold"
-  - "green"
   - "lime"
-  # - "red"
-  # - "orange"
 postfix:
   - "MB"
-  - "MB"
-  - "MB"
-  # - "MB"
-  # - "MB"
