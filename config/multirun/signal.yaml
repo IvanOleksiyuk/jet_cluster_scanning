@@ -1,0 +1,10 @@
+restart: True 
+bootstrap: True
+resample_signal: True
+sig_eq_boot_IDs: True
+
+IDb_start: 0
+IDb_finish: 20
+
+IDi_start: 0
+IDi_finish: 30

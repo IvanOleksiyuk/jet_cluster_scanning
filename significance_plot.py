@@ -47,7 +47,7 @@ def get_hunter_scheme(hunter) -> np.ndarray:
 
 
 BH_list = []
-BH_set_list = ["CURTAINS", "BHD"]
+BH_set_list = ["CURTAINS"]
 BH_color_list = ["black", "indigo"]
 for BH_set_name in BH_set_list:
     BHsettings = {
@@ -102,7 +102,7 @@ CS_list = [
     r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
     # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_1mean_results.pickle",
     # r"plots\for_BH_comparison\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.pickle",
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
+    r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
     r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
 ]
 name_list = [os.path.basename(path) for path in CS_list]
@@ -144,6 +144,7 @@ print(np.mean(results["Zs"], axis=1))
 plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 plt.grid()
 plt.xscale("log")
+plt.xlim(10**2, 10**4)
 plt.xlabel("N signal")
 plt.ylabel("significance [sigma]")
 

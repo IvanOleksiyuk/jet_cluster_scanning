@@ -671,12 +671,17 @@ class ClusterScanning:
     def list_runs_to_be_done(self):
         ID_tuple_list = []
 
+        if hasattr(self.cfg, "sig_eq_boot_IDs"):
+            sig_eq_boot_IDs = self.cfg.sig_eq_boot_IDs
+        else:
+            sig_eq_boot_IDs = False
+
         if self.cfg.bootstrap:
             IDb_arr = [i for i in range(self.cfg.IDb_start, self.cfg.IDb_finish)]
         else:
             IDb_arr = [self.def_IDb]
 
-        if self.cfg.resample_signal:
+        if self.cfg.resample_signal and (not sig_eq_boot_IDs):
             IDs_arr = [i for i in range(self.cfg.IDs_start, self.cfg.IDs_finish)]
         else:
             IDs_arr = [self.def_IDs]
@@ -686,19 +691,15 @@ class ClusterScanning:
         else:
             IDi_arr = [self.def_IDi]
 
-        if hasattr(self.cfg, "sig_eq_boot_IDs"):
-            sig_eq_boot_IDs = self.cfg.sig_eq_boot_IDs
-        else:
-            sig_eq_boot_IDs = False
+
 
         if sig_eq_boot_IDs:
             for IDb in IDb_arr:
-                for IDs in IDs_arr:
-                    for IDi in IDi_arr:
-                        if not os.path.exists(
-                            self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
-                        ):
-                            ID_tuple_list.append([IDb, IDs, IDi])
+                for IDi in IDi_arr:
+                    if not os.path.exists(
+                        self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
+                    ):
+                        ID_tuple_list.append([IDb, IDb, IDi])
         else:
             for IDb in IDb_arr:
                 for IDs in IDs_arr:
