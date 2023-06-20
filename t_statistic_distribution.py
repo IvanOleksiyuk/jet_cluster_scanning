@@ -199,7 +199,7 @@ def draw_contamination(
     label += " " + postfix
 
     # the actual plotting
-    plt.figure(fig)
+    # plt.figure(fig)
     if style[0] == "U":
         style = style[1:]
     if style[:8] == "mean_std":
@@ -286,13 +286,13 @@ def t_statistic_distribution(config_file_path):
             TS_list += score_sample(cfg, counts_windows_boot_load)
 
     # plot the TS distribution
-    plt.figure(fig)
+    # plt.figure(fig)
     if cfg.density:
         plt.hist(TS_list, bins=40, density=True, alpha=0.5)
     else:
         plt.hist(TS_list, bins=40, alpha=0.5)
 
-    plt.figure(fig)
+    # plt.figure(fig)
     if cfg.density:
         plt.ylabel("Density")
     else:

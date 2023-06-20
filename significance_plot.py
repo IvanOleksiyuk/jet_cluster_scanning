@@ -94,6 +94,16 @@ for BH_set_name in BH_set_list:
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Cluster scanning block
 # Load significances from the results of t_statistic_distribution.py
+CS_list = [
+    r"plots\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.png",
+    r"plots\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.png",
+    r"plots\V4prep05_1_maxdev3CURTAINS_15mean_results.png",
+    r"plots\V4prep05_1_maxdev3CURTAINS_1mean_results.png",
+    r"plots\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.png",
+    r"plots\V4prep05_1_maxdev5CURTAINS_15mean_results.png",
+    r"plots\V4prep05_1_maxdev5CURTAINS_1mean_results.png",
+]
+
 results = pickle.load(
     open(r"plots\test_stat\prep05_1_maxdev5CURTAINS_results.pickle", "rb")
 )
@@ -118,23 +128,11 @@ for i, r in enumerate(BH_list):
         uplims=raw_sens[:, 2] == 0,
         label="pyBumpHunter" + BH_set_list[i],
     )
-results["Zs"] = np.array(results["Zs"])
-print(results["Zs"])
-results["Zs"][np.isinf(results["Zs"])] = p2Z(results["p_upper_bound"][0])
-print(results["Zs"])
+
+
 plt.plot(
     np.array(results["contaminations"]) * len(mjj_bg),
     results["Z_mean_ps"],
-    label="Cluster Scanning",
-)
-plt.plot(
-    np.array(results["contaminations"]) * len(mjj_bg),
-    results["Z_meanres_ps"],
-    label="Cluster Scanning",
-)
-plt.plot(
-    np.array(results["contaminations"]) * len(mjj_bg),
-    np.mean(results["Zs"], axis=1),
     label="Cluster Scanning",
 )
 print(results["contaminations"])
