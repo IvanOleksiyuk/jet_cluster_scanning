@@ -686,13 +686,27 @@ class ClusterScanning:
         else:
             IDi_arr = [self.def_IDi]
 
-        for IDb in IDb_arr:
-            for IDs in IDs_arr:
-                for IDi in IDi_arr:
-                    if not os.path.exists(
-                        self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
-                    ):
-                        ID_tuple_list.append([IDb, IDs, IDi])
+        if hasattr(self.cfg, "sig_eq_boot_IDs"):
+            sig_eq_boot_IDs = self.cfg.sig_eq_boot_IDs
+        else:
+            sig_eq_boot_IDs = False
+
+        if sig_eq_boot_IDs:
+            for IDb in IDb_arr:
+                for IDs in IDs_arr:
+                    for IDi in IDi_arr:
+                        if not os.path.exists(
+                            self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
+                        ):
+                            ID_tuple_list.append([IDb, IDs, IDi])
+        else:
+            for IDb in IDb_arr:
+                for IDs in IDs_arr:
+                    for IDi in IDi_arr:
+                        if not os.path.exists(
+                            self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
+                        ):
+                            ID_tuple_list.append([IDb, IDs, IDi])
         if len(ID_tuple_list) == 0:
             logging.info("No runs to be done")
         else:

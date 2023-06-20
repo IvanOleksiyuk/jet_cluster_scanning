@@ -29,6 +29,6 @@ module load scikit-learn/0.23.2
 cd ..
 
 ### Execute your application here
-python3 binning.py -d char/v2/ 
+python3 binning.py 
 sh export_bres.sh 
 ### config/binning/CURTAINS.yaml
