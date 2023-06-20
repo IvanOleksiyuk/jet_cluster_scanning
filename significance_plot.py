@@ -9,6 +9,7 @@ from scipy.special import gammainc
 import pickle
 from utils.utils import p2Z
 from utils.os_utils import list_files
+import os
 
 # %% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Load the data block + define some parameters
@@ -95,19 +96,20 @@ for BH_set_name in BH_set_list:
 # Cluster scanning block
 # Load significances from the results of t_statistic_distribution.py
 CS_list = [
-    r"plots\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.png",
-    r"plots\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.png",
-    r"plots\V4prep05_1_maxdev3CURTAINS_15mean_results.png",
-    r"plots\V4prep05_1_maxdev3CURTAINS_1mean_results.png",
-    r"plots\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.png",
-    r"plots\V4prep05_1_maxdev5CURTAINS_15mean_results.png",
-    r"plots\V4prep05_1_maxdev5CURTAINS_1mean_results.png",
+    r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
+    r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.pickle",
+    r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
+    r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_1mean_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
+    r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
 ]
-
-results = pickle.load(
-    open(r"plots\test_stat\prep05_1_maxdev5CURTAINS_results.pickle", "rb")
-)
-print(results.keys())
+name_list = [os.path.basename(path) for path in CS_list]
+results_list = []
+for i, path in enumerate(CS_list):
+    results = pickle.load(open(path, "rb"))
+    results_list.append(results)
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Ideal fit block
 
@@ -129,17 +131,17 @@ for i, r in enumerate(BH_list):
         label="pyBumpHunter" + BH_set_list[i],
     )
 
-
-plt.plot(
-    np.array(results["contaminations"]) * len(mjj_bg),
-    results["Z_mean_ps"],
-    label="Cluster Scanning",
-)
+for results, name in zip(results_list, name_list):
+    plt.plot(
+        np.array(results["contaminations"][:-2]) * len(mjj_bg),
+        results["Z_mean_ps"][:-2],
+        label=name,
+    )
 print(results["contaminations"])
 print(results["Z_mean_ps"])
 print(np.mean(results["Zs"], axis=1))
 # plt.plot([0.005, 0.0025], [3.21, 0.92], color="red")
-plt.legend()
+plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 plt.grid()
 plt.xscale("log")
 plt.xlabel("N signal")
