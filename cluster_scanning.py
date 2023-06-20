@@ -691,13 +691,11 @@ class ClusterScanning:
         else:
             IDi_arr = [self.def_IDi]
 
-
-
         if sig_eq_boot_IDs:
             for IDb in IDb_arr:
                 for IDi in IDi_arr:
                     if not os.path.exists(
-                        self.save_path + f"lab{self.IDstr(IDb, IDs, IDi)}.pickle"
+                        self.save_path + f"lab{self.IDstr(IDb, IDb, IDi)}.pickle"
                     ):
                         ID_tuple_list.append([IDb, IDb, IDi])
         else:
