@@ -368,36 +368,43 @@ def t_statistic_distribution(config_file_path):
 
 if __name__ == "__main__":
     # main plots v4 ===============================================================
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml"
-    # )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml"
+    )
     t_statistic_distribution(
         "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml"
     )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
-    # )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
+    )
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
+    )
+
     # main plots ensambling ===============================================================
     # t_statistic_distribution(
     #     "config/distribution/ensambling/prep05_1_maxdev5CURTAINS_E20.yaml"
