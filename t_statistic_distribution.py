@@ -369,43 +369,58 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
+    # main plots v4 avriated signal ===============================================
+    # Generate plots for all methods:
+    methods = [
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
+        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
+    ]
+
+    add_conf = "config/distribution/v4/bootstrap_sig_contam.yaml"
+
+    methods = [[meth, add_conf] for meth in methods]
+
+    for method in methods:
+        t_statistic_distribution(method)
+
     # main plots v4 ===============================================================
-    # t_statistic_distribution(
+    # methods = [
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
     #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
-    # )
-    # t_statistic_distribution(
     #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml"
-    # )
-    t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml"
-    )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml"
-    # )
-    # t_statistic_distribution(
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
-    # )
-    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml",
     #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
-    # )
+    # ]
+
+    # add_conf = "config/distribution/v4/restart_sig_contam.yaml"
+
+    # methods = [[meth, add_conf] for meth in methods]
+
+    # for method in methods:
+    #     t_statistic_distribution(method)
+
+    # methods = [
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml"
+    # ]
+
+    # add_conf = "config/distribution/v4/restart_sig_contam_0002.yaml"
+
+    # methods = [[meth, add_conf] for meth in methods]
+
+    # for method in methods:
+    #     t_statistic_distribution(method)
 
     # main plots ensambling ===============================================================
     # t_statistic_distribution(

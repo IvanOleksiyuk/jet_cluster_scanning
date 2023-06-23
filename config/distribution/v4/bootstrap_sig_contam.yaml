@@ -1,0 +1,32 @@
+contaminations:
+  - 0.01
+  - 0.005
+  - 0.0025
+  - 0.002
+  - 0.001
+  - 0.0009
+  - 0.0008
+cont_paths:
+  - "char/v4/k50MB2048_1iret0con0.1W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+  - "char/v4/k50MB2048_1iret0con0.05W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+  - "char/v4/k50MB2048_1iret0con0.025W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+  - "char/v4/k50MB2048_1iret0con0.02W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+  - "char/v4/k50MB2048_1iret0con0.01W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+  - "char/v4/k50MB2048_1iret0con0.009W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+  - "char/v4/k50MB2048_1iret0con0.008W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+colors:
+  - "red"
+  - "orange"
+  - "gold"
+  - "lime"
+  - "green"
+  - "cyan"
+  - "steelblue"
+postfix:
+  - "MB"
+  - "MB"
+  - "MB"
+  - "MB"
+  - "MB"
+  - "MB"
+  - "MB"

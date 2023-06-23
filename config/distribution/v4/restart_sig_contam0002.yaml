@@ -1,0 +1,12 @@
+contamination_style: "Uall"
+
+contaminations:
+  - 0.002
+old_CS:
+  - 0
+cont_paths:
+  - "char/v4/k50MB2048_1iret0con0.02W3000_3100_w0.5s1Nrest/binnedW100s16ei30004600/"
+colors:
+  - "lime"
+postfix:
+  - "MB"
