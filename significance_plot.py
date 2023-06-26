@@ -47,7 +47,7 @@ def get_hunter_scheme(hunter) -> np.ndarray:
 
 
 BH_list = []
-BH_set_list = ["CURTAINS"]
+BH_set_list = ["CURTAINS"]  # "BHD"
 BH_color_list = ["black", "indigo"]
 for BH_set_name in BH_set_list:
     BHsettings = {
@@ -96,14 +96,14 @@ for BH_set_name in BH_set_list:
 # Cluster scanning block
 # Load significances from the results of t_statistic_distribution.py
 CS_list = [
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
+    r"plots\26-06-2023\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
     # r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.pickle",
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
+    # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
+    # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
     # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_1mean_results.pickle",
     # r"plots\for_BH_comparison\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.pickle",
-    r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
+    # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
+    # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
 ]
 name_list = [os.path.basename(path) for path in CS_list]
 results_list = []

@@ -2,6 +2,7 @@ import numpy as np
 import copy
 from utils.robust_estimators import std_ignore_outliers, mean_ignore_outliers
 from utils.lowpasfilter import butter_lowpass_filter
+import scipy.optimize
 import scipy.signal
 
 
@@ -194,3 +195,24 @@ class Spectra:
                 (self.y - another.y) / (self.err**2 + another.err**2) ** 0.5,
                 axis=axis,
             )
+
+    def fit(self, function, s=np.sqrt(13000)):
+        if function == "4_param":
+            f = (
+                lambda x, p1, p2, p3, p4: p1
+                * (1 - x / s) ** p2
+                * (x / s) ** p3
+                * np.exp(p4 * np.log(x / s))
+            )
+        rrr = scipy.optimize.curve_fit(
+            f,
+            self.x,
+            self.y[0],
+            sigma=self.err[0],
+            p0=[1, 0, 0, 0],
+            bounds=(
+                [0, -1000, -1000, -1000],
+                [np.inf, 1000, 1000, 1000],
+            ),
+        )
+        return Spectra(self.x, f(self.x, *rrr[0]), poisson=False)
