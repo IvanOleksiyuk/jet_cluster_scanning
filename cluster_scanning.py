@@ -468,117 +468,6 @@ class ClusterScanning:
             self.counts_windows_sum = np.stack(counts_windows)
         return self.counts_windows
 
-    def make_plots(self):
-        # Some plotting
-        plots_path = self.save_path + f"plots{self.get_IDstr()}/"
-        os.makedirs(plots_path, exist_ok=True)
-
-        window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
-        min_allowed_count = 100
-        min_min_allowed_count = 10
-        plt.figure()
-        plt.grid()
-        for j in range(self.cfg.k):
-            plt.plot(window_centers, self.counts_windows_sum[:, j])
-        plt.xlabel("m_jj")
-        plt.ylabel("n points from window")
-        plt.savefig(plots_path + "kmeans_ni_mjj_total.png")
-        smallest_cluster_count_window = np.min(self.counts_windows_sum, axis=1)
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(plots_path + "kmeans_ni_mjj_total_statAllowed.png")
-
-        partials_windows = np.zeros(self.counts_windows_sum.shape)
-        for i in range(len(self.Mjjmin_arr)):
-            partials_windows[i, :] = self.counts_windows_sum[i, :] / np.sum(
-                self.counts_windows_sum[i, :]
-            )
-
-        plt.figure()
-        plt.grid()
-        for j in range(self.cfg.k):
-            plt.plot(window_centers, partials_windows[:, j])
-        plt.xlabel("m_jj")
-        plt.ylabel("fraction of points in window")
-        plt.savefig(plots_path + "kmeans_xi_mjj_total.png")
-
-        countmax_windows = np.zeros(self.counts_windows_sum.shape)
-        for i in range(self.cfg.k):
-            countmax_windows[:, i] = self.counts_windows_sum[:, i] / np.max(
-                self.counts_windows_sum[:, i]
-            )
-
-        plt.figure()
-        plt.grid()
-        for j in range(self.cfg.k):
-            plt.plot(window_centers, countmax_windows[:, j])
-
-        conts_bg = []
-        conts_sg = []
-        for Mjjmin, Mjjmax in zip(self.Mjjmin_arr, self.Mjjmax_arr):
-            conts_bg.append(
-                np.sum(np.logical_and(self.mjj_bg >= Mjjmin, self.mjj_bg <= Mjjmax))
-            )
-            if self.allowed is not None:
-                conts_sg.append(
-                    np.sum(
-                        np.logical_and(
-                            np.logical_and(
-                                self.mjj_sg >= Mjjmin, self.mjj_sg <= Mjjmax
-                            ),
-                            self.allowed,
-                        )
-                    )
-                )
-            else:
-                conts_sg.append(0)
-        conts_bg = np.array(conts_bg)
-        conts_sg = np.array(conts_sg)
-        conts = conts_bg + conts_sg
-        plt.plot(window_centers, conts / np.max(conts), "--")
-        plt.xlabel("m_jj")
-        plt.ylabel("n points from window/max(...)")
-        plt.savefig(plots_path + "kmeans_xi_mjj_maxn.png")
-
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(plots_path + "kmeans_xi_mjj_maxn_statAllowed.png")
-
-        countnrm_windows = np.zeros(self.counts_windows_sum.shape)
-        for i in range(self.cfg.k):
-            countnrm_windows[:, i] = self.counts_windows_sum[:, i] / np.sum(
-                self.counts_windows_sum[:, i]
-            )
-
-        plt.figure()
-        plt.grid()
-        for j in range(self.cfg.k):
-            plt.plot(window_centers, countnrm_windows[:, j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
-        plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
-        plt.savefig(plots_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
-        for i in range(len(window_centers)):
-            if smallest_cluster_count_window[i] < min_allowed_count:
-                if smallest_cluster_count_window[i] < min_min_allowed_count:
-                    plt.axvline(window_centers[i], color="black", alpha=0.6)
-                else:
-                    plt.axvline(window_centers[i], color="black", alpha=0.3)
-
-        plt.savefig(
-            plots_path + "kmeans_ni_mjj_norm_statAllowed.png",
-            bbox_inches="tight",
-        )
-
     def run(self):
         os.makedirs(self.save_path, exist_ok=True)
         if isinstance(self.config_file_path, str):
@@ -741,6 +630,18 @@ class ClusterScanning:
         with open(self.counts_windows_path(), "wb") as file:
             pickle.dump(res, file)
 
+    def load_counts_windows(self, IDstr=None):
+        if IDstr is None:
+            IDstr = self.get_IDstr()
+        with open(self.counts_windows_path(IDstr=IDstr), "rb") as file:
+            res = pickle.load(file)
+        self.counts_windows = res["counts_windows"]
+        if isinstance(self.counts_windows, list):
+            self.counts_windows_sum = sum(self.counts_windows)
+            self.counts_windows_bg = self.counts_windows[0]
+            self.counts_windows_sg = self.counts_windows[1]
+        self.kmeans.inertia_ = res["inertia"]
+
     def available_IDstr(self):
         # TODO redo with glob.glob?
         IDstr_avail = []
@@ -760,6 +661,132 @@ class ClusterScanning:
         ) as file:
             binning = np.stack([self.Mjjmin_arr, self.Mjjmax_arr]).T
             pickle.dump(binning, file)
+
+    def plot_clusters(self):
+        plots_path = self.save_path + f"plots{self.get_IDstr()}/"
+        os.makedirs(plots_path, exist_ok=True)
+        plt.figure()
+        plt.grid()
+        for j in range(self.cfg.k):
+            plt.plot(self.mjj_bg, self.bg_lab[:, j], ".", alpha=0.1)
+        plt.xlabel("m_jj")
+        plt.ylabel("cluster label")
+        plt.savefig(plots_path + "kmeans_ni_mjj_total.png")
+
+    def make_plots(self):
+        # Some plotting
+
+        plots_path = self.save_path + f"plots{self.get_IDstr()}/"
+        os.makedirs(plots_path, exist_ok=True)
+
+        self.plot_cluster_spectra(plots_path, "kmeans_ni_mjj_total.png")
+        self.plot_cluster_spectra(
+            plots_path, "kmeans_ni_mjj_total_statAllowed.png", plot_stat_allowed=True
+        )
+        self.plot_cluster_spectra(
+            plots_path, "kmeans_ni_mjj_maxnuorm.png", normalize="max"
+        )
+        self.plot_cluster_spectra(
+            plots_path, "kmeans_ni_mjj_sumnorm.png", normalize="sum"
+        )
+        self.plot_cluster_spectra(
+            plots_path, "kmeans_ni_mjj_perbin.png", normalize="per_bin"
+        )
+        self.plot_global_stats(plots_path, "total_stats.png")
+        self.plot_global_stats(plots_path, "total_stats_sigsort.png", sort="sig")
+        self.plot_global_stats(plots_path, "total_stats_bgsort.png", sort="bg")
+        self.plot_global_stats(plots_path, "total_stats_totsort.png", sort="tot")
+        self.plot_cluster_images(plots_path)
+
+    def plot_global_stats(self, plots_path, plot_name, sort=None):
+        spectra = self.counts_windows_sum
+        tot_counts = np.sum(spectra, axis=0)
+        bg_counts = np.sum(self.counts_windows_bg, axis=0)
+        sg_counts = np.sum(self.counts_windows_sg, axis=0)
+
+        if sort is not None:
+            if sort == "sig":
+                index = np.argsort(sg_counts)
+            elif sort == "bg":
+                index = np.argsort(bg_counts)
+            elif sort == "tot":
+                index = np.argsort(tot_counts)
+            tot_counts = tot_counts[index]
+            bg_counts = bg_counts[index]
+            sg_counts = sg_counts[index]
+        plt.figure()
+        plt.grid()
+        plt.plot(tot_counts, label="total")
+        plt.plot(bg_counts, label="background")
+        plt.plot(sg_counts, label="signal")
+        plt.legend()
+        plt.savefig(plots_path + plot_name)
+
+    def plot_cluster_images(self, plots_path):
+        plt.figure(figsize=(20, 10))
+        plt.grid()
+        for j in range(self.cfg.k):
+            plt.subplot(5, 10, j + 1)
+            plt.tick_params(left = False, right = False , labelleft = False,
+                labelbottom = False, bottom = False)
+            plt.imshow(
+                self.kmeans.cluster_centers_[j].reshape(
+                    (self.cfg.image_size, self.cfg.image_size)
+                ),
+                cmap="turbo",
+            )
+            plt.title(f"cluster {j}")
+        plt.savefig(plots_path + "kmeans_images.png", bbox_inches="tight")
+
+    def plot_cluster_spectra(
+        self,
+        plots_path,
+        plot_name,
+        plot_stat_allowed=False,
+        min_allowed_count=100,
+        min_min_allowed_count=10,
+        normalize=None,
+    ):
+        plt.figure()
+        window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
+
+        if normalize is None:
+            spectra = self.counts_windows_sum
+            plt.ylabel("n points from window")
+        elif normalize == "max":
+            spectra = np.zeros(self.counts_windows_sum.shape)
+            for i in range(self.cfg.k):
+                spectra[:, i] = self.counts_windows_sum[:, i] / np.max(
+                    self.counts_windows_sum[:, i]
+                )
+            plt.ylabel("n points from window/max(...)")
+        elif normalize == "sum":
+            spectra = np.zeros(self.counts_windows_sum.shape)
+            for i in range(len(self.Mjjmin_arr)):
+                spectra[:, i] = self.counts_windows_sum[:, i] / np.sum(
+                    self.counts_windows_sum[:, i]
+                )
+            plt.ylabel("n points from window/sum(...)")
+        elif normalize == "per_bin":
+            spectra = (
+                self.counts_windows_sum
+                / self.counts_windows_sum.sum(axis=1)[:, np.newaxis]
+            )
+            plt.ylabel("ratio points from window")
+
+        plt.grid()
+        for j in range(self.cfg.k):
+            plt.plot(window_centers, spectra[:, j])
+        plt.xlabel("m_jj")
+        if plot_stat_allowed:
+            smallest_cluster_count_window = np.min(self.counts_windows_sum, axis=1)
+            for i in range(len(window_centers)):
+                if smallest_cluster_count_window[i] < min_allowed_count:
+                    if smallest_cluster_count_window[i] < min_min_allowed_count:
+                        plt.axvline(window_centers[i], color="black", alpha=0.6)
+                    else:
+                        plt.axvline(window_centers[i], color="black", alpha=0.3)
+        plt.savefig(plots_path + plot_name, bbox_inches="tight")
 
 
 if __name__ == "__main__":

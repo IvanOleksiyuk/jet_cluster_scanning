@@ -2,6 +2,7 @@ import math
 import numpy as np
 import scipy.stats as stats
 
+
 def p2Z(p):
     if isinstance(p, np.ndarray):
         out = []
@@ -15,6 +16,7 @@ def p2Z(p):
         return np.array(out)
     else:
         return -stats.norm.ppf(p)
+
 
 def make_lists_in_dict(dictionary):
     for key in dictionary:
@@ -73,14 +75,3 @@ def calculate_batch_averages(batches):
         average = sum(batch) / len(batch)
         averages.append(average)
     return averages
-
-
-# Example usage
-array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-batch_size = 3
-
-batches = divide_into_batches(array, batch_size)
-averages = calculate_batch_averages(batches)
-
-print("Batches:", batches)
-print("Averages:", averages)

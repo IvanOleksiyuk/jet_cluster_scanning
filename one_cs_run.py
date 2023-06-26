@@ -10,7 +10,7 @@ def one_cs_run():
     cs = ClusterScanning(
         [
             "config/v4/s0_0.5_1_MB_i1.yaml",
-            # "config/sig_frac/0.02.yaml",
+            "config/sig_frac/0.05.yaml",
             "config/multirun/-1_0_0.yaml",
             # "config/multirun/i2.yaml",
             "config/binning/CURTAINS.yaml",
@@ -19,36 +19,38 @@ def one_cs_run():
         ]
     )
 
-    start_time = time.time()
-    cs.run()
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Execution time:", execution_time, "seconds")
+    # start_time = time.time()
+    # cs.run()
+    # end_time = time.time()
+    # execution_time = end_time - start_time
+    # print("Execution time:", execution_time, "seconds")
 
-    start_time = time.time()
-    cs.perform_binning()
-    end_time = time.time()
-    execution_time = end_time - start_time
-    print("Execution time:", execution_time, "seconds")
+    # start_time = time.time()
+    # cs.perform_binning()
+    # end_time = time.time()
+    # execution_time = end_time - start_time
+    # print("Execution time:", execution_time, "seconds")
 
-    cs.save_binning_array()
-    cs.save_counts_windows()
+    # cs.save_binning_array()
+    # cs.save_counts_windows()
     cs.load_results()
+    cs.load_counts_windows()
+    cs.make_plots()
 
     # # Evaluation part
-    config_path = ["config/cs_eval/maxdev3.yaml", "config/cs_eval/plotting.yaml"]
-    path1 = cs.counts_windows_path(directory=True)
-    counts_windows = pickle.load(open(path1 + f"bres{cs.get_IDstr()}.pickle", "rb"))[
-        "counts_windows"
-    ]
-    binning = pickle.load(open(path1 + "binning.pickle", "rb"))
-    cs_performance_evaluation(
-        counts_windows=counts_windows,
-        binning=binning,
-        path=path1,
-        ID=cs.get_IDstr(),
-        config_file_path=config_path,
-    )
+    # config_path = ["config/cs_eval/maxdev3.yaml", "config/cs_eval/plotting.yaml"]
+    # path1 = cs.counts_windows_path(directory=True)
+    # counts_windows = pickle.load(open(path1 + f"bres{cs.get_IDstr()}.pickle", "rb"))[
+    #     "counts_windows"
+    # ]
+    # binning = pickle.load(open(path1 + "binning.pickle", "rb"))
+    # cs_performance_evaluation(
+    #     counts_windows=counts_windows,
+    #     binning=binning,
+    #     path=path1,
+    #     ID=cs.get_IDstr(),
+    #     config_file_path=config_path,
+    # )
     # cs_performance_evaluation(
     #     cs.counts_windows,
     #     filterr="med",

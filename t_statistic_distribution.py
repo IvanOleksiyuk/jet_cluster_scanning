@@ -387,22 +387,22 @@ if __name__ == "__main__":
         t_statistic_distribution(method)
 
     # main plots v4 ===============================================================
-    # methods = [
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
-    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml",
-    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
-    # ]
+    methods = [
+        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
+        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
+        # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
+        # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
+        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
+        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
+        # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml",
+        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml",
+        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml",
+        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
+    ]
 
-    # add_conf = "config/distribution/v4/restart_sig_contam.yaml"
+    add_conf = "config/distribution/v4/restart_sig_contam.yaml"
 
     # methods = [[meth, add_conf] for meth in methods]
 
