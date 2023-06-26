@@ -248,7 +248,7 @@ class CS_evaluation_process:
                     np.sum(anomaly_rich_sp.y) / np.sum(anomaly_poor_sp.y)
                 )
             elif self.cfg.background_estim == "4_param_fit":
-                anomaly_poor_sp = anomaly_rich_sp.chisq_fit("4_param")
+                anomaly_poor_sp = anomaly_rich_sp.fit("4_param")
         else:
             anomaly_poor_sp = anomaly_poor_sp.scale(
                 np.sum(anomaly_rich_sp.y) / np.sum(anomaly_poor_sp.y)

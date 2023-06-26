@@ -38,19 +38,22 @@ def one_cs_run():
     cs.make_plots()
 
     # # Evaluation part
-    # config_path = ["config/cs_eval/maxdev3.yaml", "config/cs_eval/plotting.yaml"]
-    # path1 = cs.counts_windows_path(directory=True)
-    # counts_windows = pickle.load(open(path1 + f"bres{cs.get_IDstr()}.pickle", "rb"))[
-    #     "counts_windows"
-    # ]
-    # binning = pickle.load(open(path1 + "binning.pickle", "rb"))
-    # cs_performance_evaluation(
-    #     counts_windows=counts_windows,
-    #     binning=binning,
-    #     path=path1,
-    #     ID=cs.get_IDstr(),
-    #     config_file_path=config_path,
-    # )
+    config_path = [
+        "config/cs_eval/maxdev3_msde_4par.yaml",
+        "config/cs_eval/plotting.yaml",
+    ]
+    path1 = cs.counts_windows_path(directory=True)
+    counts_windows = pickle.load(open(path1 + f"bres{cs.get_IDstr()}.pickle", "rb"))[
+        "counts_windows"
+    ]
+    binning = pickle.load(open(path1 + "binning.pickle", "rb"))
+    cs_performance_evaluation(
+        counts_windows=counts_windows,
+        binning=binning,
+        path=path1,
+        ID=cs.get_IDstr(),
+        config_file_path=config_path,
+    )
     # cs_performance_evaluation(
     #     cs.counts_windows,
     #     filterr="med",

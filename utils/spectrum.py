@@ -196,7 +196,7 @@ class Spectra:
                 axis=axis,
             )
 
-    def fit(self, function, s=np.sqrt(13000)):
+    def fit(self, function, s=13000):
         if function == "4_param":
             f = (
                 lambda x, p1, p2, p3, p4: p1
@@ -212,7 +212,7 @@ class Spectra:
             p0=[1, 0, 0, 0],
             bounds=(
                 [0, -1000, -1000, -1000],
-                [np.inf, 1000, 1000, 1000],
+                [100000000, 1000, 1000, 1000],
             ),
         )
-        return Spectra(self.x, f(self.x, *rrr[0]), poisson=False)
+        return Spectra(self.x, np.array([list(f(self.x, *rrr[0]))]), poisson=False)
