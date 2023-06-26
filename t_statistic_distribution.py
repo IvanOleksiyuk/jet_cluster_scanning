@@ -41,6 +41,7 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
 
     print(len(os.listdir(counts_windows_boot_load)))
     files_list = os.listdir(counts_windows_boot_load)
+    print(files_list)
     bres_files = [file for file in files_list if file.startswith("bres")]
     counts_windows_boot = []
     IDs_array = []
@@ -59,6 +60,7 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
     binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
 
     ensampbling = cfg.ensambling_num
+    print("doing ensambling", ensampbling)
     if ensampbling == "desamble":
         tstat_array = []
         for i, counts_windows in enumerate(counts_windows_boot):
@@ -72,8 +74,8 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
             )
             if i % 100 == 0:
                 print(i)
-            if i > 1000:  # DELETE THIS
-               break
+            # if i > 1000:  # DELETE THIS
+            #    break
         tstat_array = np.array(tstat_array)
         tstat_ensembled = tstat_array
         print("There are ", len(tstat_ensembled), " valid tstats")
@@ -372,11 +374,11 @@ if __name__ == "__main__":
     # main plots v4 avriated signal ===============================================
     # Generate plots for all methods:
     methods = [
-        "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
+        #"config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
         "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
-        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
-        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
-        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
+        #"config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+        #"config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
+        #"config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
     ]
 
     add_conf = "config/distribution/v4/bootstrap_sig_contam.yaml"
@@ -387,27 +389,27 @@ if __name__ == "__main__":
         t_statistic_distribution(method)
 
     # main plots v4 ===============================================================
-    methods = [
-        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
-        "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
-        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
-        # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml",
-        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
-    ]
+    # methods = [
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_desamble.yaml"
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_desamble.yaml"
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_0002_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3CURTAINS_0002_15med.yaml"
+    # ]
 
-    add_conf = "config/distribution/v4/restart_sig_contam.yaml"
+    # add_conf = "config/distribution/v4/restart_sig_contam.yaml"
 
-    methods = [[meth, add_conf] for meth in methods]
+    # methods = [[meth, add_conf] for meth in methods]
 
-    for method in methods:
-        t_statistic_distribution(method)
+    # for method in methods:
+    #     t_statistic_distribution(method)
 
     # methods = [
     #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",

@@ -9,7 +9,7 @@ CSEconf: "config/cs_eval/maxdev3.yaml"
 
 xlabel: "$\\tilde{\\chi}^2/n_{dof}$"
 
-counts_windows_boot_load: "char/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600boot/"
+counts_windows_boot_load: "char/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
 title: "$n=0.5,\\sigma=1$, maxdev3 CURTAINS ensamble 15 median"
 density: 0
 

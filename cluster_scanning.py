@@ -610,10 +610,7 @@ class ClusterScanning:
             self.save_path
             + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}"
         )
-        if self.bootstrap_bg is not None:
-            pathh += f"boot/"
-        else:
-            pathh += "/"
+        pathh += "/"
         if directory:
             return pathh
         else:
