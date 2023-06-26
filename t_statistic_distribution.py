@@ -404,10 +404,10 @@ if __name__ == "__main__":
 
     add_conf = "config/distribution/v4/restart_sig_contam.yaml"
 
-    # methods = [[meth, add_conf] for meth in methods]
+    methods = [[meth, add_conf] for meth in methods]
 
-    # for method in methods:
-    #     t_statistic_distribution(method)
+    for method in methods:
+        t_statistic_distribution(method)
 
     # methods = [
     #     "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
