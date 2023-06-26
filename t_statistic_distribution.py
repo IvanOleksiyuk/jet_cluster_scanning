@@ -374,11 +374,11 @@ if __name__ == "__main__":
     # main plots v4 avriated signal ===============================================
     # Generate plots for all methods:
     methods = [
-        #"config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
+        "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
         "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
-        #"config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
-        #"config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
-        #"config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+        "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
+        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
     ]
 
     add_conf = "config/distribution/v4/bootstrap_sig_contam.yaml"

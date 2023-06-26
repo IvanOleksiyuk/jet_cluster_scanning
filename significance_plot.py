@@ -96,14 +96,14 @@ for BH_set_name in BH_set_list:
 # Cluster scanning block
 # Load significances from the results of t_statistic_distribution.py
 CS_list = [
-    #r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
-    #r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.pickle",
-    #r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
-    #r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
     # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_1mean_results.pickle",
     # r"plots\for_BH_comparison\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.pickle",
-    r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
-    #r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
+    r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
+    # r"plots\for_BH_comparison\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
 ]
 name_list = [os.path.basename(path) for path in CS_list]
 results_list = []
@@ -133,21 +133,27 @@ for i, r in enumerate(BH_list):
 
 for results, name in zip(results_list, name_list):
     # Use median and quartiles for the error bars
-    median = np.median(results["Zs"], axis=1)
-    q1 = np.quantile(results["Zs"], 0.25, axis=1)
-    q3 = np.quantile(results["Zs"], 0.75, axis=1)
+    Zs = results["Zs"]
+    min_length = min([len(Z) for Z in results["Zs"]])
+    Zs = [Z[:min_length] for Z in Zs]
+    Zs = np.stack(Zs, axis=1).T
+    Zs[np.isinf(Zs)] = p2Z(results["p_upper_bound"][0])
+    print(Zs.shape)
+    median = np.median(Zs, axis=1)
+    q1 = np.quantile(Zs, 0.25, axis=1)
+    q3 = np.quantile(Zs, 0.75, axis=1)
     err_low = median - q1
     err_high = q3 - median
     plt.errorbar(
-        np.array(results["contaminations"][:-2]) * len(mjj_bg),
-        np.median(results["Zs"], axis=1),
+        np.array(results["contaminations"]) * len(mjj_bg),
+        np.median(Zs, axis=1),
         xerr=0,
-        yerr=[[err_low], [err_high]],
+        yerr=[err_low, err_high],
         label=name,
     )
-print(results["contaminations"])
-print(results["Z_mean_ps"])
-print(np.mean(results["Zs"], axis=1))
+# print(results["contaminations"])
+# print(results["Z_mean_ps"])
+# print(np.mean(results["Zs"], axis=1))
 # plt.plot([0.005, 0.0025], [3.21, 0.92], color="red")
 plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 plt.grid()
