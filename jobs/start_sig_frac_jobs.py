@@ -31,7 +31,7 @@ else:
 # copy a job template to scripted folder
 for jname, config_file in zip(jnames, config_files):
     path = "scripted/" + f"job_{jname}.sh"
-    shutil.copy2("job_CPU_1h.sh", path)
+    shutil.copy2("job_CPU_6h.sh", path)
     # Append a python run command to the job template
     str_for_job = (
         "python3 cluster_scanning.py "
