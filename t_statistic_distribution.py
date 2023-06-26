@@ -72,8 +72,8 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
             )
             if i % 100 == 0:
                 print(i)
-            # if i > 1000:  # DELETE THIS
-            #    break
+            if i > 1000:  # DELETE THIS
+               break
         tstat_array = np.array(tstat_array)
         tstat_ensembled = tstat_array
         print("There are ", len(tstat_ensembled), " valid tstats")

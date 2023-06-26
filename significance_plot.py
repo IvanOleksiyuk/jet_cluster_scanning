@@ -132,9 +132,17 @@ for i, r in enumerate(BH_list):
     )
 
 for results, name in zip(results_list, name_list):
-    plt.plot(
+    # Use median and quartiles for the error bars
+    median = np.median(results["Zs"], axis=1)
+    q1 = np.quantile(results["Zs"], 0.25, axis=1)
+    q3 = np.quantile(results["Zs"], 0.75, axis=1)
+    err_low = median - q1
+    err_high = q3 - median
+    plt.errorbar(
         np.array(results["contaminations"][:-2]) * len(mjj_bg),
-        results["Z_mean_ps"][:-2],
+        np.median(results["Zs"], axis=1),
+        xerr=0,
+        yerr=[[err_low], [err_high]],
         label=name,
     )
 print(results["contaminations"])
