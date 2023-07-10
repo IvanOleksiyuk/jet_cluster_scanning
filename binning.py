@@ -3,8 +3,8 @@ import sys
 from cluster_scanning import ClusterScanning
 import logging
 
-logging.basicConfig(level=logging.INFO)
-
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def perform_binning_ID(config, ID, override_config=None):
     """Performs binning for the given ID in the cluster_scanning object and saves count_windows
@@ -79,8 +79,13 @@ def perform_binning_directory(directory, override_config=None):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        perform_binning_directory("char/v4/")
+        #perform_binning_directory("char/v4/")
         perform_binning_directory("char/v4/", ["config/binning/CURTAINS.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/CURTAINS.yaml", "config/idealised.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/32.yaml", "config/idealised.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/32.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/64.yaml", "config/idealised.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/64.yaml"])
 
     else:
         if sys.argv[1] == "-d":

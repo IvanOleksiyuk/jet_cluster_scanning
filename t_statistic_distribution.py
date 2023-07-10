@@ -39,13 +39,16 @@ def load_counts_windows(path):
 
 def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
 
-    print(len(os.listdir(counts_windows_boot_load)))
+    print("found binnings total:", len(os.listdir(counts_windows_boot_load)))
+    print("CSE config", cfg.CSEconf)
     files_list = os.listdir(counts_windows_boot_load)
     bres_files = [file for file in files_list if file.startswith("bres")]
+    ensampbling = cfg.ensambling_num
+    print("doing ensambling", ensampbling)
+
     counts_windows_boot = []
     IDs_array = []
     for file in bres_files:
-        counts_windows_boot.append(load_counts_windows(counts_windows_boot_load + file))
         IDs = ClusterScanning.IDstr_to_IDs(os.path.basename(file))
         IDs_array.append([IDs[0], IDs[2]])  # ignore the signal ID here
     IDs_array = np.stack(IDs_array)
@@ -57,16 +60,16 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
     )
 
     binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
-
-    ensampbling = cfg.ensambling_num
-    print("doing ensambling", ensampbling)
+    
+    
     if ensampbling == "desamble":
         tstat_array = []
-        for i, counts_windows in enumerate(counts_windows_boot):
+        for i, file in enumerate(bres_files):
             # counts_windows = np.array(counts_windows) #DELETE THIS
+            counts_windows_boot.append(load_counts_windows(counts_windows_boot_load + file))
             tstat_array.append(
                 cs_performance_evaluation(
-                    counts_windows=counts_windows,
+                    counts_windows=counts_windows_boot[-1],
                     binning=binning,
                     config_file_path=cfg.CSEconf,
                 )
@@ -81,41 +84,58 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
         print("There are ", sum(tstat_ensembled == 0), " 0 stats")
         print("There are ", sum(tstat_ensembled > 0), " >0 stats")
     else:
+
+        tstat_files = np.full(
+            (
+                np.max(IDs_array[:, 0]) + 1,
+                np.max(IDs_array[:, 1]) + 1,
+            ),
+            "",
+            dtype='<U100',
+        )
+        for i, indices in enumerate(IDs_array):
+            tstat_files[indices[0], indices[1]] = bres_files[i]
+        valid_bootstraps = np.sum(np.logical_not(tstat_files==""), axis=1) >= ensampbling
+        print(f"len(valid_bootstraps) {sum(valid_bootstraps)}")
+        tstat_files_new = np.full(
+            (
+                sum(valid_bootstraps),
+                ensampbling,
+            ),
+            "",
+            dtype='<U100',
+        )
         tstat_array = np.full(
             (
-                np.max(IDs_array[:, 0]) + 1 - np.min(IDs_array[:, 0]),
-                np.max(IDs_array[:, 1]) + 1,
+                sum(valid_bootstraps),
+                ensampbling,
             ),
             np.nan,
         )
-        for i, counts_windows in enumerate(counts_windows_boot):
-            # counts_windows = np.array(counts_windows) #DELETE THIS
-            tstat_array[
-                IDs_array[i, 0] - np.min(IDs_array[:, 0]), IDs_array[i, 1]
-            ] = cs_performance_evaluation(
-                counts_windows=counts_windows,
-                binning=binning,
-                config_file_path=cfg.CSEconf,
-            )
-            if i % 100 == 0:
-                print(i)
-            # if i > 2000:  # DELETE THIS
-            #    break
-        tstat_ensembled = []
-        valid_bootstraps = np.sum(~np.isnan(tstat_array), axis=1) >= ensampbling
-        for val in np.where(valid_bootstraps)[0]:
-            if cfg.ensambling_type == "mean":
-                tstat_ensembled.append(
-                    np.mean(tstat_array[val][~np.isnan(tstat_array[val])][:ensampbling])
-                )
-            elif cfg.ensambling_type == "median":
-                tstat_ensembled.append(
-                    np.median(
-                        tstat_array[val][~np.isnan(tstat_array[val])][:ensampbling]
-                    )
-                )
-        tstat_ensembled = np.array(tstat_ensembled)
+        for i, val in enumerate(np.where(valid_bootstraps)[0]):
+            tstat_files_new[i] = tstat_files[val][np.logical_not(tstat_files[val]=="")][:ensampbling]
+        
+        k=0
+        for i in range(sum(valid_bootstraps)):
+            for j in range(ensampbling):
+                counts_windows_boot.append(load_counts_windows(counts_windows_boot_load + tstat_files_new[i, j]))
+                tstat_array[i, j] = cs_performance_evaluation(
+                    counts_windows = counts_windows_boot[-1], 
+                    binning=binning,
+                    config_file_path=cfg.CSEconf,)
+                k+=1
+                if k % 100 == 0:
+                    print(k)
+        tstat_array = np.array(tstat_array)
 
+        if cfg.ensambling_type == "mean":
+            tstat_ensembled= np.mean(tstat_array, axis=1)                
+        elif cfg.ensambling_type == "median":
+            tstat_ensembled=np.median(tstat_array, axis=1)
+
+    if np.any(np.isnan(tstat_ensembled)):
+        raise ValueError("There are NaNs in the tstat_ensembled")
+    
     # plot the worst cases
     if (
         cfg.evaluate_the_worst_cases
@@ -370,8 +390,12 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot.yaml"
+    # )
     t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot.yaml"
+        ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.yaml",
+         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml"]
     )
 
     # main plots v4 avriated signal ===============================================

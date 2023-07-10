@@ -221,8 +221,8 @@ class ClusterScanning:
             bg = self.im_bg[indexing_bg[0] : indexing_bg[-1]]
         else:
             if self.cfg.verbose:
-                logging.info(len(self.im_bg[indexing_bg[0] : indexing_bg[-1]]))
-                logging.info(len(self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
+                logging.debug("jets in window originally:", len(self.im_bg[indexing_bg[0] : indexing_bg[-1]]))
+                logging.debug("jets in window bootstrapped:", np.sum(self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
             bg = np.repeat(
                 self.im_bg[indexing_bg[0] : indexing_bg[-1]],
                 self.bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
@@ -355,8 +355,8 @@ class ClusterScanning:
             self.bg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_bg) / batch_size))):
-                logging.debug(
-                    i * batch_size, min((i + 1) * batch_size, len(self.im_bg))
+                logging.debug("evaluating chunk: " +
+                    str(i * batch_size, min((i + 1) * batch_size, len(self.im_bg)))
                 )
                 self.bg_lab.append(
                     self.kmeans.predict(
@@ -429,8 +429,8 @@ class ClusterScanning:
             if bootstrap_bg is None:
                 bg = self.bg_lab[indexing_bg[0] : indexing_bg[-1] + 1]
             else:
-                logging.debug(len(self.bg_lab[indexing_bg[0] : indexing_bg[-1]]))
-                logging.debug(len(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]]))
+                logging.debug("originaly in the window : " + str(len(self.bg_lab[indexing_bg[0] : indexing_bg[-1]])))
+                logging.debug("after bootstrap resample: " + str(np.sum(bootstrap_bg[indexing_bg[0] : indexing_bg[-1]])))
                 bg = np.repeat(
                     self.bg_lab[indexing_bg[0] : indexing_bg[-1]],
                     bootstrap_bg[indexing_bg[0] : indexing_bg[-1]],
@@ -472,6 +472,10 @@ class ClusterScanning:
         for i in range(self.cfg.steps):
             if hasattr(self.cfg, "idealised"):
                 if self.cfg.idealised and i > 0:
+                    if hasattr(counts_windows[0][0], '__iter__'):
+                        fractions_idealised = counts_windows[0][0] / np.sum(counts_windows[0][0])
+                    else:
+                        fractions_idealised = counts_windows[0] / np.sum(counts_windows[0])
                     counts_windows.append(
                         self.count_bin(
                             self.Mjjmin_arr[i],
@@ -479,8 +483,7 @@ class ClusterScanning:
                             self.allowed,
                             self.bootstrap_bg,
                             idealised=True,
-                            fractions_idealised=counts_windows[0]
-                            / np.sum(counts_windows[0]),
+                            fractions_idealised=fractions_idealised,
                         )
                     )
                 else:
@@ -676,6 +679,7 @@ class ClusterScanning:
         res["inertia"] = self.kmeans.inertia_
         with open(self.counts_windows_path(), "wb") as file:
             pickle.dump(res, file)
+            logger.info("bin counts saved to " + self.counts_windows_path())
 
     def load_counts_windows(self, IDstr=None):
         if IDstr is None:
