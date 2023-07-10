@@ -204,15 +204,33 @@ class Spectra:
                 * (x / s) ** p3
                 * np.exp(p4 * np.log(x / s))
             )
-        rrr = scipy.optimize.curve_fit(
+            rrr = scipy.optimize.curve_fit(
             f,
             self.x,
             self.y[0],
             sigma=self.err[0],
             p0=[1, 0, 0, 0],
             bounds=(
-                [0, -1000, -1000, -1000],
-                [100000000, 1000, 1000, 1000],
+                [-0.1, -100, -100, -100],
+                [1000000, 100, 100, 100],
             ),
-        )
+            )
+        if function == "3_param":
+            f = (
+                lambda x, p1, p2, p3: p1
+                * (1 - x / s) ** p2
+                * (x / s) ** p3
+            )
+            rrr = scipy.optimize.curve_fit(
+                f,
+                self.x,
+                self.y[0],
+                sigma=self.err[0],
+                p0=[1, 0, 0],
+                bounds=(
+                    [-0.1, -100, -100],
+                    [1000000, 100, 100],
+                ),
+                method = "trf"
+            )
         return Spectra(self.x, np.array([list(f(self.x, *rrr[0]))]), poisson=False)

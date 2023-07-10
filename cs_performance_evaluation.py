@@ -151,6 +151,8 @@ class CS_evaluation_process:
     def signal_efficiency(self):
         """function to calculate the purity of the labels"""
         # Calculate purity
+        if self.labels is None:
+            self.labels = self.label_spectra()
         fraction_signal = np.sum(self.counts_windows_sg[self.labels == 1]) / np.sum(
             self.counts_windows_sg
         )
@@ -159,6 +161,8 @@ class CS_evaluation_process:
     def background_efficiency(self):
         """function to calculate the purity of the labels"""
         # Calculate purity
+        if self.labels is None:
+            self.labels = self.label_spectra()
         fraction_signal = np.sum(self.counts_windows_bg[self.labels == 1]) / np.sum(
             self.counts_windows_bg
         )
@@ -250,6 +254,9 @@ class CS_evaluation_process:
                 )
             elif self.cfg.background_estim == "4_param_fit":
                 anomaly_poor_sp = anomaly_rich_sp.fit("4_param")
+            elif self.cfg.background_estim == "3_param_fit":
+                print("doing 3 param")
+                anomaly_poor_sp = anomaly_rich_sp.fit("3_param")
         else:
             anomaly_poor_sp = anomaly_poor_sp.scale(
                 np.sum(anomaly_rich_sp.y) / np.sum(anomaly_poor_sp.y)
@@ -344,6 +351,10 @@ class CS_evaluation_process:
             res = self.non_aggregation_based_TS(
                 prepare_sp=prepr, cluster_sc="chi", mjj_sc="chi"
             )
+        elif self.cfg.test_statistic == "signal_efficiency":
+            res = self.signal_efficiency()
+        elif self.cfg.test_statistic == "background_efficiency":
+            res = self.background_efficiency()
 
         if self.cfg.plotting:
             self.plot()

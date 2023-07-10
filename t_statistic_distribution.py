@@ -41,7 +41,6 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
 
     print(len(os.listdir(counts_windows_boot_load)))
     files_list = os.listdir(counts_windows_boot_load)
-    print(files_list)
     bres_files = [file for file in files_list if file.startswith("bres")]
     counts_windows_boot = []
     IDs_array = []
@@ -100,7 +99,7 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
             )
             if i % 100 == 0:
                 print(i)
-            # if i > 1000:  # DELETE THIS
+            # if i > 2000:  # DELETE THIS
             #    break
         tstat_ensembled = []
         valid_bootstraps = np.sum(~np.isnan(tstat_array), axis=1) >= ensampbling
