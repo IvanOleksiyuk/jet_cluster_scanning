@@ -47,7 +47,7 @@ def get_hunter_scheme(hunter) -> np.ndarray:
 
 
 BH_list = []
-BH_set_list = ["CURTAINS"]  # "BHD"
+BH_set_list = ["CURTAINS2"]  # "BHD"
 BH_color_list = ["black", "indigo"]
 for BH_set_name in BH_set_list:
     BHsettings = {
@@ -70,6 +70,11 @@ for BH_set_name in BH_set_list:
         n_bins = 16
         bins = np.linspace(3000, 4600, n_bins + 1)
         BHsettings["bins"] = bins
+    if BH_set_name == "CURTAINS2":
+        n_bins = 16
+        bins = np.linspace(3000, 4600, n_bins + 1)
+        BHsettings["bins"] = bins
+        BHsettings["width_min"] = 1
     elif BH_set_name == "BHD":
         n_bins = 60
         bins = np.linspace(3000, 4600, n_bins + 1)
@@ -155,6 +160,24 @@ for results, name in zip(results_list, name_list):
 # print(results["Z_mean_ps"])
 # print(np.mean(results["Zs"], axis=1))
 # plt.plot([0.005, 0.0025], [3.21, 0.92], color="red")
+
+res = pickle.load(open("experiments/Zs_4p_full.pickle", "rb"))
+plt.plot(
+    res["sig_fractions"] * len(mjj_sg),
+    [np.median(Zs) for Zs in res["Zs"]],
+    color="black",
+    label="4 par fit",
+    linestyle="dashed",
+)
+res = pickle.load(open("experiments/Zs.pickle", "rb"))
+plt.plot(
+    res["sig_fractions"] * len(mjj_sg),
+    [np.median(Zs) for Zs in res["Zs"]],
+    color="darkgrey",
+    label="3 par fit",
+    linestyle="dashed",
+)
+
 plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 plt.grid()
 plt.xscale("log")
@@ -164,6 +187,6 @@ plt.ylabel("significance [sigma]")
 
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Save the plot
-plt.savefig("plots/main/significances.png", bbox_inches="tight")
+plt.savefig("plots/main/significances.png", bbox_inches="tight", dpi=300)
 
 # %%

@@ -371,23 +371,27 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot.yaml"
+    )
+
     # main plots v4 avriated signal ===============================================
     # Generate plots for all methods:
-    methods = [
-        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
-        # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
-        "config/distribution/v4/prep05_1_maxdev3_msde_4parCURTAINS_15mean.yaml",
-    ]
+    # methods = [
+    #     # "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml",
+    #     # "config/distribution/v4/prep05_1_maxdev5CURTAINS_15mean.yaml",
+    #     # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15mean.yaml",
+    #     # "config/distribution/v4/prep05_1_maxdev3CURTAINS_15med.yaml",
+    #     # "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
+    #     "config/distribution/v4/prep05_1_maxdev3_msde_4parCURTAINS_15mean.yaml",
+    # ]
 
-    add_conf = "config/distribution/v4/bootstrap_sig_contam.yaml"
+    # add_conf = "config/distribution/v4/bootstrap_sig_contam.yaml"
 
-    methods = [[meth, add_conf] for meth in methods]
+    # methods = [[meth, add_conf] for meth in methods]
 
-    for method in methods:
-        t_statistic_distribution(method)
+    # for method in methods:
+    #     t_statistic_distribution(method)
 
     # main plots v4 ===============================================================
     # methods = [
@@ -536,3 +540,5 @@ if __name__ == "__main__":
     # t_statistic_distribution(
     #     "config/distribution/prep0_0_LABmaxdev5_max-maxnorm-dev.yaml"
     # )
+
+# %%

@@ -108,7 +108,7 @@ class Spectra:
     def standardize_rob(self):  # TODO outlier factor should be a parameter
         y = (self.y - mean_ignore_outliers(self.y)) / std_ignore_outliers(self.y)
         x = self.x
-        err = 0  # TODO THIS IS FALSE IMPROVE IT
+        err = self.err / std_ignore_outliers(self.y)  # TODO THIS IS FALSE IMPROVE IT
         return Spectra(x, y, err, poisson=False)
 
     def butter_lowpas(self):

@@ -14,6 +14,7 @@ from utils.config_utils import Config
 import shutil
 import logging
 import re
+import copy
 
 
 class ColoredFormatter(logging.Formatter):
@@ -281,11 +282,15 @@ class ClusterScanning:
             self.cfg.train_interval[0], self.cfg.train_interval[1]
         )
         self.kmeans.fit(data)
-        counts = np.bincount(self.kmeans.labels_)
+        counts = self.get_counts_train()
         counts.sort()
         logging.info(f"sorted cluster counts {counts}")
         logging.info(f"iterations {self.kmeans.n_iter_}")
         logging.info("training --- %s seconds ---" % (time.time() - start_time))
+
+    def get_counts_train(self):
+        counts = np.bincount(self.kmeans.labels_)
+        return counts
 
     def bootstrap_resample(self, ID=None):
         if ID is None:
@@ -389,7 +394,15 @@ class ClusterScanning:
             self.sg_lab = np.concatenate(self.sg_lab)
         logging.info("label_eval --- %s seconds ---" % (time.time() - start_time))
 
-    def count_bin(self, mjjmin, mjjmax, allowed, bootstrap_bg):
+    def count_bin(
+        self,
+        mjjmin,
+        mjjmax,
+        allowed,
+        bootstrap_bg,
+        idealised=False,
+        fractions_idealised=None,
+    ):
         """Counts a number of events for all classes in a given Mjj window
 
         Args:
@@ -427,6 +440,14 @@ class ClusterScanning:
             bg = np.array([])
             logger.warning("no background events in this window")
 
+        if idealised:
+            bg = random.choices(
+                range(self.cfg.k),
+                weights=fractions_idealised,
+                k=len(bg) * 2,
+            )
+            bg = np.array(bg)
+
         if allowed is not None:
             sg = np.repeat(
                 self.sg_lab[indexing_sg[0] : indexing_sg[-1]],
@@ -449,14 +470,37 @@ class ClusterScanning:
     def perform_binning(self):
         counts_windows = []
         for i in range(self.cfg.steps):
-            counts_windows.append(
-                self.count_bin(
-                    self.Mjjmin_arr[i],
-                    self.Mjjmax_arr[i],
-                    self.allowed,
-                    self.bootstrap_bg,
+            if hasattr(self.cfg, "idealised"):
+                if self.cfg.idealised and i > 0:
+                    counts_windows.append(
+                        self.count_bin(
+                            self.Mjjmin_arr[i],
+                            self.Mjjmax_arr[i],
+                            self.allowed,
+                            self.bootstrap_bg,
+                            idealised=True,
+                            fractions_idealised=counts_windows[0]
+                            / np.sum(counts_windows[0]),
+                        )
+                    )
+                else:
+                    counts_windows.append(
+                        self.count_bin(
+                            self.Mjjmin_arr[i],
+                            self.Mjjmax_arr[i],
+                            self.allowed,
+                            self.bootstrap_bg,
+                        )
+                    )
+            else:
+                counts_windows.append(
+                    self.count_bin(
+                        self.Mjjmin_arr[i],
+                        self.Mjjmax_arr[i],
+                        self.allowed,
+                        self.bootstrap_bg,
+                    )
                 )
-            )
 
         if self.cfg.separate_binning:
             self.counts_windows_bg = np.stack([x[0] for x in counts_windows])
@@ -605,19 +649,25 @@ class ClusterScanning:
     def get_IDstr(self):
         return self.IDstr(self.__bsID, self.__sigID, self.__ID)
 
-    def counts_windows_path(self, directory=False, IDstr=None):
+    def counts_windows_path(self, directory=False, IDstr=None, fake=False):
         pathh = (
             self.save_path
             + f"binnedW{self.cfg.W}s{self.cfg.steps}ei{self.cfg.eval_interval[0]}{self.cfg.eval_interval[1]}"
         )
-        pathh += "/"
-        if directory:
-            return pathh
+        if fake:
+            pathh += "fake"
         else:
+            if hasattr(self.cfg, "idealised"):
+                if self.cfg.idealised:
+                    pathh += "ideal"
+
+        pathh += "/"
+        if not directory:
             if IDstr is None:
-                return pathh + f"bres{self.get_IDstr()}.pickle"
+                pathh += f"bres{self.get_IDstr()}.pickle"
             else:
-                return pathh + f"bres{IDstr}.pickle"
+                pathh += f"bres{IDstr}.pickle"
+        return pathh
 
     def save_counts_windows(self):
         os.makedirs(self.counts_windows_path(directory=True), exist_ok=True)
@@ -636,7 +686,10 @@ class ClusterScanning:
         if isinstance(self.counts_windows, list):
             self.counts_windows_sum = sum(self.counts_windows)
             self.counts_windows_bg = self.counts_windows[0]
-            self.counts_windows_sg = self.counts_windows[1]
+            if len(self.counts_windows) > 1:
+                self.counts_windows_sg = self.counts_windows[1]
+            else:
+                self.counts_windows_sg = np.zeros_like(self.counts_windows_bg)
         self.kmeans.inertia_ = res["inertia"]
 
     def available_IDstr(self):
@@ -696,36 +749,44 @@ class ClusterScanning:
         self.plot_cluster_images(plots_path)
 
     def plot_global_stats(self, plots_path, plot_name, sort=None):
-        spectra = self.counts_windows_sum
-        tot_counts = np.sum(spectra, axis=0)
-        bg_counts = np.sum(self.counts_windows_bg, axis=0)
-        sg_counts = np.sum(self.counts_windows_sg, axis=0)
+        if hasattr(self, "counts_windows_sg"):
+            spectra = self.counts_windows_sum
+            tot_counts = np.sum(spectra, axis=0)
+            bg_counts = np.sum(self.counts_windows_bg, axis=0)
+            sg_counts = np.sum(self.counts_windows_sg, axis=0)
 
-        if sort is not None:
-            if sort == "sig":
-                index = np.argsort(sg_counts)
-            elif sort == "bg":
-                index = np.argsort(bg_counts)
-            elif sort == "tot":
-                index = np.argsort(tot_counts)
-            tot_counts = tot_counts[index]
-            bg_counts = bg_counts[index]
-            sg_counts = sg_counts[index]
-        plt.figure()
-        plt.grid()
-        plt.plot(tot_counts, label="total")
-        plt.plot(bg_counts, label="background")
-        plt.plot(sg_counts, label="signal")
-        plt.legend()
-        plt.savefig(plots_path + plot_name)
+            if sort is not None:
+                if sort == "sig":
+                    index = np.argsort(sg_counts)
+                elif sort == "bg":
+                    index = np.argsort(bg_counts)
+                elif sort == "tot":
+                    index = np.argsort(tot_counts)
+                tot_counts = tot_counts[index]
+                bg_counts = bg_counts[index]
+                sg_counts = sg_counts[index]
+            plt.figure()
+            plt.grid()
+            plt.plot(tot_counts, label="total")
+            plt.plot(bg_counts, label="background")
+            plt.plot(sg_counts, label="signal")
+            plt.legend()
+            plt.savefig(plots_path + plot_name)
+        else:
+            print("skip global stats as no signal is present")
 
     def plot_cluster_images(self, plots_path):
         plt.figure(figsize=(20, 10))
         plt.grid()
         for j in range(self.cfg.k):
             plt.subplot(5, 10, j + 1)
-            plt.tick_params(left = False, right = False , labelleft = False,
-                labelbottom = False, bottom = False)
+            plt.tick_params(
+                left=False,
+                right=False,
+                labelleft=False,
+                labelbottom=False,
+                bottom=False,
+            )
             plt.imshow(
                 self.kmeans.cluster_centers_[j].reshape(
                     (self.cfg.image_size, self.cfg.image_size)
@@ -784,6 +845,52 @@ class ClusterScanning:
                     else:
                         plt.axvline(window_centers[i], color="black", alpha=0.3)
         plt.savefig(plots_path + plot_name, bbox_inches="tight")
+
+    def bin_mjj_inc(self):
+        return self.counts_windows_sum.sum(axis=1)
+
+    def generate_fake_pseudoexperiments(self, err_dist="correct", err_par=1, n=1000):
+        counts_windows_inc = self.bin_mjj_inc()
+        fr = self.get_counts_train()
+        fr = fr / np.sum(fr)
+        fake_clusters = counts_windows_inc * fr.reshape((-1, 1))
+        err = np.sqrt(fake_clusters)
+        # now we need to distort the clusters using the error
+        for i in range(n):
+            if err_dist == "normal":
+                deviation = np.random.normal(err_par[0], err * err_par[1])
+            if err_dist == "student-t":
+                deviation = (
+                    (np.random.standard_t(err_par[0], size=err.shape) + err_par[1])
+                    * err
+                    * err_par[2]
+                )
+            if err_dist == "multinomial":
+                # Split each window randomly but correctly into clusters
+                samples = []
+                for n in counts_windows_inc:
+                    samples.append(np.random.multinomial(n, fr))
+
+                fake_clusters_sampled = np.stack(samples).T
+                # Take deviation as difference between expected and actual counts
+                deviation = fake_clusters_sampled - fake_clusters
+                deviation *= err_par
+            # deviation = deviation - np.mean(deviation, axis=0)
+            fake_counts_distorted = fake_clusters + deviation
+            # Now we just have to store them in the same format as the real ones
+            os.makedirs(
+                self.counts_windows_path(directory=True, fake=True), exist_ok=True
+            )
+            res = {}
+            res["counts_windows"] = fake_counts_distorted.T
+            res["inertia"] = self.kmeans.inertia_
+            with open(
+                self.counts_windows_path(
+                    fake=True, IDstr=self.IDstr(i, self.__sigID, self.__ID)
+                ),
+                "wb",
+            ) as file:
+                pickle.dump(res, file)
 
 
 if __name__ == "__main__":

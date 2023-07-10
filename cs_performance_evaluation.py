@@ -180,6 +180,7 @@ class CS_evaluation_process:
 
         elif labeling[:6] == "maxdev":
             sp_sumn_standrob = self.prepare_spectra(["sumn", "-bsumsumn", "standrob"])
+            logging.debug(str(sp_sumn_standrob.y / sp_sumn_standrob.err))
             threshold = float(labeling[6:])
             labels = np.zeros(self.k)
             for j in range(self.k):

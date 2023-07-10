@@ -10,12 +10,13 @@ def one_cs_run():
     cs = ClusterScanning(
         [
             "config/v4/s0_0.5_1_MB_i1.yaml",
-            "config/sig_frac/0.05.yaml",
-            "config/multirun/-1_0_0.yaml",
+            # "config/sig_frac/0.05.yaml",
+            "config/multirun/0_0_0.yaml",
             # "config/multirun/i2.yaml",
             "config/binning/CURTAINS.yaml",
             "config/tra_reg/3000_3100.yaml",
             "config/one_run_experiments.yaml",
+            # "config/idealised.yaml",
         ]
     )
 
@@ -24,18 +25,27 @@ def one_cs_run():
     # end_time = time.time()
     # execution_time = end_time - start_time
     # print("Execution time:", execution_time, "seconds")
-
-    # start_time = time.time()
-    # cs.perform_binning()
-    # end_time = time.time()
-    # execution_time = end_time - start_time
-    # print("Execution time:", execution_time, "seconds")
-
-    # cs.save_binning_array()
-    # cs.save_counts_windows()
     cs.load_results()
+    cs.load_mjj()
+    cs.sample_signal_events()
+    cs.bootstrap_resample()
+
+    start_time = time.time()
+    cs.perform_binning()
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print("Execution time:", execution_time, "seconds")
+
+    cs.save_binning_array()
+    cs.save_counts_windows()
     cs.load_counts_windows()
     cs.make_plots()
+
+    cs.generate_fake_pseudoexperiments(
+        err_dist="multinomial",
+        err_par=1.7,
+        n=40000,
+    )
 
     # # Evaluation part
     config_path = [

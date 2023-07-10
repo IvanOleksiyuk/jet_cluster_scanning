@@ -1,0 +1,10 @@
+restart: False
+bootstrap: True
+resample_signal: False
+
+IDb_start: 0
+IDb_finish: 1
+
+bootstrap_ID: 0
+signal_sample_ID: 0
+ID: 0
