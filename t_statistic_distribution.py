@@ -76,8 +76,9 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
             )
             if i % 100 == 0:
                 print(i)
-            # if i > 1000:  # DELETE THIS
-            #    break
+            if hasattr(cfg, "max_i"):
+                if i > cfg.max_i:  # DELETE THIS
+                    break
         tstat_array = np.array(tstat_array)
         tstat_ensembled = tstat_array
         print("There are ", len(tstat_ensembled), " valid tstats")
@@ -306,7 +307,7 @@ def t_statistic_distribution(config_file_path):
         # if multiple locations are given
         TS_list = []
         for counts_windows_boot_load in cfg.counts_windows_boot_load:
-            TS_list += score_sample(cfg, counts_windows_boot_load)
+            TS_list += [score_sample(cfg, counts_windows_boot_load)]
 
     # plot the TS distribution
     # plt.figure(fig)
@@ -372,10 +373,10 @@ def t_statistic_distribution(config_file_path):
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # plt.tight_layout(rect=[0, 0, 0.8, 1])
     plt.xlabel(cfg.xlabel)
-    plt.xlim(
-        min(TS_list) - 0.1 * (max(TS_list) - min(TS_list)),
-        max(TS_list) + 0.1 * (max(TS_list) - min(TS_list)),
-    )
+    # plt.xlim(
+    #     min(TS_list) - 0.1 * (max(TS_list) - min(TS_list)),
+    #     max(TS_list) + 0.1 * (max(TS_list) - min(TS_list)),
+    # )
     # plt.xlim((0, 30))
     plt.savefig(
         output_path + cfg.plot_name,
@@ -390,13 +391,16 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
+    t_statistic_distribution(
+        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot_compare.yaml"
+    )
     # t_statistic_distribution(
     #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot.yaml"
     # )
-    t_statistic_distribution(
-        ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.yaml",
-         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml"]
-    )
+    # t_statistic_distribution(
+    #     ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.yaml",
+    #      "config/distribution/v4/bootstrap_sig_contam_ideal.yaml"]
+    # )
 
     # main plots v4 avriated signal ===============================================
     # Generate plots for all methods:

@@ -230,8 +230,6 @@ def distorted_calorimeter_image(event,
         
     return image/np.sum(image)
     
-    
-
 def calorimeter_image_ptethaphi(event, 
                       IMG_SIZE=40, 
                       phi_bonds=(-0.8, 0.8),
@@ -315,7 +313,6 @@ def calorimeter_image_ptethaphi(event,
         raise NameError('Too many non-zero pixels')
         
     return image/np.sum(image)
-
 
 def calorimeter_image_ptethaphi_no_center(event, 
                       IMG_SIZE=40, 

@@ -11,6 +11,15 @@ from utils.utils import p2Z
 from utils.os_utils import list_files
 import os
 
+def get_median_and_quar_err(Zs):
+    median = np.median(Zs, axis=1)
+    q1 = np.quantile(Zs, 0.25, axis=1)
+    q3 = np.quantile(Zs, 0.75, axis=1)
+    err_low = median - q1
+    err_high = q3 - median
+    return median, err_low, err_high
+
+
 # %% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Load the data block + define some parameters
 
@@ -20,7 +29,10 @@ mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
 mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
 
 # Choose the binning
-
+plot_idealised = True
+plot_realistic = True
+plot_BH = True
+use_points_insuff_stats = False
 
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Py Bump Hunter block
@@ -100,16 +112,24 @@ for BH_set_name in BH_set_list:
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Cluster scanning block
 # Load significances from the results of t_statistic_distribution.py
-CS_list = [
-    r"plots\26-06-2023\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.pickle",
-    # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
-    # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_1mean_results.pickle",
-    # r"plots\for_BH_comparison\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.pickle",
-    # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
-    # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
-]
+CS_list = []
+
+if plot_realistic:
+    CS_list += [
+        r"plots\26-06-2023\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
+        #r"plots\V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal_results.pickle",
+        # r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.pickle",
+        # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
+        # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
+        # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_1mean_results.pickle",
+        # r"plots\for_BH_comparison\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.pickle",
+        # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
+        # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
+    ]
+if plot_idealised:
+    CS_list+= [r"plots\V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal_results.pickle"]
+
+
 name_list = [os.path.basename(path) for path in CS_list]
 results_list = []
 for i, path in enumerate(CS_list):
@@ -122,19 +142,23 @@ for i, path in enumerate(CS_list):
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Plot
 # Create the figure
+
 fig = plt.figure(figsize=(5, 5))
-for i, r in enumerate(BH_list):
-    raw_str, raw_sens = r
-    plt.errorbar(
-        raw_str * len(mjj_sg),
-        raw_sens[:, 0],
-        xerr=0,
-        yerr=[raw_sens[:, 1], raw_sens[:, 2]],
-        marker="x",
-        color=BH_color_list[i],
-        uplims=raw_sens[:, 2] == 0,
-        label="pyBumpHunter" + BH_set_list[i],
-    )
+
+if plot_BH:
+    for i, r in enumerate(BH_list):
+        raw_str, raw_sens = r
+        plt.errorbar(
+            raw_str * len(mjj_sg),
+            raw_sens[:, 0],
+            xerr=0,
+            yerr=[raw_sens[:, 1], raw_sens[:, 2]],
+            marker="x",
+            color=BH_color_list[i],
+            uplims=raw_sens[:, 2] == 0,
+            label="pyBumpHunter" + BH_set_list[i],
+            #alpha=0.1,          
+        )
 
 for results, name in zip(results_list, name_list):
     # Use median and quartiles for the error bars
@@ -144,39 +168,51 @@ for results, name in zip(results_list, name_list):
     Zs = np.stack(Zs, axis=1).T
     Zs[np.isinf(Zs)] = p2Z(results["p_upper_bound"][0])
     print(Zs.shape)
-    median = np.median(Zs, axis=1)
-    q1 = np.quantile(Zs, 0.25, axis=1)
-    q3 = np.quantile(Zs, 0.75, axis=1)
-    err_low = median - q1
-    err_high = q3 - median
+    median, err_low, err_high = get_median_and_quar_err(Zs)
+    x = np.array(results["contaminations"]) * len(mjj_bg)
     plt.errorbar(
-        np.array(results["contaminations"]) * len(mjj_bg),
-        np.median(Zs, axis=1),
+        x,
+        median,
         xerr=0,
         yerr=[err_low, err_high],
         label=name,
+        capsize=5,
     )
 # print(results["contaminations"])
 # print(results["Z_mean_ps"])
 # print(np.mean(results["Zs"], axis=1))
 # plt.plot([0.005, 0.0025], [3.21, 0.92], color="red")
 
-res = pickle.load(open("experiments/Zs_4p_full.pickle", "rb"))
-plt.plot(
-    res["sig_fractions"] * len(mjj_sg),
-    [np.median(Zs) for Zs in res["Zs"]],
-    color="black",
-    label="4 par fit",
-    linestyle="dashed",
-)
-res = pickle.load(open("experiments/Zs.pickle", "rb"))
-plt.plot(
-    res["sig_fractions"] * len(mjj_sg),
-    [np.median(Zs) for Zs in res["Zs"]],
-    color="darkgrey",
-    label="3 par fit",
-    linestyle="dashed",
-)
+if plot_realistic:
+    res = pickle.load(open("experiments/Zs_4par_16bin_maxd.pickle", "rb"))
+    median, err_low, err_high = get_median_and_quar_err(res["Zs"])
+    x = res["sig_fractions"] * len(mjj_sg)
+    print(x)
+    plt.errorbar(
+        x,
+        median,
+        xerr=0,
+        yerr=[err_low, err_high],
+        color="black",
+        label="4 par fit",
+        linestyle="dashed",
+        capsize=5,
+    )
+
+if plot_idealised:
+    res = pickle.load(open("experiments/Zs_ideal_4par_16_bin_maxd.pickle", "rb"))
+    x = res["sig_fractions"] * len(mjj_sg)
+    median, err_low, err_high = get_median_and_quar_err(res["Zs"])
+    plt.errorbar(
+        x,
+        median,
+        xerr=0,
+        yerr=[err_low, err_high],
+        color="darkgrey",
+        label="ideaised fit",
+        linestyle="dashed",
+        capsize=5,
+    )
 
 plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 plt.grid()
