@@ -1,0 +1,8 @@
+data_directory: "C:\\WORK\\DATA\\LHCO\\"
+initial_file: "events_anomalydetection_v2.h5"
+clustered_jets_file: "clustered_jets.h5"
+sorted_bkg_file: "sorted_background.h5"
+sorted_sig_file: "sorted_signal.h5"
+sorted_bkg_mass_file: "sorted_background_2.h5"
+sorted_sig_mass_file: "sorted_background_2.h5"
+plots_directory: "plots"

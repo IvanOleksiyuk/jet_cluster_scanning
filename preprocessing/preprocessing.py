@@ -49,7 +49,6 @@ def jet_boost_to_Em(jet_par, jet_const, m_zero = 0.25, e_zero = 1.):
         jet_const[i][1]=Lc.eta
         jet_const[i][2]=Lc.phi()
 
-
 def calorimeter_image(event, 
                       IMG_SIZE=40, 
                       phi_bonds=(-0.8, 0.8),
