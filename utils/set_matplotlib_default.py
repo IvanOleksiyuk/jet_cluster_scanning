@@ -4,7 +4,7 @@ import matplotlib
 from matplotlib.lines import Line2D
 from matplotlib.font_manager import FontProperties
 
-"""
+
 labelfont = FontProperties()
 labelfont.set_family("serif")
 labelfont.set_name("Times New Roman")
@@ -26,7 +26,7 @@ labelfontsize = 16
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams["mathtext.default"] = "rm"
 plt.rcParams["text.usetex"] = True
-"""
+
 plt.rcParams["savefig.dpi"] = 200
 
 # plt.rcParams['lines.linewidth'] = 0.5

@@ -12,11 +12,12 @@
 ### Request the time you need for execution. The full format is D-HH:MM:SS
 ### You must at least specify minutes OR days and hours and may add or
 ### leave out any other parameters
-#SBATCH --time=120
+#SBATCH --time=600
  
 ### Request the amount of memory you need for your job. 
 ### You can specify this in either MB (1024M) or GB (4G).
 #SBATCH --mem-per-cpu=32G
+#SBATCH -c 1
  
 ### Load modules
 
@@ -30,5 +31,5 @@ cd ..
 
 ### Execute your application here
 python3 binning.py 
-sh export_bres.sh 
+#sh export_bres.sh 
 ### config/binning/CURTAINS.yaml

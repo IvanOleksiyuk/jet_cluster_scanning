@@ -82,10 +82,10 @@ if __name__ == "__main__":
         #perform_binning_directory("char/v4/")
         perform_binning_directory("char/v4/", ["config/binning/CURTAINS.yaml"])
         perform_binning_directory("char/v4/", ["config/binning/CURTAINS.yaml", "config/idealised.yaml"])
-        perform_binning_directory("char/v4/", ["config/binning/32.yaml", "config/idealised.yaml"])
-        perform_binning_directory("char/v4/", ["config/binning/32.yaml"])
-        perform_binning_directory("char/v4/", ["config/binning/64.yaml", "config/idealised.yaml"])
-        perform_binning_directory("char/v4/", ["config/binning/64.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/32bins.yaml", "config/idealised.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/32bins.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/64bins.yaml", "config/idealised.yaml"])
+        perform_binning_directory("char/v4/", ["config/binning/64bins.yaml"])
 
     else:
         if sys.argv[1] == "-d":
