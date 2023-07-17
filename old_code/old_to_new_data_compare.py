@@ -29,3 +29,7 @@ images_new = input_f_new[data_dataset_name]
 
 print(np.sum(images_new[0][1] == images_old[0][1]))
 
+a1 = np.load(cfg.get("data_directory") + "sorted_mjj_sig.npy")
+a2 = np.load(cfg.get("data_directory") + "mjj_sig_sort.npy")
+
+print(np.sum(a1 == a2))

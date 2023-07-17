@@ -21,7 +21,7 @@ User manual:
 	0.1 Clone the repository or a fork of it
 	0.2 It is advisable to create a virtual environment (e.g. with conda) with python 3.7.15 and install requirements from requirements.txt
 	0.3 Download the LHCO R&D dataset "events_anomalydetection.h5" from https://zenodo.org/record/4536377
-	0.4 Tweak path.yaml according to your preferences 
+	0.4 Create path.yaml file in config directory, an example_path.yaml is provided to lead you
 	#0.5 ... tests not implemented yet
 ========================================================================================================================
 1. Preprocessing 

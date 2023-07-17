@@ -96,7 +96,7 @@ def extract_events_jets(
                     tau = 1. / jet.pt * np.sum(constis['pT'] * dRs)
                     jet_info[ind1*CHUNKSIZE+n_event, ind2, nsubj] = tau
             # invariant mass of the two jets
-            m_jj[ind1*CHUNKSIZE+n_event] = (clustered[0].e + clustered[1].e)**2 - (clustered[0].px + clustered[1].px)**2 - (clustered[0].py + clustered[1].py)**2 - (clustered[0].pz + clustered[1].pz)**2
+            m_jj[ind1*CHUNKSIZE+n_event] = ((clustered[0].e + clustered[1].e)**2 - (clustered[0].px + clustered[1].px)**2 - (clustered[0].py + clustered[1].py)**2 - (clustered[0].pz + clustered[1].pz)**2)**0.5
 
     with h5py.File(outfilepath, 'w') as f:
         f.create_dataset('events', data=events, dtype='float32')
