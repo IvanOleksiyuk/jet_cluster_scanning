@@ -1,7 +1,12 @@
+import os
+import sys
+#Make sure the path to the root directory of the project is in the system path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pandas as pd
 import numpy as np
 from pyjet import cluster
-import time, h5py
+import h5py
 from utils.config_utils import Config
 
 def generator(filename, chunksize=100000, total_size=1100000):
@@ -14,8 +19,8 @@ def generator(filename, chunksize=100000, total_size=1100000):
             break
 
 def extract_events_jets(
-        infile='events_anomalydetection_v2.h5', 
-        outfile='tmp.h5',
+        infilepath='events_anomalydetection_v2.h5', 
+        outfilepath='tmp.h5',
         CHUNKSIZE=5000, 
         NEVENTS=110000):
     """
@@ -32,10 +37,10 @@ def extract_events_jets(
     jet_info = np.zeros((NEVENTS, 2, 4))
     
     labels = np.ones(NEVENTS, dtype=np.int8) * (-1)
-    n_constituents = np.zeros((NEVENTS, 2,))
+    #n_constituents = np.zeros((NEVENTS, 2,))
     m_jj = np.zeros(NEVENTS)
     n_tot = 0
-    for ind1, data in enumerate(generator(infile, chunksize=CHUNKSIZE, total_size=NEVENTS)):
+    for ind1, data in enumerate(generator(infilepath, chunksize=CHUNKSIZE, total_size=NEVENTS)):
         n_tot += data.shape[0]
         jets = np.reshape(data.to_numpy(dtype=np.float32)[:, :-1], (CHUNKSIZE, 700, 3))
         
@@ -93,7 +98,7 @@ def extract_events_jets(
             # invariant mass of the two jets
             m_jj[ind1*CHUNKSIZE+n_event] = (clustered[0].e + clustered[1].e)**2 - (clustered[0].px + clustered[1].px)**2 - (clustered[0].py + clustered[1].py)**2 - (clustered[0].pz + clustered[1].pz)**2
 
-    with h5py.File(outfile, 'w') as f:
+    with h5py.File(outfilepath, 'w') as f:
         f.create_dataset('events', data=events, dtype='float32')
         f.create_dataset('jet_info', data=jet_info, dtype='float32')
         f.create_dataset('labels', data=labels, dtype='int')
@@ -101,5 +106,6 @@ def extract_events_jets(
         
 if __name__ == '__main__':
     cfg = Config("config/path.yaml")
-    extract_events_jets(infile = cfg.get("data_directory")+cfg.get("initial_file"),
-                        outfile = cfg.get("data_directory")+cfg.get("clustered_jets_file"))
+    extract_events_jets(infilepath = cfg.get("data_directory")+cfg.get("initial_file"),
+                        outfilepath = cfg.get("data_directory")+cfg.get("clustered_jets_file"),
+                        NEVENTS = 1100000)

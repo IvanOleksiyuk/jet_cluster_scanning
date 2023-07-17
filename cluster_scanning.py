@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from sklearn.cluster import KMeans, MiniBatchKMeans
-import reprocessing
+from preproc import reprocessing
 from utils.config_utils import Config
 import shutil
 import logging
