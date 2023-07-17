@@ -6,7 +6,7 @@ from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, Birch
 from sklearn.manifold import TSNE
 import time
 import os
-import reprocessing
+import preproc.reprocessing as reprocessing
 import pickle
 from scipy.ndimage import gaussian_filter
 import copy

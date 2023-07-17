@@ -22,3 +22,5 @@ try_code.py
 look_pickle.py
 **.npy
 **.h5
+
+config/path**

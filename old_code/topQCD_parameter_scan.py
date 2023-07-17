@@ -2,9 +2,9 @@ from k_means_train_experiments import k_means_process
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, roc_curve
-import reprocessing
+import preproc.reprocessing as reprocessing
 import pickle
-import reprocessing
+import preproc.reprocessing as reprocessing
 import time
 start_time = time.time()
 

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, MiniBatchKMeans
 import time
 import os
-import reprocessing
+import preproc.reprocessing as reprocessing
 import pickle
 from scipy.ndimage import gaussian_filter
 import copy
