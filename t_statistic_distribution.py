@@ -22,6 +22,7 @@ from utils.utils import (
     add_lists_in_dicts,
     p2Z,
     ensamble_means,
+    p_value,
 )
 from cluster_scanning import ClusterScanning
 
@@ -37,7 +38,7 @@ def load_counts_windows(path):
         return res["counts_windows"]
 
 
-def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
+def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True, small=False):
 
     print("found binnings total:", len(os.listdir(counts_windows_boot_load)))
     print("CSE config", cfg.CSEconf)
@@ -96,8 +97,12 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
         )
         for i, indices in enumerate(IDs_array):
             tstat_files[indices[0], indices[1]] = bres_files[i]
+        
         valid_bootstraps = np.sum(np.logical_not(tstat_files==""), axis=1) >= ensampbling
+        if small:
+            valid_bootstraps = valid_bootstraps[:10]
         print(f"len(valid_bootstraps) {sum(valid_bootstraps)}")
+        
         tstat_files_new = np.full(
             (
                 sum(valid_bootstraps),
@@ -169,12 +174,6 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
             )
 
     return tstat_ensembled
-
-
-def p_value(stat, tstat_list):
-    return (
-        (np.sum(tstat_list >= stat) + np.sum(tstat_list > stat)) / 2 / len(tstat_list)
-    )
 
 
 def draw_contamination(
@@ -373,10 +372,10 @@ def t_statistic_distribution(config_file_path):
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # plt.tight_layout(rect=[0, 0, 0.8, 1])
     plt.xlabel(cfg.xlabel)
-    # plt.xlim(
-    #     min(TS_list) - 0.1 * (max(TS_list) - min(TS_list)),
-    #     max(TS_list) + 0.1 * (max(TS_list) - min(TS_list)),
-    # )
+    plt.xlim(
+        min(TS_list) - 0.1 * (max(TS_list) - min(TS_list)),
+        max(TS_list) + 0.1 * (max(TS_list) - min(TS_list)),
+    )
     # plt.xlim((0, 30))
     plt.savefig(
         output_path + cfg.plot_name,
@@ -391,16 +390,17 @@ def t_statistic_distribution(config_file_path):
 
 
 if __name__ == "__main__":
-    t_statistic_distribution(
-        "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot_compare.yaml"
-    )
+    # t_statistic_distribution(
+    #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot_compare.yaml"
+    # )
     # t_statistic_distribution(
     #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot.yaml"
     # )
-    # t_statistic_distribution(
-    #     ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.yaml",
-    #      "config/distribution/v4/bootstrap_sig_contam_ideal.yaml"]
-    # )
+    t_statistic_distribution(
+        ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.yaml",
+         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml",
+         "config/distribution/v4/plot_path.yaml"]
+    )
 
     # main plots v4 avriated signal ===============================================
     # Generate plots for all methods:

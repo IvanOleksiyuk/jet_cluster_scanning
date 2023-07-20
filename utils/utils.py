@@ -2,7 +2,7 @@ import math
 import numpy as np
 import scipy.stats as stats
 
-
+# statistical functions
 def p2Z(p):
     if isinstance(p, np.ndarray):
         out = []
@@ -17,6 +17,12 @@ def p2Z(p):
     else:
         return -stats.norm.ppf(p)
 
+def p_value(stat, tstat_list):
+    return (
+        (np.sum(tstat_list >= stat) + np.sum(tstat_list > stat)) / 2 / len(tstat_list)
+    )
+
+# operatios with dictionaries
 
 def make_lists_in_dict(dictionary):
     for key in dictionary:
@@ -40,6 +46,7 @@ def add_lists_in_dicts(dict1, dict2):
             dict1[key] = dict1[key] + dict2[key]
         return dict1
 
+# test statistic ensambling operations
 
 def ensamble_means(arr, k):
     return np.mean(arr.reshape(-1, k), axis=1)

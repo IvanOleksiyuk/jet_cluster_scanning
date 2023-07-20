@@ -1,4 +1,0 @@
-restart: True 
-bootstrap: True
-restart_ID_start: 300
-restart_ID_finish: 600 

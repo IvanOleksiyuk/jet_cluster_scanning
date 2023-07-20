@@ -224,5 +224,3 @@ plt.ylabel("significance [sigma]")
 #%% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Save the plot
 plt.savefig("plots/main/significances.png", bbox_inches="tight", dpi=300)
-
-# %%
