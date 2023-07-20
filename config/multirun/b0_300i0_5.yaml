@@ -1,8 +1,0 @@
-restart: True 
-bootstrap: True
-
-IDb_start: 0
-IDb_finish: 300
-
-IDi_start: 0
-IDi_finish: 5

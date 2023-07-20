@@ -1,6 +1,4 @@
 restart: True 
-bootstrap: False
-
 
 IDi_start: 0
 IDi_finish: 15
