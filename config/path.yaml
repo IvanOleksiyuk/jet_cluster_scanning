@@ -1,4 +1,4 @@
-data_directory: "..\\..\\DATA\\LHCO\\"
+data_directory: "../../DATA/LHCO/"
 initial_file: "events_anomalydetection_v2.h5"
 clustered_jets_file: "clustered_jets.h5"
 jet_images_file: "jet_images_v2.h5"
