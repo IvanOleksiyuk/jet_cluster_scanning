@@ -29,4 +29,5 @@ python start_multirun_jobs3.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml conf
 
 #signal contaminations
 python start_sig_frac_jobs.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/signal.yaml
+python start_sig_frac_jobs_extended.py config/v4/s0_0.5_1_MB_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/signal.yaml
 python start_sig_frac_jobs.py config/v4/s0_0.5_1_i1.yaml config/v4.yaml config/tra_reg/3000_3100.yaml config/binning/CURTAINS.yaml config/multirun/signal.yaml
