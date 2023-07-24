@@ -14,9 +14,14 @@ import time
 from utils.config_utils import Config
 from utils import set_matplotlib_default
 from preproc.reprocessing import reweighting, gaussian_smearing, sum_1_norm
+import os
 
 start_time = time.time()
-cfg = Config("config/path.yaml")
+if len(sys.argv) == 1:
+	cfg = Config("config/path.yaml")
+else:
+	cfg = Config(["config/path.yaml", sys.argv[1]])
+os.makedirs(cfg.get("plots_directory")+"data/", exist_ok=True)
 
 data_file_path = cfg.get("data_directory")+"jet_images_v2.h5"#cfg.get("jet_images_file")
 data_dataset_name = 'data'
@@ -77,7 +82,7 @@ for i in range(len(sigmas)):
 		axs[i, j].yaxis.set_ticklabels([])
 		axs[i, j].yaxis.set_ticks([])
 plt.tight_layout()
-plt.savefig("plots/data/reprocessing.png", bbox_inches='tight')
+plt.savefig(cfg.get("plots_directory")+"data/reprocessing.png", bbox_inches='tight')
 
 
 # Plot a distriution of jet_masses
@@ -85,7 +90,7 @@ plt.figure()
 plt.hist(inf_bkg[:, :, 0].flatten(), bins=100, label="QCD", histtype="step")
 plt.hist(inf_sig[:, 0, 0].flatten(), bins=100, label="Signal_lead", histtype="step")
 plt.hist(inf_sig[:, 1, 0].flatten(), bins=100, label="Signal_sublead", histtype="step")
-plt.savefig("plots/data/jet_masses.png", bbox_inches='tight')
+#plt.savefig(cfg.get("plots_directory")+"data/jet_masses.png", bbox_inches='tight')
 #plt.show()
 
 print("#####bkg_data")
@@ -153,7 +158,7 @@ n_non_zero_bkg=cout_nonzero_pixels(images_bkg[:, 0])+cout_nonzero_pixels(images_
 n_non_zero_sig=cout_nonzero_pixels(images_sig[:, 0])+cout_nonzero_pixels(images_sig[:, 1])
 
 # Show the plot
-plt.savefig("plots/data/avarage_images.png", bbox_inches='tight')
+plt.savefig(cfg.get("plots_directory")+"data/avarage_images.png", bbox_inches='tight')
 
 plt.figure()
 plt.hist(n_non_zero_bkg, bins=np.linspace(0, 100, 101), label="QCD", density=True, color="black", histtype="step")
@@ -165,4 +170,4 @@ print(max(n_non_zero_sig))
 print(np.mean(n_non_zero_bkg))
 print(np.mean(n_non_zero_sig))
 plt.legend()
-plt.savefig("plots/data/non_zero_pixels.png", bbox_inches='tight')
+plt.savefig(cfg.get("plots_directory")+"data/non_zero_pixels.png", bbox_inches='tight')
