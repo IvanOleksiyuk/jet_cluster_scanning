@@ -4,22 +4,22 @@ import shutil
 
 # list of config files:
 config_files = [
-    "config/multirun/b2100_2400i0.yaml",
-    "config/multirun/b2400_2700i0.yaml",
+    # "config/multirun/b2100_2400i0.yaml",
+    # "config/multirun/b2400_2700i0.yaml",
     "config/multirun/b2700_3000i0.yaml",
-    "config/multirun/b3000_3300i0.yaml",
-    "config/multirun/b3300_3600i0.yaml",
-    "config/multirun/b3600_3900i0.yaml",
-    "config/multirun/b3900_4200i0.yaml",
+    # "config/multirun/b3000_3300i0.yaml",
+    # "config/multirun/b3300_3600i0.yaml",
+    # "config/multirun/b3600_3900i0.yaml",
+    # "config/multirun/b3900_4200i0.yaml",
 ]
 jnames = [
-    "2100_2400",
-    "2400_2700",
+    # "2100_2400",
+    # "2400_2700",
     "2700_3000",
-    "3000_3300",
-    "3300_3600",
-    "3600_3900",
-    "3900_4200",
+    # "3000_3300",
+    # "3300_3600",
+    # "3600_3900",
+    # "3900_4200",
 ]
 
 if "-p" in sys.argv[1:]:

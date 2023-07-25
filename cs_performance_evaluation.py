@@ -8,7 +8,7 @@ import pickle
 import cs_performance_plotting as csp
 import cluster_scanning
 from utils.robust_estimators import std_ignore_outliers, mean_ignore_outliers
-import utils.set_matplotlib_default as smd
+import utils.set_matplotlib_default
 from utils.spectrum import Spectra
 from utils.squeeze_array import squeeze
 import matplotlib as mpl

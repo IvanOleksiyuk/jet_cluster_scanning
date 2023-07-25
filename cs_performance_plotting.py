@@ -155,7 +155,7 @@ def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1):
     # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq_ndof)
     # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
     plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("jets in 16.58GeV window")
+    plt.ylabel("$N(m_{jj})\\cdot sum(N_{sig}(m_{jj}))/sum(N(m_{jj}))$")
     plt.legend()
 
 
