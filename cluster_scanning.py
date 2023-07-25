@@ -536,6 +536,10 @@ class ClusterScanning:
             self.single_run()
 
     def save_results(self):
+        if self.cfg.k < 256:
+            dtype = np.uint8
+            self.bg_lab = self.bg_lab.astype(dtype)
+            self.sg_lab = self.sg_lab.astype(dtype)
         with open(self.save_path + f"lab{self.get_IDstr()}.pickle", "wb") as file:
             pickle.dump(
                 {"bg": self.bg_lab, "sg": self.sg_lab, "k_means": self.kmeans},

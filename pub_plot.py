@@ -31,13 +31,21 @@ if 'one_run' in steps:
 
 #Create the distribution plots with vertical lines for the cuts
 if 'dist' in steps:
+	os.makedirs(directory+"dist", exist_ok=True)
+	add_list=["config/distribution/v4/plot_path.yaml"] #, "config/distribution/v4/small.yaml"
 	from t_statistic_distribution import t_statistic_distribution
-	t_statistic_distribution(["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.yaml",
-         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml",
-         "config/distribution/v4/plot_path.yaml"])
-	t_statistic_distribution(["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean.yaml",
-		"config/distribution/v4/bootstrap_sig_contam.yaml",
-		"config/distribution/v4/plot_path.yaml"])
+	t_statistic_distribution(["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal-pub.yaml",
+         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml"]+add_list)
+	t_statistic_distribution(["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean-pub.yaml",
+		"config/distribution/v4/bootstrap_sig_contam.yaml"]+add_list)
+	t_statistic_distribution(["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble-pub.yaml",
+		"config/distribution/v4/bootstrap_sig_contam.yaml"]+add_list)
+	shutil.copyfile("plots/ts_distribs/V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.png",
+					directory+"dist/V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.png")
+	shutil.copyfile("plots/ts_distribs/V4prep05_1_maxdev3_msdeCURTAINS_15mean.png", 
+					directory+"algo/V4prep05_1_maxdev3_msdeCURTAINS_15mean.png")
+	shutil.copyfile("plots/ts_distribs/V4prep05_1_maxdev3_msdeCURTAINS_desamble.png", 
+				directory+"algo/V4prep05_1_maxdev3_msdeCURTAINS_desamble.png")
 
 #Create the ROC, SF and SI plots
 

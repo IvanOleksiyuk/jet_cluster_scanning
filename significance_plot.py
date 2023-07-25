@@ -115,19 +115,9 @@ for BH_set_name in BH_set_list:
 CS_list = []
 
 if plot_realistic:
-    CS_list += [
-        r"plots\26-06-2023\V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle",
-        #r"plots\V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal_results.pickle",
-        # r"plots\for_BH_comparison\V4prep05_1_maxdev3_msdeCURTAINS_1mean_results.pickle",
-        # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15mean_results.pickle",
-        # r"plots\26-06-2023\V4prep05_1_maxdev3CURTAINS_15med_results.pickle",
-        # r"plots\for_BH_comparison\V4prep05_1_maxdev3CURTAINS_1mean_results.pickle",
-        # r"plots\for_BH_comparison\V4prep05_1_maxdev5_msdeCURTAINS_15med_results.pickle",
-        # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_15mean_results.pickle",
-        # r"plots\26-06-2023\V4prep05_1_maxdev5CURTAINS_1mean_results.pickle",
-    ]
+    CS_list += [r"plots/ts_distribs/V4prep05_1_maxdev3_msdeCURTAINS_15mean_results.pickle"]
 if plot_idealised:
-    CS_list+= [r"plots\V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal_results.pickle"]
+    CS_list+= [r"plots/ts_distribs/V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal_results.pickle"]
 
 
 name_list = [os.path.basename(path) for path in CS_list]
@@ -184,23 +174,28 @@ for results, name in zip(results_list, name_list):
 # plt.plot([0.005, 0.0025], [3.21, 0.92], color="red")
 
 if plot_realistic:
-    res = pickle.load(open("experiments/Zs_4par_16bin_maxd.pickle", "rb"))
-    median, err_low, err_high = get_median_and_quar_err(res["Zs"])
-    x = res["sig_fractions"] * len(mjj_sg)
-    print(x)
-    plt.errorbar(
-        x,
-        median,
-        xerr=0,
-        yerr=[err_low, err_high],
-        color="black",
-        label="4 par fit",
-        linestyle="dashed",
-        capsize=5,
-    )
+    res_list = ["gf_results/MLSnormal_positiv4_parambootstrap_true10000x100_binning16_Zs.pickle",
+                "gf_results/MLSnormal_positiv3_parambootstrap_true10000x100_binning16_Zs.pickle",]
+    labal_list = ["4 par fit", "3 par fit"]
+    color_list = ["black", "grey"]
+    for resn, lab, color in zip(res_list, labal_list, color_list):
+        res = pickle.load(open(resn, "rb"))
+        median, err_low, err_high = get_median_and_quar_err(res["Zs"])
+        x = res["sig_fractions"] * len(mjj_sg)
+        print(x)
+        plt.errorbar(
+            x,
+            median,
+            xerr=0,
+            yerr=[err_low, err_high],
+            color=color,
+            label=lab,
+            linestyle="dashed",
+            capsize=5,
+        )
 
 if plot_idealised:
-    res = pickle.load(open("experiments/Zs_ideal_4par_16_bin_maxd.pickle", "rb"))
+    res = pickle.load(open("gf_results/MLSnormal_positiv3_parambootstrap_true10000x100_binning16_Zs_ideal.pickle", "rb"))
     x = res["sig_fractions"] * len(mjj_sg)
     median, err_low, err_high = get_median_and_quar_err(res["Zs"])
     plt.errorbar(

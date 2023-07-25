@@ -1,7 +1,7 @@
 seed: 1
 output_path: "plots/"
 plot_name: "V4prep05_1_maxdev3_msdeCURTAINS_15mean_ideal"
-contamination_style: "mean_std"
+contamination_style: "median_quartiles"
 evaluate_the_worst_cases: False
 do_plotting_in_contamination_evaluation: False
 # parametetrs for cs_eval
