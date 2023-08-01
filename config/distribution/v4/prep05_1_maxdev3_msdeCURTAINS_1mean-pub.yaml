@@ -1,6 +1,6 @@
 seed: 1
 output_path: "plots/"
-plot_name: "V4prep05_1_maxdev3_msdeCURTAINS_15mean"
+plot_name: "V4prep05_1_maxdev3_msdeCURTAINS_1mean"
 contamination_style: "median_quartiles"
 evaluate_the_worst_cases: False
 do_plotting_in_contamination_evaluation: False
@@ -13,6 +13,6 @@ counts_windows_boot_load: "char/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/bi
 title: ""
 density: 0
 
-ensambling_num: 15
+ensambling_num: 1
 ensambling_type: mean
 labelling: "Z"

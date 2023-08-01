@@ -288,11 +288,11 @@ class ClusterScanning:
             self.cfg.train_interval[0], self.cfg.train_interval[1]
         )
         self.kmeans.fit(data)
+        logging.info("training --- %s seconds ---" % (time.time() - start_time))
         counts = self.get_counts_train()
         counts.sort()
         logging.info(f"sorted cluster counts {counts}")
         logging.info(f"iterations {self.kmeans.n_iter_}")
-        logging.info("training --- %s seconds ---" % (time.time() - start_time))
 
     def get_counts_train(self):
         counts = np.bincount(self.kmeans.labels_)
@@ -764,8 +764,8 @@ class ClusterScanning:
         self.plot_cluster_images(plots_path, sort="sig", display_info="sig")
         self.plot_cluster_images(plots_path, sort="bg", display_info="bg")
         self.plot_cluster_images(plots_path, sort="tot", display_info="tot")
-        self.plot_cluster_images(plots_path, sort="SF", display_info="SF_SI")
-        self.plot_cluster_images(plots_path, sort="SI", display_info="SF_SI")
+        self.plot_cluster_images(plots_path, sort="SFI", display_info="SFI_SI")
+        self.plot_cluster_images(plots_path, sort="SI", display_info="SFI_SI")
 
     def plot_global_stats(self, plots_path, plot_name, sort=None):
         if hasattr(self, "counts_windows_sg"):
@@ -800,7 +800,7 @@ class ClusterScanning:
             tot_counts = np.sum(spectra, axis=0)
             bg_counts = np.sum(self.counts_windows_bg, axis=0)
             sg_counts = np.sum(self.counts_windows_sg, axis=0)
-            sf = sg_counts / (sg_counts + bg_counts)
+            sfi = sg_counts/np.sum(sg_counts) / (bg_counts/np.sum(bg_counts))
             si = sg_counts/np.sum(sg_counts) / np.sqrt((bg_counts)/np.sum(bg_counts)) 
             if sort is not None:
                 if sort == "sig":
@@ -809,15 +809,15 @@ class ClusterScanning:
                     index = np.argsort(bg_counts)[::-1]
                 elif sort == "tot":
                     index = np.argsort(tot_counts)[::-1]
-                elif sort == "SF":
-                    index = np.argsort(sf)[::-1]
+                elif sort == "SFI":
+                    index = np.argsort(sfi)[::-1]
                 elif sort == "SI":
                     index = np.argsort(si)[::-1]
                 tot_counts = tot_counts[index]
                 bg_counts = bg_counts[index]
                 sg_counts = sg_counts[index]
                 images = self.kmeans.cluster_centers_[index]
-                sf = sf[index]
+                sfi = sfi[index]
                 si = si[index]
             else:
                 images = self.kmeans.cluster_centers_
@@ -842,10 +842,10 @@ class ClusterScanning:
             )
             if display_info=="SI":
                 plt.title(f"SI {si[j]:.2e}")
-            elif display_info=="SF":
-                plt.title(f"SF {sf[j]:.2e}")
-            elif display_info=="SF_SI":
-                plt.title(f"SF {sf[j]:.1e} SI {si[j]:.1e}")
+            elif display_info=="SFI":
+                plt.title(f"SFI {sfi[j]:.2e}")
+            elif display_info=="SFI_SI":
+                plt.title(f"SFI {sfi[j]:.1e} SI {si[j]:.1e}")
             elif display_info=="sig":
                 plt.title(f"signal {sg_counts[j]:.2e}")
             elif display_info=="bg":

@@ -89,7 +89,7 @@ def two_class_curves(
         )
 
 
-def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
+def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False, label="mean and SD"):
     plt.plot(
         x,
         middle,
@@ -119,7 +119,7 @@ def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
         )
 
 
-def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1):
+def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1, ts="chisq_ndof"):
     window_centers = anomaly_poor_sp.x
     plt.figure(figsize=figsize)
     plt.grid()
@@ -141,21 +141,27 @@ def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1):
     plt.plot(
         window_centers,
         anomaly_poor_sp.y[0],
-        label=r"$\tilde{N}_l$normalised sum of anomaly poor clusters",
+        label=r"$N_{bkg}$ background estimation",
         color="blue",
     )
     # plt.plot(window_centers, anomaly_rich_sp.y[0], label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
+    if ts=="chisq_ndof":
+        label=r"$N_{sig}$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$" + "{:.3f}".format(res["chisq_ndof"])
+    elif ts=="max-sumnorm-dev-sr":
+        label=r"$N_{sig}$ sum of anomaly rich clusters MLS=" + "{:.3f}".format(res["max-sumnorm-dev-sr"])
+    else:
+        label=r"$N_{sig}$ sum of anomaly rich clusters TS=" + "{:.3f}".format(res[ts])
+
     plt.plot(
         window_centers,
         anomaly_rich_sp.y[0],
-        label=r"$\tilde{N}_l$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$"
-        + "{:.3f}".format(res["chisq_ndof"]),
+        label=label,
         color="red",
     )
     # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq_ndof)
     # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
     plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("$N(m_{jj})\\cdot sum(N_{sig}(m_{jj}))/sum(N(m_{jj}))$")
+    plt.ylabel("$N_{jets}$")
     plt.legend()
 
 

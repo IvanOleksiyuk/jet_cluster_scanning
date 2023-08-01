@@ -3,7 +3,7 @@
 #SBATCH --partition=shared-cpu
 
 ### Job name
-#SBATCH --job-name=BINNING
+#SBATCH --job-name=PLOTTING
  
 ### Output path for stdout and stderr
 ### %J is the job ID, %I is the array ID

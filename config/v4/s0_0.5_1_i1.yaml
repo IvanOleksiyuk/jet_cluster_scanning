@@ -26,8 +26,8 @@ resample_signal: False
 #Parameters of the training
 memory_intensive: True
 train_interval:
-  - 2600
-  - 2700
+  - 3000
+  - 3100
 signal_fraction: 0 #THIS IS THE SIGNAL FRACTION OF THE SIGNAL DATASET TO USE DURING TRAINING
 k: 50 #number of clusters to train
 reproc_arg_string: "w 0.5 s 1 N"
@@ -37,10 +37,10 @@ batch_size: 2048
 
 #Parameters for binning
 W: 100 #Bin width 
-steps: 200 #Number of bins
+steps: 16 #Number of bins
 eval_interval: #Histogram window
-  - 2600
-  - 6000
+  - 3000
+  - 4600
 separate_binning: False
 
 #Retraining option not yet implemented - requires binning to be specified

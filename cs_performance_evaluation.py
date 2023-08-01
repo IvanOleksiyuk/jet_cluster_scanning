@@ -185,10 +185,10 @@ class CS_evaluation_process:
         elif labeling[:6] == "maxdev":
             sp_sumn_standrob = self.prepare_spectra(["sumn", "-bsumsumn", "standrob"])
             logging.debug(str(sp_sumn_standrob.y / sp_sumn_standrob.err))
-            threshold = float(labeling[6:])
+            self.threshold = float(labeling[6:])
             labels = np.zeros(self.k)
             for j in range(self.k):
-                if np.any(sp_sumn_standrob.y[j] > threshold):
+                if np.any(sp_sumn_standrob.y[j] > self.threshold):
                     labels[j] = 1
                 else:
                     labels[j] = 0
@@ -267,14 +267,20 @@ class CS_evaluation_process:
         max_sumnorm_diff = anomaly_poor_sp.sum_norm().max_diff_abs(
             anomaly_rich_sp.sum_norm()
         )
-        max_sumnorm_dev = anomaly_poor_sp.sum_norm().max_dev_abs(
-            anomaly_rich_sp.sum_norm()
-        )
         max_maxnorm_diff = anomaly_poor_sp.max_norm().max_diff_abs(
             anomaly_rich_sp.max_norm()
         )
+        max_sumnorm_dev = anomaly_poor_sp.sum_norm().max_dev_abs(
+            anomaly_rich_sp.sum_norm()
+        )
         max_maxnorm_dev = anomaly_poor_sp.max_norm().max_dev_abs(
             anomaly_rich_sp.max_norm()
+        )
+        max_sumnorm_dev_rs = anomaly_poor_sp.sum_norm().max_dev_abs(
+            anomaly_rich_sp.sum_norm(), error_style="self_sqrt"
+        )
+        max_maxnorm_dev_rs = anomaly_poor_sp.max_norm().max_dev_abs(
+            anomaly_rich_sp.max_norm(), error_style="self_sqrt"
         )
 
         # Save results
@@ -282,6 +288,8 @@ class CS_evaluation_process:
         res["chisq_ndof"] = chisq_ndof
         res["max-sumnorm-dev"] = max_sumnorm_dev
         res["max-maxnorm-dev"] = max_maxnorm_dev
+        res["max-sumnorm-dev-rs"] = max_sumnorm_dev_rs
+        res["max-maxnorm-dev-rs"] = max_maxnorm_dev_rs
         res["max-sumnorm-diff"] = max_sumnorm_diff
         res["max-maxnorm-diff"] = max_maxnorm_diff
         res["tf"] = tf
@@ -325,6 +333,22 @@ class CS_evaluation_process:
         """function to run the evaluation process of a test statistic or a given metric"""
         prepr = ["fix_low_stat_error", "sumn", "-bsumsumn"]
 
+        aggr_based_stats = [
+            "chisq_ndof",
+            "max-sumnorm-dev",
+            "max-maxnorm-dev",
+            "max-sumnorm-diff",
+            "max-maxnorm-diff",
+            "max-sumnorm-dev-rs",
+            "max-maxnorm-dev-rs",
+        ]
+        if self.cfg.test_statistic in aggr_based_stats:
+            res = self.aggregation_based_TS()[self.cfg.test_statistic]
+
+        print(self.cfg.test_statistic)
+        print(res)
+        exit()
+
         if self.cfg.test_statistic == "chisq_ndof":
             res = self.aggregation_based_TS()["chisq_ndof"]
         elif self.cfg.test_statistic == "max-sumnorm-dev":
@@ -335,6 +359,10 @@ class CS_evaluation_process:
             res = self.aggregation_based_TS()["max-sumnorm-diff"]
         elif self.cfg.test_statistic == "max-maxnorm-diff":
             res = self.aggregation_based_TS()["max-maxnorm-diff"]
+        elif self.cfg.test_statistic == "max-sumnorm-dev-sr":
+            res = self.aggregation_based_TS()["max-sumnorm-dev-sr"]
+        elif self.cfg.test_statistic == "max-maxnorm-dev-sr":
+            res = self.aggregation_based_TS()["max-maxnorm-dev-sr"]
         elif self.cfg.test_statistic == "NA-sumnorm-maxC-maxM":
             res = self.non_aggregation_based_TS(
                 prepare_sp=prepr, cluster_sc="max", mjj_sc="max"
@@ -375,13 +403,13 @@ class CS_evaluation_process:
             self.plot_standardisation_step(
                 self.prepare_spectra(["sumn", "-bsumsumn"]),
                 self.labels,
-                y_label="$N_i(m_{jj})/sum(N_i(m_{jj}))$-background",
+                y_label="$N_i(m_{jj})/sum(N_i(m_{jj}))-N_{orig}(m_{jj})/sum(N_{orig}(m_{jj}))$",
                 savefile="sumn-toatal.png",
             )
             self.plot_standardisation_step(
                 self.prepare_spectra(["maxn", "-bsummaxn"]),
                 self.labels,
-                y_label="$N_i(m_{jj})/max(N_i(m_{jj}))$-background",
+                y_label="$N_i(m_{jj})/max(N_i(m_{jj}))-N_{orig}(m_{jj})/sum(N_{orig}(m_{jj}))$",
                 savefile="maxm-toatal.png",
             )
             self.plot_labeled_spectra(
@@ -421,13 +449,14 @@ class CS_evaluation_process:
                 self.agg_sp["rich"],
                 self.figsize,
                 self.agg_sp["res"],
+                ts="max-sumnorm-dev-sr"
             )
-            curvefit_eval(
-                self.agg_sp["poor"],
-                self.agg_sp["rich"],
-                self.binning,
-                self.agg_sp["res"]["tf"],
-            )
+            # curvefit_eval(
+            #     self.agg_sp["poor"],
+            #     self.agg_sp["rich"],
+            #     self.binning,
+            #     self.agg_sp["res"]["tf"],
+            # )
             plt.savefig(self.eval_path + "comb.png", bbox_inches="tight")
             csp.plot_aggregation(
                 self.agg_sp["poor"].subtract_sp(self.agg_sp["poor"]),
@@ -474,7 +503,7 @@ class CS_evaluation_process:
             self.figsize,
         )
         if add_line:
-            plt.axhline(5, color="red", alpha=0.2)
+            plt.axhline(self.threshold, color="red", alpha=0.2)
         plt.xlabel("window centre $m_{jj}$ [GeV]")
         plt.ylabel(ylabel)
         plt.legend()
@@ -493,12 +522,13 @@ class CS_evaluation_process:
             sp.mean_sp().y[0],
             sp.std_sp().y[0],
             fillb=True,
+            label="mean with SD",
         )
         csp.plot_mean_deviat(
             sp.x,
             sp.mean_sp_rob().y[0],
             sp.std_sp_rob().y[0],
-            color="orange",
+        color="robust mean with \n robust SD",
             fillb=True,
         )
         plt.legend()

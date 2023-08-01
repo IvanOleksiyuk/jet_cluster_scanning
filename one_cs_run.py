@@ -38,7 +38,7 @@ def one_cs_run(config_list):
 
     # # Evaluation part
     config_path = [
-        "config/cs_eval/maxdev3_msde_4par.yaml",
+        "config/cs_eval/maxdev3_msders.yaml",
         "config/cs_eval/plotting.yaml",
     ]
     path1 = cs.counts_windows_path(directory=True)
@@ -67,7 +67,7 @@ def one_cs_run(config_list):
 
 if __name__ == "__main__":
     config_list = [
-            "config/v4/s0_0.5_1_MB_i1.yaml",
+            "config/v4/s0_0.5_1_i1.yaml",
             "config/sig_frac/0.05.yaml",
             "config/multirun/0_0_0.yaml",
             # "config/multirun/i2.yaml",
