@@ -170,7 +170,7 @@ class Spectra:
     def max_diff(self, another):
         return np.max(self.y - another.y)
 
-    def max_dev_abs(self, another=None, error_style="self_sqrt"):
+    def max_dev_abs(self, another=None, error_style="comb"):
         if len(self.y) > 1:
             axis = 1
         else:

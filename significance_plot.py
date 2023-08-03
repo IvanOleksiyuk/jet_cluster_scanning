@@ -149,8 +149,13 @@ def significance_plot(plot_idealised = True,
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Plot
     # Create the figure
-
-    fig = plt.figure(figsize=(5, 5))
+    fig = plt.figure(figsize=(6, 8))
+    gs = fig.add_gridspec(2, 1, height_ratios=[2, 1])
+    axs=[]
+    axs.append(fig.add_subplot(gs[0]))
+    axs.append(fig.add_subplot(gs[1]))
+    
+    plt.sca(axs[0])
 
     if plot_BH:
         for i, r in enumerate(BH_list):
@@ -175,13 +180,13 @@ def significance_plot(plot_idealised = True,
         Zs = np.stack(Zs, axis=1).T
         Zs[np.isinf(Zs)] = p2Z(results["p_upper_bound"][0])
         print(Zs.shape)
-        median, err_low, err_high = get_median_and_quar_err(Zs)
-        x = np.array(results["contaminations"]) * len(mjj_bg)
+        median_CS, err_low, err_high = get_median_and_quar_err(Zs)
+        x_CS = np.array(results["contaminations"]) * len(mjj_bg)
         if use_cs_name:
             label = name.replace("_", " ")
         else:
             label = "Cluster scanning"
-        draw_line_yerr(x, median, [err_low, err_high], label=label, style=style, color="blue")
+        draw_line_yerr(x_CS, median_CS, [err_low, err_high], label=label, style=style, color="blue")
     # print(results["contaminations"])
     # print(results["Z_mean_ps"])
     # print(np.mean(results["Zs"], axis=1))
@@ -195,25 +200,52 @@ def significance_plot(plot_idealised = True,
         for resn, lab, color in zip(res_list, labal_list, color_list):
             res = pickle.load(open(resn, "rb"))
             median, err_low, err_high = get_median_and_quar_err(res["Zs"])
-            x = res["sig_fractions"] * len(mjj_sg)
-            print(x)
-            draw_line_yerr(x, median, [err_low, err_high], label=lab, style=style, color=color, linestyle="dashed")
+            if color=="maroon":
+                median_fit = median
+            x_fit = res["sig_fractions"] * len(mjj_sg)
+            draw_line_yerr(x_fit, median, [err_low, err_high], label=lab, style=style, color=color, linestyle="dashed")
 
     if plot_idealised:
         res = pickle.load(open("gf_results/MLSnormal_positiv3_parambootstrap_true10000x100_binning16_Zs_ideal.pickle", "rb"))
-        x = res["sig_fractions"] * len(mjj_sg)
-        median, err_low, err_high = get_median_and_quar_err(res["Zs"])
-        draw_line_yerr(x, median, [err_low, err_high], label="Idealised fit", style=style, color="maroon", linestyle="dashed")
+        x_fit = res["sig_fractions"] * len(mjj_sg)
+        median_fit, err_low, err_high = get_median_and_quar_err(res["Zs"])
+        draw_line_yerr(x_fit, median_fit, [err_low, err_high], label="Idealised fit", style=style, color="maroon", linestyle="dashed")
 
     if use_cs_name:
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     else:
         plt.legend(loc="lower right")
-    plt.grid()
+    plt.gca().xaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1)) 
+    plt.grid(which='both')
     plt.xscale("log")
     plt.xlim(10**2, 10**4)
     plt.xlabel("$\epsilon$")
     plt.ylabel("Z $[\sigma]$")
+
+    def filter_common_points(x1, y1, x2, y2):
+        common_points = np.intersect1d(x1, x2)
+        y1_n = y1[np.isin(x1, common_points)]
+        y2_n = y2[np.isin(x2, common_points)]
+        return common_points, y1_n, y2_n
+
+
+    def transform(x):
+        return x*(100000/95710)/378303
+
+    plt.sca(axs[1])
+    plt.xlabel("$S/B$")
+    plt.ylabel("SI")
+    plt.grid()
+    print(x_fit)
+    print(x_CS)
+    x, median_CS, median_fit = filter_common_points(x_CS, median_CS, x_fit, median_fit)
+    print(x)
+    plt.axhline(1, color="maroon", linestyle="dashed")
+    plt.plot(transform(x[::-1]), median_CS/median_fit, color="blue")
+
+    plt.xscale("log")
+    plt.ylim(0.5, None)
+    plt.xlim(transform(10**2), transform(10**4))
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Save the plot

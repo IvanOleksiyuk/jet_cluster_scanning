@@ -276,11 +276,8 @@ class CS_evaluation_process:
         max_maxnorm_dev = anomaly_poor_sp.max_norm().max_dev_abs(
             anomaly_rich_sp.max_norm()
         )
-        max_sumnorm_dev_rs = anomaly_poor_sp.sum_norm().max_dev_abs(
-            anomaly_rich_sp.sum_norm(), error_style="self_sqrt"
-        )
-        max_maxnorm_dev_rs = anomaly_poor_sp.max_norm().max_dev_abs(
-            anomaly_rich_sp.max_norm(), error_style="self_sqrt"
+        max_sumnorm_dev_rs = anomaly_poor_sp.max_dev_abs(
+            anomaly_rich_sp, error_style="self_sqrt"
         )
 
         # Save results
@@ -289,7 +286,6 @@ class CS_evaluation_process:
         res["max-sumnorm-dev"] = max_sumnorm_dev
         res["max-maxnorm-dev"] = max_maxnorm_dev
         res["max-sumnorm-dev-rs"] = max_sumnorm_dev_rs
-        res["max-maxnorm-dev-rs"] = max_maxnorm_dev_rs
         res["max-sumnorm-diff"] = max_sumnorm_diff
         res["max-maxnorm-diff"] = max_maxnorm_diff
         res["tf"] = tf
@@ -345,24 +341,11 @@ class CS_evaluation_process:
         if self.cfg.test_statistic in aggr_based_stats:
             res = self.aggregation_based_TS()[self.cfg.test_statistic]
 
-        print(self.cfg.test_statistic)
-        print(res)
-        exit()
+        # print(self.cfg.test_statistic)
+        # print(self.cfg.test_statistic in aggr_based_stats)
+        # print(res)
+        # exit()
 
-        if self.cfg.test_statistic == "chisq_ndof":
-            res = self.aggregation_based_TS()["chisq_ndof"]
-        elif self.cfg.test_statistic == "max-sumnorm-dev":
-            res = self.aggregation_based_TS()["max-sumnorm-dev"]
-        elif self.cfg.test_statistic == "max-maxnorm-dev":
-            res = self.aggregation_based_TS()["max-maxnorm-dev"]
-        elif self.cfg.test_statistic == "max-sumnorm-diff":
-            res = self.aggregation_based_TS()["max-sumnorm-diff"]
-        elif self.cfg.test_statistic == "max-maxnorm-diff":
-            res = self.aggregation_based_TS()["max-maxnorm-diff"]
-        elif self.cfg.test_statistic == "max-sumnorm-dev-sr":
-            res = self.aggregation_based_TS()["max-sumnorm-dev-sr"]
-        elif self.cfg.test_statistic == "max-maxnorm-dev-sr":
-            res = self.aggregation_based_TS()["max-maxnorm-dev-sr"]
         elif self.cfg.test_statistic == "NA-sumnorm-maxC-maxM":
             res = self.non_aggregation_based_TS(
                 prepare_sp=prepr, cluster_sc="max", mjj_sc="max"
@@ -403,13 +386,13 @@ class CS_evaluation_process:
             self.plot_standardisation_step(
                 self.prepare_spectra(["sumn", "-bsumsumn"]),
                 self.labels,
-                y_label="$N_i(m_{jj})/sum(N_i(m_{jj}))-N_{orig}(m_{jj})/sum(N_{orig}(m_{jj}))$",
+                y_label="$N_{i,b}/sum(N_{i,b})-N_{orig, b}/sum(N_{orig, b})$",
                 savefile="sumn-toatal.png",
             )
             self.plot_standardisation_step(
                 self.prepare_spectra(["maxn", "-bsummaxn"]),
                 self.labels,
-                y_label="$N_i(m_{jj})/max(N_i(m_{jj}))-N_{orig}(m_{jj})/sum(N_{orig}(m_{jj}))$",
+                y_label="$N_{i,b}/max_b(N_{i,b})-N_{orig, b}/max_b(N_{orig, b})$",
                 savefile="maxm-toatal.png",
             )
             self.plot_labeled_spectra(
@@ -444,6 +427,8 @@ class CS_evaluation_process:
                 self.eval_path,
             )
             # aggregations
+            self.agg_sp["poor"].err = np.sqrt(self.agg_sp["poor"].y)
+            self.agg_sp["rich"].err = np.sqrt(self.agg_sp["poor"].y)*0
             csp.plot_aggregation(
                 self.agg_sp["poor"],
                 self.agg_sp["rich"],
@@ -528,7 +513,8 @@ class CS_evaluation_process:
             sp.x,
             sp.mean_sp_rob().y[0],
             sp.std_sp_rob().y[0],
-        color="robust mean with \n robust SD",
+            label="robust mean with \n robust SD",
+            color="orange",
             fillb=True,
         )
         plt.legend()
