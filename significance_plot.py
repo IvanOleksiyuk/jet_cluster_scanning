@@ -11,6 +11,7 @@ from utils.utils import p2Z
 from utils.os_utils import list_files
 import os
 import utils.set_matplotlib_default
+import copy
 
 def get_median_and_quar_err(Zs):
     median = np.median(Zs, axis=1)
@@ -20,7 +21,32 @@ def get_median_and_quar_err(Zs):
     err_high = q3 - median
     return median, err_low, err_high
 
-def draw_line_yerr(x, y, yerr, color="black", label=None, linestyle="solid", capsize=5, style="errorbar"):
+def make_first_invalid_valid(valid):
+    shape = valid.shape
+    valid = np.where(valid)[0]
+    valid = np.array([valid[0]-1, ]+list(valid))
+    validd = np.full(shape, False)
+    validd[valid] = True
+    return validd
+
+def make_last_valid_invalid(invalid):
+    shape = invalid.shape
+    invalid = np.where(invalid)[0]
+    invalid = np.array(list(invalid)+[invalid[-1]+1, ])
+    invalidd = np.full(shape, False)
+    invalidd[invalid] = True
+    return invalidd
+
+def find_stat_validity(y, intersect=True):
+    valid = np.logical_not(y==y[0])
+    invalid = np.logical_not(valid)
+    if intersect:
+        valid = make_first_invalid_valid(valid)
+    return valid, invalid
+
+
+
+def draw_line_yerr(x, y, yerr=None, color="black", label=None, linestyle="solid", capsize=5, style="band+lowstat", validd="auto"):
     if style == "errorbar":
         plt.errorbar(
             x,
@@ -35,13 +61,33 @@ def draw_line_yerr(x, y, yerr, color="black", label=None, linestyle="solid", cap
         if isinstance(yerr, list):
             plt.plot(x, y, label=label, color=color, linestyle=linestyle)
             plt.fill_between(x, y-yerr[0], y+yerr[1], alpha=0.2, color=color)
+        else:
+            plt.plot(x, y, label=label, color=color, linestyle=linestyle)
+            plt.fill_between(x, y-yerr, y+yerr, alpha=0.2, color=color)
+    
+    elif style == "band+lowstat":
+        
+        if validd=="all":
+            valid = np.full(y.shape, True)
+        elif validd=="auto":
+            valid, invalid = find_stat_validity(y)
+        else:
+            valid = validd
+            invalid = np.logical_not(validd)
+            invalid = make_last_valid_invalid(invalid)
+        plt.plot(x[valid], y[valid], label=label, color=color, linestyle=linestyle)
+        if not np.all(valid):
+            plt.plot(x[invalid], y[invalid], color=color, linestyle="dotted")
+        if isinstance(yerr, list):
+            plt.fill_between(x[valid], y[valid]-yerr[0][valid], y[valid]+yerr[1][valid], alpha=0.2, color=color)
+            
 
 
 def significance_plot(plot_idealised = True, 
                       plot_realistic = True, 
                       plot_BH = False,
                       use_points_insuff_stats = False,
-                      style="band",
+                      style="band+lowstat",
                       use_cs_name=False):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Load the data block + define some parameters
@@ -180,13 +226,13 @@ def significance_plot(plot_idealised = True,
         Zs = np.stack(Zs, axis=1).T
         Zs[np.isinf(Zs)] = p2Z(results["p_upper_bound"][0])
         print(Zs.shape)
-        median_CS, err_low, err_high = get_median_and_quar_err(Zs)
-        x_CS = np.array(results["contaminations"]) * len(mjj_bg)
+        median_CS, err_low_CS, err_high_CS = get_median_and_quar_err(Zs)
+        x_CS = np.round(np.array(results["contaminations"]) * len(mjj_bg))
         if use_cs_name:
             label = name.replace("_", " ")
         else:
             label = "Cluster scanning"
-        draw_line_yerr(x_CS, median_CS, [err_low, err_high], label=label, style=style, color="blue")
+        draw_line_yerr(x_CS, median_CS, [err_low_CS, err_high_CS], label=label, style=style, color="blue")
     # print(results["contaminations"])
     # print(results["Z_mean_ps"])
     # print(np.mean(results["Zs"], axis=1))
@@ -202,12 +248,12 @@ def significance_plot(plot_idealised = True,
             median, err_low, err_high = get_median_and_quar_err(res["Zs"])
             if color=="maroon":
                 median_fit = median
-            x_fit = res["sig_fractions"] * len(mjj_sg)
+            x_fit = np.round(res["sig_fractions"] * len(mjj_sg))
             draw_line_yerr(x_fit, median, [err_low, err_high], label=lab, style=style, color=color, linestyle="dashed")
 
     if plot_idealised:
         res = pickle.load(open("gf_results/MLSnormal_positiv3_parambootstrap_true10000x100_binning16_Zs_ideal.pickle", "rb"))
-        x_fit = res["sig_fractions"] * len(mjj_sg)
+        x_fit = np.round(res["sig_fractions"] * len(mjj_sg))
         median_fit, err_low, err_high = get_median_and_quar_err(res["Zs"])
         draw_line_yerr(x_fit, median_fit, [err_low, err_high], label="Idealised fit", style=style, color="maroon", linestyle="dashed")
 
@@ -222,30 +268,61 @@ def significance_plot(plot_idealised = True,
     plt.xlabel("$\epsilon$")
     plt.ylabel("Z $[\sigma]$")
 
-    def filter_common_points(x1, y1, x2, y2):
+    def plot_significances(Zs, contaminations, label=None, color="blue"):
+        median, err_low, err_high = get_median_and_quar_err(Zs)
+        draw_line_yerr(contaminations, median, [err_low, err_high], label=label, style=style, color=color)
+
+    def filter_common_points(x1, y1_, x2, y2_):
         common_points = np.intersect1d(x1, x2)
-        y1_n = y1[np.isin(x1, common_points)]
-        y2_n = y2[np.isin(x2, common_points)]
-        return common_points, y1_n, y2_n
+        y1 = copy.deepcopy(y1_)
+        y2 = copy.deepcopy(y2_)
+        if isinstance(y1, list):
+            for i in range(len(y1)):
+                y1[i] = y1[i][np.isin(x1, common_points)]
+        else:
+            y1 = y1[np.isin(x1, common_points)]
+        if isinstance(y2, list):
+            for i in range(len(y2)):
+                y2[i] = y2[i][np.isin(x2, common_points)]
+        else:
+            y2 = y2[np.isin(x2, common_points)]
+        return common_points, y1, y2
 
-
-    def transform(x):
+    def NS2SoB(x):
         return x*(100000/95710)/378303
 
     plt.sca(axs[1])
     plt.xlabel("$S/B$")
     plt.ylabel("SI")
     plt.grid()
-    print(x_fit)
     print(x_CS)
-    x, median_CS, median_fit = filter_common_points(x_CS, median_CS, x_fit, median_fit)
+    print(x_fit)
+    
+    valid_CS, invalid_CS = find_stat_validity(median_CS)
+    valid_fit, invalid_fit = find_stat_validity(median_fit)
+    
+    x, CS, fit = filter_common_points(x_CS, [median_CS, err_low_CS, err_high_CS, valid_CS], x_fit, [median_fit, valid_fit])
+    valid_CS = CS[3]
+    valid_fit = fit[1]
+    cut=np.max(np.where(np.logical_and(np.logical_not(valid_CS), np.logical_not(valid_fit))))+1
+    print(cut)
+    valid_CS = CS[3][cut:]
+    valid_fit = fit[1][cut:]
+    median_fit = fit[0][cut:]
+    median_CS = CS[0][cut:]
+    err_low_CS = CS[1][cut:]
+    err_high_CS = CS[2][cut:]
+    x=x[::-1][cut:]
     print(x)
-    plt.axhline(1, color="maroon", linestyle="dashed")
-    plt.plot(transform(x[::-1]), median_CS/median_fit, color="blue")
+    #plt.axhline(1, color="maroon", linestyle="dashed")
+    #plt.plot(NS2SoB(x[::-1]), median_CS/median_fit, color="blue")
+
+    draw_line_yerr(NS2SoB(x), median_CS/median_fit, [err_low_CS/median_fit, err_high_CS/median_fit], style=style, color="blue", validd=valid_CS)
+    draw_line_yerr(NS2SoB(x), median_CS/median_CS, style=style, color="maroon", validd="all", linestyle="dashed")
 
     plt.xscale("log")
-    plt.ylim(0.5, None)
-    plt.xlim(transform(10**2), transform(10**4))
+    plt.ylim(0, None)
+    plt.xlim(NS2SoB(10**2), NS2SoB(10**4))
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Save the plot

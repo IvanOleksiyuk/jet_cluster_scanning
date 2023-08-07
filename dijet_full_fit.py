@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 import scipy.optimize
 from utils.utils import p2Z
 import utils.set_matplotlib_default
+from numpy.random import choice
 
-# %%
+
 # Hyperparameters for this run
 seed=1
-n_trials = 10000
+n_trials = 100
 n_trials_sig = 100
-save_directory = "gf_results/"
+save_directory = "gf_test/"
 test_stat="MLSnormal_positiv"
 fff = "4_param"
 n_dof=16-4
@@ -21,11 +22,9 @@ random_resampling_type="bootstrap_true"
 sig_fractions = [0.1, 0.075, 0.05, 0.03, 0.025, 0.024, 0.023, 0.022, 0.02, 0.019, 0.018, 0.017, 0.016, 0.015, 0.014, 0.013, 0.012, 0.011, 0.01, 0.009, 0.008, 0.007, 0.006, 0.005, 0.002, 0.001]
 #sig_fractions = [0.075, 0.05, 0.025, 0.02, 0.015, 0.01, 0.008, 0.007, 0.005]
 
-# %%
 np.random.seed(seed)
 save_name = test_stat+fff+random_resampling_type+str(n_trials) +"x"+str(n_trials_sig)+"_binning"+str(len(binning)-1)
 
-# %%
 from utils.test_statistics import MLSnormal_positiv, chi_square
 
 if test_stat=="MLSnormal_positiv":
@@ -35,9 +34,6 @@ elif test_stat=="chi_square":
 elif test_stat=="chi_square_n_dof":
 	test_stat_f = lambda x, y: chi_square(x, y)/n_dof
 
-
-# %%
-from numpy.random import choice
 def random_resampling_normal(y, y_err):
     return np.random.normal(y, y_err)
 
@@ -59,39 +55,30 @@ if random_resampling_type=="bootstrap_in_spectrum":
 if random_resampling_type=="bootstrap_true":
 	random_resampling = lambda x, y: random_resampling_bootstrap_in_spectrum(x, y, actual_total=1000000)
 
-
-
-# %%
 def smample_signal(mjj_signal, sig_fraction, binning):
     n = int(len(mjj_signal)*sig_fraction)
     m_chosen = np.random.choice(mjj_signal, n, replace=False)
     sig = np.histogram(m_chosen, bins=binning)[0]
     return sig 
 
-# %%
 #Load the mass spectra
 data_path = "../../DATA/LHCO/"
 mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
 mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
 
-# %%
 bkg = plt.hist(mjj_bg, bins=binning, range=(3000, 4600), histtype="step", color="black")
 bkg = bkg[0]
 sig = plt.hist(mjj_sg, bins=binning, range=(3000, 4600), histtype="step", color="red")
 sig = sig[0]
 
-# %%
 x=np.linspace(3000, 4600, 17)
 x=x[:-1]+(x[1]-x[0])/2
 
-# %%
 bkg_err = np.sqrt(bkg)
 sig_err = np.sqrt(sig)
 
-# %%
 y_orig_err=np.sqrt(bkg_err**2)
 
-# %%
 s=13000
 def fit(x, y, y_err, fff, s=13000):
 	if fff == "5_param":
@@ -154,28 +141,20 @@ def fit(x, y, y_err, fff, s=13000):
 
 
 
-# %%
-rrr, f = fit(x, bkg, y_orig_err, fff, s=13000)
-fited_bkg = f(x, *rrr[0])
-print(rrr)
 
-# %%
-plt.step(x, fited_bkg, color="blue", where="mid")
-plt.step(x, bkg, color="green", where="mid")
-plt.figure()
-plt.step(x, (bkg-fited_bkg)/y_orig_err, color="blue", where="mid")
-print(MLSnormal_positiv(bkg, fited_bkg))
-k = len(bkg)
-print(np.sum((bkg-fited_bkg)**2/y_orig_err**2)/n_dof)
-print(test_stat_f(bkg, fited_bkg))
 
 # %%
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
 
 # Plot histogram and fit on ax1
-ax1.step(x, bkg, color="orange", where="mid", label="Data")
-ax1.step(x, fited_bkg, color="blue", where="mid", label='4 parameter fit')
-
+ax1.step(x, bkg, color="black", where="mid", label="Data")
+rrr, f = fit(x, bkg, y_orig_err, "4_param", s=13000)
+fited_bkg = f(x, *rrr[0])
+ax1.step(x, fited_bkg, color="blue", where="mid", label='4 parameter fit, $\chi^2$/dof = '+str(np.sum((bkg-fited_bkg)**2/y_orig_err**2)/12))
+rrr, f = fit(x, bkg, y_orig_err, "3_param", s=13000)
+fited_bkg = f(x, *rrr[0])
+ax1.step(x, fited_bkg, color="green", where="mid", label='3 parameter fit, $\chi^2$/dof = '+str(np.sum((bkg-fited_bkg)**2/y_orig_err**2)/13))
+ax1.errorbar(x, bkg, yerr=y_orig_err, fmt='none', color="black", label="Data error")
 ax1.legend()
 ax1.set_xlabel('$m_{jj}$')
 ax1.set_ylabel('Counts')
@@ -189,7 +168,17 @@ ax2.set_ylabel('Difference in SD')
 plt.tight_layout()
 plt.savefig('plots/gfit/4_param_fit.png', bbox_inches='tight', dpi=300)
 exit()
+
+
+
 # %%
+rrr, f = fit(x, bkg, y_orig_err, fff, s=13000)
+fited_bkg = f(x, *rrr[0])
+print(MLSnormal_positiv(bkg, fited_bkg))
+k = len(bkg)
+print(np.sum((bkg-fited_bkg)**2/y_orig_err**2)/n_dof)
+print(test_stat_f(bkg, fited_bkg))
+
 test = np.max((bkg-fited_bkg)**2/y_orig_err**2)
 print(test)
 
