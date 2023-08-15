@@ -143,63 +143,98 @@ def t_statistic_distribution(config_file_path):
 
     BE_arr=[]
     SE_arr=[]
+    conts=[0.005, 0.002, 0.0015, 0.001]
     if "contaminations" in config.get_dict().keys():
+        BE_avg = []
+        SE_avg = []
+        BE_std = []
+        SE_std = []
+        SI_avg = []
+        SI_std = []
+        SFI_avg = []
+        SFI_std = []
         for c, path in zip(cfg.contaminations, cfg.cont_paths):
-            print(c)
-            cfg.CSEconf = [origCSEconf, "config/cs_eval/BE.yaml"]
-            BE = score_sample(cfg, path)
-            BE_arr.append(BE)
-            cfg.CSEconf = [origCSEconf, "config/cs_eval/SE.yaml"]
-            SE = score_sample(cfg, path)
-            SE_arr.append(SE)
-            plt.figure(1)
-            plt.scatter(BE, SE, s=5, label=f"{c}")
-            plt.figure(2)
-            plt.scatter(1/BE, SE/np.sqrt(BE), s=5, label=f"{c}")
-            plt.figure(3)
-            plt.scatter(SE, 1/BE, s=5, label=f"{c}")
-            plt.figure(4)
-            plt.scatter(1/BE, SE/BE, s=5, label=f"{c}")
+            if c in conts:
+                print(c)
+                cfg.CSEconf = [origCSEconf, "config/cs_eval/BE.yaml"]
+                BE = score_sample(cfg, path)
+                BE_arr.append(BE)
+                cfg.CSEconf = [origCSEconf, "config/cs_eval/SE.yaml"]
+                SE = score_sample(cfg, path)
+                SE_arr.append(SE)
+                plt.figure(1)
+                plt.scatter(BE, SE, s=5, label=f"{c}")
+                plt.figure(2)
+                plt.scatter(1/BE, SE/np.sqrt(BE), s=5, label=f"{c}")
+                plt.figure(3)
+                plt.scatter(SE, 1/BE, s=5, label=f"{c}")
+                plt.figure(4)
+                plt.scatter(1/BE, SE/BE, s=5, label=f"{c}")
+                print(BE)
+                print(SE)
+                BE_avg.append(np.mean(BE))
+                SE_avg.append(np.mean(SE))
+                BE_std.append(np.std(BE))
+                SE_std.append(np.std(SE))
+                cfg.CSEconf = [origCSEconf, "config/cs_eval/SI.yaml"]
+                SI = score_sample(cfg, path)
+                SE_arr.append(SI)
+                SI_avg.append(np.nanmean(SI))
+                SI_std.append(np.nanstd(SI))
+                SFI_avg.append(np.nanmean(SE/BE))
+                SFI_std.append(np.nanstd(SE/BE))
+
     
     plt.figure(1)
     plt.xlim(-0.1, 1.1)
     plt.ylim(-0.1, 1.1)
-    plt.xlabel("e_b")
-    plt.ylabel("e_s")
+    plt.xlabel("$e_b$")
+    plt.ylabel("$e_s$")
     plt.grid()
     plt.legend()
-    plt.savefig("plots/ROC.png")
+    plt.savefig("plots/SI/ROC.png")
 
     plt.figure(2)
-    plt.xlabel("1/e_b")
+    plt.xlabel("$1/e_b$")
     plt.ylabel("SI")
     plt.xscale("log")
     plt.ylim(0, 3)
     plt.xlim(1, 1e3)
     plt.grid()
     plt.legend()
-    plt.savefig("plots/SIC.png")
+    plt.savefig("plots/SI/SIC.png")
 
     plt.figure(3)
     plt.yscale("log")
-    plt.ylabel("1/e_b")
-    plt.xlabel("e_s")
+    plt.ylabel("$1/e_b$")
+    plt.xlabel("$e_s$")
     plt.xlim(0, 1)
     plt.ylim(1, 1e4)
     plt.grid()
     plt.legend()
-    plt.savefig("plots/ROC2.png")
+    plt.savefig("plots/SI/ROC2.png")
 
     plt.figure(4)
     plt.xscale("log")
-    plt.xlabel("1/e_b")
-    plt.ylabel("e_s/e_b")
+    plt.xlabel("$1/e_b$")
+    plt.ylabel("$e_s/e_b$")
     #plt.xlim(0, 1)
     #plt.ylim(1, 1e4)
     plt.grid()
     plt.legend()
-    plt.savefig("plots/SEC.png")
+    plt.savefig("plots/SI/SEC.png")
 
+    plt.figure(5)
+    #print(cfg.contaminations*100000)
+    #print(SI_avg)
+    plt.errorbar(conts, SI_avg, yerr=SI_std, fmt="o")
+    plt.savefig("plots/SI/SI_cont.png")
+
+    plt.figure(6)
+    #print(cfg.contaminations*100000)
+    #print(SFI_avg)
+    plt.errorbar(conts, SFI_avg, yerr=SFI_std, fmt="o")
+    plt.savefig("plots/SI/SfI_cont.png")
 
 
 
@@ -207,9 +242,9 @@ if __name__ == "__main__":
     # main plots v4 avriated signal ===============================================
     # Generate plots for all methods:
     methods = [#"config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble.yaml"
-               "config/distribution/v4/prep05_1_maxdev5CURTAINS_1mean.yaml"]
+               "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15max.yaml"]
     
-    add_conf = "config/distribution/v4/bootstrap_sig_contam_LL.yaml"
+    add_conf = "config/distribution/v4/bootstrap_sig_contam.yaml"
 
     methods = [[meth, add_conf] for meth in methods]
 

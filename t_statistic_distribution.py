@@ -139,6 +139,12 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
             tstat_ensembled= np.mean(tstat_array, axis=1)                
         elif cfg.ensambling_type == "median":
             tstat_ensembled=np.median(tstat_array, axis=1)
+        elif cfg.ensambling_type == "max":
+            print("tstat_array", tstat_array)
+            tstat_ensembled=np.nanmax(tstat_array, axis=1)
+            print("tstat_ensembled", tstat_ensembled)
+        elif cfg.ensambling_type == "min":
+            tstat_ensembled=np.nanmin(tstat_array, axis=1)
 
     if np.any(np.isnan(tstat_ensembled)):
         raise ValueError("There are NaNs in the tstat_ensembled")

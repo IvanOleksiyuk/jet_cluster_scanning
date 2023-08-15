@@ -138,14 +138,27 @@ class CS_evaluation_process:
         return labels
 
     def significance_improvement(self, cluster=None):
-        if cluster is None:
-            cluster = self.labels == 1
         initial_significance = np.sum(self.counts_windows_sg) / np.sqrt(
             np.sum(self.counts_windows_bg)
         )
+        #print(initial_significance)
         final_significance = np.sum(self.counts_windows_sg[cluster]) / np.sqrt(
             np.sum(self.counts_windows_bg[cluster])
         )
+        #print(final_significance)
+        return final_significance / initial_significance
+    
+    def significance_improvement_full(self):
+        if self.labels is None:
+            self.labels = self.label_spectra()
+        initial_significance = np.sum(self.counts_windows_sg) / np.sqrt(
+            np.sum(self.counts_windows_bg)
+        )
+        #print(initial_significance)
+        final_significance = np.sum(self.counts_windows_sg[self.labels == 1]) / np.sqrt(
+            np.sum(self.counts_windows_bg[self.labels == 1])
+        )
+        #print(final_significance)
         return final_significance / initial_significance
 
     def signal_efficiency(self):
@@ -366,6 +379,8 @@ class CS_evaluation_process:
             res = self.signal_efficiency()
         elif self.cfg.test_statistic == "background_efficiency":
             res = self.background_efficiency()
+        elif self.cfg.test_statistic == "significance_improvement":
+            res = self.significance_improvement_full()
 
         if self.cfg.plotting:
             self.plot()
