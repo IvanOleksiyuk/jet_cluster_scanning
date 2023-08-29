@@ -239,7 +239,7 @@ def get_tests_fit(y_orig, n_trials, signal_fraction=None, seed=1):
             y = random_resampling(y_orig, y_orig_err) + smample_signal(mjj_sg, signal_fraction, binning)
         else:
             y = random_resampling(y_orig, y_orig_err)
-        SWIFT_x, SWIFT_y = SWIFT(x, bkg, fff, sbr=3, sbl=3, sr=5)
+        SWIFT_x, SWIFT_y = SWIFT(x, y, fff, sbr=3, sbl=3, sr=5)
         test = test_stat_f(SWIFT_y, y[sbr:-sbl])
         tests.append(test)
     return tests
