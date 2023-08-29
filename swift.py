@@ -8,12 +8,13 @@ import utils.set_matplotlib_default
 # %%
 # Hyperparameters for this run
 seed=1
+n_trials=10000
 trials_start=1
-trials_end=100
+trials_end=25
 n_trials_sig = 100
 save_directory = "swift_results/"
 test_stat="MLSnormal_positiv"
-fff = "4_param"
+fff = "3_param"
 n_dof=16-4
 method="trf"
 nfev=100000
