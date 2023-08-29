@@ -13,6 +13,18 @@ import os
 import utils.set_matplotlib_default
 import copy
 
+def find_corresponding_x_values(specific_y, y_values, x_values):
+    corresponding_x_values = []
+
+    for i in range(len(y_values) - 1):
+        if (y_values[i] <= specific_y <= y_values[i + 1]) or (y_values[i] >= specific_y >= y_values[i + 1]):
+            x_interpolation = np.interp(specific_y, [y_values[i], y_values[i + 1]], [x_values[i], x_values[i + 1]])
+            print([x_values[i], x_values[i + 1]])
+            print("interpolating", specific_y, "between", y_values[i], "and", y_values[i + 1], "to", x_interpolation)
+            corresponding_x_values.append(x_interpolation)
+
+    return corresponding_x_values
+
 def get_median_and_quar_err(Zs):
     median = np.median(Zs, axis=1)
     q1 = np.quantile(Zs, 0.25, axis=1)
@@ -93,10 +105,10 @@ def significance_plot(plot_idealised = True,
     # Load the data block + define some parameters
 
     # load the mass spectra
-    data_path = "../../DATA/LHCO/"
+    data_path = "../../scratch/DATA/LHCO/"
     mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
     mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
-
+    print(np.std(mjj_sg))
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Py Bump Hunter block
     # perform bump hunting using the pyBumpHunter package
@@ -233,6 +245,12 @@ def significance_plot(plot_idealised = True,
         else:
             label = "Cluster scanning"
         draw_line_yerr(x_CS, median_CS, [err_low_CS, err_high_CS], label=label, style=style, color="blue")
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("CS")
+        print(find_corresponding_x_values(3, np.flip(median_CS), np.flip(x_CS)))
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     # print(results["contaminations"])
     # print(results["Z_mean_ps"])
     # print(np.mean(results["Zs"], axis=1))
@@ -250,12 +268,24 @@ def significance_plot(plot_idealised = True,
                 median_fit = median
             x_fit = np.round(res["sig_fractions"] * len(mjj_sg))
             draw_line_yerr(x_fit, median, [err_low, err_high], label=lab, style=style, color=color, linestyle="dashed")
+            
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+            print(lab)
+            print(find_corresponding_x_values(3, np.flip(median), np.flip(x_fit)))
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     if plot_idealised:
         res = pickle.load(open("gf_results/MLSnormal_positiv3_parambootstrap_true10000x100_binning16_Zs_ideal.pickle", "rb"))
         x_fit = np.round(res["sig_fractions"] * len(mjj_sg))
         median_fit, err_low, err_high = get_median_and_quar_err(res["Zs"])
         draw_line_yerr(x_fit, median_fit, [err_low, err_high], label="Idealised fit", style=style, color="maroon", linestyle="dashed")
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print(find_corresponding_x_values(3, np.flip(median_fit), np.flip(x_fit)))
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     if use_cs_name:
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
@@ -332,6 +362,7 @@ def significance_plot(plot_idealised = True,
         plt.savefig("plots/main/significances_realistic.png", bbox_inches="tight", dpi=300)
     else:
         plt.savefig("plots/main/significances.png", bbox_inches="tight", dpi=300)
+
 
 
 if __name__ == "__main__":
