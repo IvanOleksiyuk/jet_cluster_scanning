@@ -4,7 +4,6 @@ from sklearn.metrics import silhouette_score  # WHAT IS THIS?
 from cluster_scanning import ClusterScanning
 import matplotlib.pyplot as plt
 
-
 class StepByStepKmeans:
     def __init__(self, n_clusters, batch_size=100, max_iter=100, verbose=False):
         self.n_clusters = n_clusters

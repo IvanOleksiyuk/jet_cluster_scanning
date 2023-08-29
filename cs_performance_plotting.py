@@ -49,7 +49,7 @@ def two_class_curves(
     labels,
     figsize,
     suffix="",
-    xlabel="window centre $m_{jj}$ [GeV]",
+    xlabel="bin centre $m_{jj}$ [GeV]",
     ylabel="",
     save_file="",
     marker="",
@@ -89,12 +89,12 @@ def two_class_curves(
         )
 
 
-def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
+def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False, label="mean and SD"):
     plt.plot(
         x,
         middle,
         color=color,
-        label="mean and SD",
+        label=label,
         linewidth=lwd,
     )
     plt.plot(
@@ -119,7 +119,7 @@ def plot_mean_deviat(x, middle, deviat, lwd=1.5, color="lime", fillb=False):
         )
 
 
-def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1):
+def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1, ts="chisq_ndof", error_source="spectr"):
     window_centers = anomaly_poor_sp.x
     plt.figure(figsize=figsize)
     plt.grid()
@@ -141,21 +141,27 @@ def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1):
     plt.plot(
         window_centers,
         anomaly_poor_sp.y[0],
-        label=r"$\tilde{N}_l$normalised sum of anomaly poor clusters",
+        label=r"$N_{bkg}$ background estimation",
         color="blue",
     )
     # plt.plot(window_centers, anomaly_rich_sp.y[0], label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
+    if ts=="chisq_ndof":
+        label=r"$N_{sig}$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$" + "{:.3f}".format(res["chisq_ndof"])
+    elif ts=="max-sumnorm-dev-sr":
+        label=r"$N_{sig}$ sum of anomaly rich clusters MLS=" + "{:.3f}".format(res["max-sumnorm-dev-rs"])
+    else:
+        label=r"$N_{sig}$ sum of anomaly rich clusters TS=" + "{:.3f}".format(res[ts])
+
     plt.plot(
         window_centers,
         anomaly_rich_sp.y[0],
-        label=r"$\tilde{N}_l$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$"
-        + "{:.3f}".format(res["chisq_ndof"]),
+        label=label,
         color="red",
     )
     # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq_ndof)
     # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("jets in 16.58GeV window")
+    plt.xlabel("bin centre $m_{jj}$ [GeV]")
+    plt.ylabel("$N_{jets}$")
     plt.legend()
 
 
@@ -185,8 +191,8 @@ def plot_all_scalings(
     plt.grid()
     for j in range(k):
         plt.plot(window_centers, counts_windows[j])
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("$N_i(m_{jj})$")
+    plt.xlabel("bin centre $m_{jj}$ [GeV]")
+    plt.ylabel("$N_{i, b}$")
     plt.savefig(save_path + "kmeans_ni_mjj_total.png", bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
     for i in range(len(window_centers)):
@@ -205,8 +211,8 @@ def plot_all_scalings(
     plt.grid()
     for j in range(k):
         plt.plot(window_centers, countmax_windows[j])
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("$N_i(m_{jj})/max(N_i(m_{jj}))$")
+    plt.xlabel("bin centre $m_{jj}$ [GeV]")
+    plt.ylabel("$N_{i, b}/max(N_{i, b})$")
     plt.savefig(save_path + "kmeans_ni_mjj_max.png", bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
     for i in range(len(window_centers)):
@@ -225,8 +231,8 @@ def plot_all_scalings(
     plt.grid()
     for j in range(k):
         plt.plot(window_centers, countnrm_windows[j])
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
-    plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
+    plt.xlabel("bin centre $m_{jj}$ [GeV]")
+    plt.ylabel("$N_{i, b}/sum(N_{i, b})$")
     plt.savefig(save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
     for i in range(len(window_centers)):

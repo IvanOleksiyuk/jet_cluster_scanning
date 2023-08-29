@@ -35,6 +35,8 @@ output_images_sig = cfg.get("data_directory") + cfg.get("sorted_sig_file")
 output_mass_bkg = cfg.get("data_directory") + cfg.get("sorted_bkg_mass_file")
 output_mass_sig = cfg.get("data_directory") + cfg.get("sorted_sig_mass_file")
 
+# Plots to save 
+pts = ["inv_mass", "images", "non_zero_pixels", "reprocessing"]
 
 # Load data (e.g. images)
 input_f = h5py.File(data_file_path, 'r')
@@ -49,19 +51,36 @@ inf = mjj_f['jet_info']
 lables_f = h5py.File(lables_file_path, 'r')
 labels = lables_f[lables_dataset_name][:]
 
-# Get QCD masses
+# Get masses
 mjj_bkg = mjj[labels==0]
-
-# Get signal masses
 mjj_sig = mjj[labels==1]
 
+# Get high level features
 inf_bkg = inf[labels==0]
 inf_sig = inf[labels==1]
 
-
-# Sort by mjj
-ind_bkg=np.argsort(mjj_bkg)
-ind_sig=np.argsort(mjj_sig)
+# Plot invariant mass spectrum 
+if "inv_mass" in pts:
+	plt.figure()
+	region=(3000, 4600)#
+	tr_region=(3000, 3100)
+	n_QCD = len(mjj_bkg[(mjj_bkg>region[0]) & (mjj_bkg<region[1])])
+	n_Zp = len(mjj_sig[(mjj_sig>region[0]) & (mjj_sig<region[1])])
+	binning = np.linspace(1700, 7000, 53+1)
+	plt.hist(mjj_bkg, bins=binning, label="QCD", histtype="step")
+	plt.hist(mjj_sig, bins=binning, label="Z'", histtype="step")
+	print("resonance width: ", np.std(mjj_sig[(mjj_sig>region[0]) & (mjj_sig<region[1])]))
+	plt.hist(np.concatenate([mjj_bkg, np.random.choice(mjj_sig, 5000, replace=False)]), bins=binning, label="1M QCD, 5K Z'", histtype="step")
+	plt.axvline(x=3000, color="black", label=f"Selection, \n {n_QCD} QCD, \n {n_Zp} Z'")
+	plt.axvline(x=4600, color="black")
+	plt.xlabel("$m_{jj}$ [GeV]")
+	plt.ylabel("Number of events")
+	#plt.yscale("log")
+	plt.grid()
+	plt.legend()
+	plt.savefig(cfg.get("plots_directory")+"data/mjj.png", bbox_inches='tight')
+	print("QCD points in the training region: ", len(mjj_bkg[(mjj_bkg>tr_region[0]) & (mjj_bkg<tr_region[1])]))
+	print("Z' points in the training region: ", len(mjj_sig[(mjj_sig>tr_region[0]) & (mjj_sig<tr_region[1])]))
 
 # Visualise effect of reprocessing on a single image
 image = images[-1, 1]

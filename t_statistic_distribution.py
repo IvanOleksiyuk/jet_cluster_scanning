@@ -38,7 +38,7 @@ def load_counts_windows(path):
         return res["counts_windows"]
 
 
-def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True, small=False):
+def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
 
     print("found binnings total:", len(os.listdir(counts_windows_boot_load)))
     print("CSE config", cfg.CSEconf)
@@ -99,8 +99,9 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True, small=False)
             tstat_files[indices[0], indices[1]] = bres_files[i]
         
         valid_bootstraps = np.sum(np.logical_not(tstat_files==""), axis=1) >= ensampbling
-        if small:
-            valid_bootstraps = valid_bootstraps[:10]
+        if hasattr(cfg, "small"):
+            if cfg.small:
+                valid_bootstraps = valid_bootstraps[:cfg.small]
         print(f"len(valid_bootstraps) {sum(valid_bootstraps)}")
         
         tstat_files_new = np.full(
@@ -138,6 +139,12 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True, small=False)
             tstat_ensembled= np.mean(tstat_array, axis=1)                
         elif cfg.ensambling_type == "median":
             tstat_ensembled=np.median(tstat_array, axis=1)
+        elif cfg.ensambling_type == "max":
+            print("tstat_array", tstat_array)
+            tstat_ensembled=np.nanmax(tstat_array, axis=1)
+            print("tstat_ensembled", tstat_ensembled)
+        elif cfg.ensambling_type == "min":
+            tstat_ensembled=np.nanmin(tstat_array, axis=1)
 
     if np.any(np.isnan(tstat_ensembled)):
         raise ValueError("There are NaNs in the tstat_ensembled")
@@ -185,96 +192,134 @@ def draw_contamination(
     postfix="",
     style="all",
     fig=None,
+    max_ts=np.inf,
 ):
 
-    arr = score_sample(cfg, path, do_wors_cases=False)
-    ps = []
-    for res in arr:
-        ps.append(p_value(res, tstat_list))
-    meanres_ps = p_value(np.mean(arr), tstat_list)
-    mean_ps = np.mean(ps)
-    label = "$\epsilon$={:.4f}".format(c)
-    if mean_ps == 0:
-        label += ", $<p><${:.4f}, Z>{:2f}".format(
-            1 / len(tstat_list), p2Z(np.mean(1 / len(tstat_list)))
-        )
-        mean_ps = 1 / len(tstat_list)
-        upper_bound_mps = True
-    else:
-        label += ", $<p>=${:.4f}, Z={:2f}".format(np.mean(ps), p2Z(np.mean(ps)))
-        upper_bound_mps = False
+	arr = score_sample(cfg, path, do_wors_cases=False)
+	ps = []
+	for res in arr:
+		ps.append(p_value(res, tstat_list))
+	meanres_ps = p_value(np.mean(arr), tstat_list)
+	mean_ps = np.mean(ps)
+	c=int(c*1000000)
+	label = r"$\epsilon$"+f"={c}"
+	
+	p_min=1/len(tstat_list)
+	Z_max = p2Z(p_min)
+	if hasattr(cfg, "labelling"):
+		if cfg.labelling=="Z":
+			add_p = False
+			add_Z = True			
+	else:
+		add_p = True
+		add_Z = True
 
-    if np.mean(meanres_ps) == 0:
-        if cfg.ensambling_num == "desamble":
-            label += "\n p(<x>)<{:.4f} Z>{:.2f}".format(
-                1 / len(tstat_list),
-                p2Z(np.mean(1 / len(tstat_list))),
-            )
-        meanres_ps = 1 / len(tstat_list)
-        upper_bound_mrps = True
-    else:
-        if cfg.ensambling_num == "desamble":
-            label += "\n p(<x>)={:.4f} Z={:.2f}".format(
-                meanres_ps, p2Z(np.mean(meanres_ps))
-            )
-        upper_bound_mrps = False
+	p_good = np.array(ps).copy()
+	p_good[p_good < p_min] = p_min
+	p_median = np.median(p_good)
+	Z_median = p2Z(p_median)
 
-    label += " " + postfix
 
-    # the actual plotting
-    # plt.figure(fig)
-    if style[0] == "U":
-        style = style[1:]
-    if style[:8] == "mean_std":
-        plt.axvline(np.mean(arr), color=col, label=label)
-        plt.axvspan(
-            np.mean(arr) - np.std(arr),
-            np.mean(arr) + np.std(arr),
-            color=col,
-            alpha=0.15,
-        )
-        style = style[8:]
-    if style == "_meanstd":
-        plt.errorbar(
-            np.mean(arr),
-            0,
-            xerr=np.std(arr) / np.sqrt(len(arr)),
-            capsize=2,
-            color=col,
-        )
+	if p_median == p_min:
+		if add_p:
+			label += r", $p_{med} <$"+"{:.2e}".format(p_min)
+		if add_Z:
+			label += r", $Z_{med} >$"+"{:2f}".format(Z_max)
+		upper_bound_mps = True
+	else:
+		if add_p:
+			label += r", $p_{med} =$"+"{:.2e}".format(p_median)	
+		if add_Z:
+			label += r", $Z_{med} =$"+"{:2f}".format(Z_median)	
+		upper_bound_mps = False
 
-    elif style == "all":
-        for i, a in enumerate(arr):
-            if i == 0:
-                plt.axvline(a, color=col, label=label, alpha=0.3)
-            else:
-                plt.axvline(a, color=col, alpha=0.3)
-    elif style == "mean":
-        plt.axvline(np.mean(arr), color=col, label=label)
-    elif style == "median_quartiles":
-        plt.axvline(np.median(arr), color=col, label=label)
-        plt.axvspan(
-            np.quantile(arr, 0.25),
-            np.quantile(arr, 0.75),
-            color=col,
-            alpha=0.15,
-        )
+	# if mean_ps < p_min:
+	# 	if add_p:
+	# 		label += ", $<p> <${:.2e}".format(p_min)
+	# 	if add_Z:
+	# 		label += ", $<Z> <${:2f}".format(Z_max)
+	# 	mean_ps = p_min
+	# 	upper_bound_mps = True
+	# else:
+	# 	if add_p:
+	# 		label += ", $<p> =${:.2e}".format(np.mean(ps))
+	# 	if add_Z:
+	# 		label += ", $<Z> =${:2f}".format(np.mean(p2Z(ps)))
+	# 	upper_bound_mps = False
 
-    results = {}
-    results["ps"] = ps
-    results["p_upper_bound"] = 1 / len(tstat_list)
-    results["mean_ps"] = mean_ps
-    results["upper_bound_mps"] = upper_bound_mps
-    results["meanres_ps"] = meanres_ps
-    results["upper_bound_mrps"] = upper_bound_mrps
-    results["Zs"] = p2Z(ps)
-    results["Z_mean_ps"] = p2Z(mean_ps)
-    results["Z_meanres_ps"] = p2Z(meanres_ps)
+	if np.mean(meanres_ps) < p_min:
+		if cfg.ensambling_num == "desamble":
+			label += "\n p(<x>)<{:.4f} Z>{:.2f}".format(
+				p_min,
+				p2Z(np.mean(p_min)),
+			)
+		meanres_ps = p_min
+		upper_bound_mrps = True
+	else:
+		if cfg.ensambling_num == "desamble":
+			label += "\n p(<x>)={:.4f} Z={:.2f}".format(
+				meanres_ps, p2Z(np.mean(meanres_ps))
+			)
+		upper_bound_mrps = False
 
-    for key in copy.deepcopy(list(results.keys())):
-        results[key + "Z"] = [p2Z(results[key])]
-        results[key] = [results[key]]
-    return results
+	label += " " + postfix
+
+	# the actual plotting
+	# plt.figure(fig)
+
+	if col != "none" and np.quantile(arr, 0.25)<max(tstat_list)*1.1:
+		if style[0] == "U":
+			style = style[1:]
+		if style[:8] == "mean_std":
+			plt.axvline(np.mean(arr), color=col, label=label)
+			plt.axvspan(
+				np.mean(arr) - np.std(arr),
+				np.mean(arr) + np.std(arr),
+				color=col,
+				alpha=0.15,
+			)
+			style = style[8:]
+		if style == "_meanstd":
+			plt.errorbar(
+				np.mean(arr),
+				0,
+				xerr=np.std(arr) / np.sqrt(len(arr)),
+				capsize=2,
+				color=col,
+			)
+
+		elif style == "all":
+			for i, a in enumerate(arr):
+				if i == 0:
+					plt.axvline(a, color=col, label=label, alpha=0.3)
+				else:
+					plt.axvline(a, color=col, alpha=0.3)
+		elif style == "mean":
+			plt.axvline(np.mean(arr), color=col, label=label)
+		elif style == "median_quartiles":
+			plt.axvline(np.median(arr), color=col, label=label)
+			plt.axvspan(
+				np.quantile(arr, 0.25),
+				np.quantile(arr, 0.75),
+				color=col,
+				alpha=0.15,
+			)
+
+	results = {}
+	results["ps"] = ps
+	results["p_upper_bound"] = 1 / len(tstat_list)
+	results["mean_ps"] = mean_ps
+	results["upper_bound_mps"] = upper_bound_mps
+	results["meanres_ps"] = meanres_ps
+	results["upper_bound_mrps"] = upper_bound_mrps
+	results["Zs"] = p2Z(ps)
+	results["Z_mean_ps"] = p2Z(mean_ps)
+	results["Z_meanres_ps"] = p2Z(meanres_ps)
+
+	for key in copy.deepcopy(list(results.keys())):
+		results[key + "Z"] = [p2Z(results[key])]
+		results[key] = [results[key]]
+	return results
 
 
 def t_statistic_distribution(config_file_path):
@@ -319,7 +364,7 @@ def t_statistic_distribution(config_file_path):
     if cfg.density:
         plt.ylabel("Density")
     else:
-        plt.ylabel("Tries")
+        plt.ylabel("Pseudo-experiments")
     # plt.axvline(np.mean(TS_list), color="blue", label=r"Average for $H_0$")
     TS_list = np.array(TS_list)
     print("mean", np.mean(TS_list))

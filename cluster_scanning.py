@@ -1,4 +1,4 @@
-# imports
+# global imports
 import sys
 import os
 import pickle
@@ -9,12 +9,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from sklearn.cluster import KMeans, MiniBatchKMeans
-from preproc import reprocessing
-from utils.config_utils import Config
 import shutil
 import logging
 import re
 import copy
+#local imports
+import utils.set_matplotlib_default
+from utils.config_utils import Config
+from preproc import reprocessing
+
+pil_logger = logging.getLogger('PIL')
+pil_logger.setLevel(logging.WARNING)
 
 
 class ColoredFormatter(logging.Formatter):
@@ -172,6 +177,7 @@ class ClusterScanning:
                     self.cfg.image_w * self.cfg.image_h,
                 )
             )
+            logging.info("bg load and reproc complete")
             # np.save("data_record"+self.cfg.reproc_arg_string, self.im_bg)
             self.im_sg = self.reproc(
                 im_sg_file["data"][:].reshape((-1, self.cfg.image_w, self.cfg.image_h))
@@ -282,11 +288,11 @@ class ClusterScanning:
             self.cfg.train_interval[0], self.cfg.train_interval[1]
         )
         self.kmeans.fit(data)
+        logging.info("training --- %s seconds ---" % (time.time() - start_time))
         counts = self.get_counts_train()
         counts.sort()
         logging.info(f"sorted cluster counts {counts}")
         logging.info(f"iterations {self.kmeans.n_iter_}")
-        logging.info("training --- %s seconds ---" % (time.time() - start_time))
 
     def get_counts_train(self):
         counts = np.bincount(self.kmeans.labels_)
@@ -530,6 +536,10 @@ class ClusterScanning:
             self.single_run()
 
     def save_results(self):
+        if self.cfg.k < 256:
+            dtype = np.uint8
+            self.bg_lab = self.bg_lab.astype(dtype)
+            self.sg_lab = self.sg_lab.astype(dtype)
         with open(self.save_path + f"lab{self.get_IDstr()}.pickle", "wb") as file:
             pickle.dump(
                 {"bg": self.bg_lab, "sg": self.sg_lab, "k_means": self.kmeans},
@@ -723,7 +733,7 @@ class ClusterScanning:
         plt.grid()
         for j in range(self.cfg.k):
             plt.plot(self.mjj_bg, self.bg_lab[:, j], ".", alpha=0.1)
-        plt.xlabel("m_jj")
+        plt.xlabel("$m_{jj}$")
         plt.ylabel("cluster label")
         plt.savefig(plots_path + "kmeans_ni_mjj_total.png")
 
@@ -751,6 +761,11 @@ class ClusterScanning:
         self.plot_global_stats(plots_path, "total_stats_bgsort.png", sort="bg")
         self.plot_global_stats(plots_path, "total_stats_totsort.png", sort="tot")
         self.plot_cluster_images(plots_path)
+        self.plot_cluster_images(plots_path, sort="sig", display_info="sig")
+        self.plot_cluster_images(plots_path, sort="bg", display_info="bg")
+        self.plot_cluster_images(plots_path, sort="tot", display_info="tot")
+        self.plot_cluster_images(plots_path, sort="SFI", display_info="SFI_SI")
+        self.plot_cluster_images(plots_path, sort="SI", display_info="SFI_SI")
 
     def plot_global_stats(self, plots_path, plot_name, sort=None):
         if hasattr(self, "counts_windows_sg"):
@@ -779,7 +794,35 @@ class ClusterScanning:
         else:
             print("skip global stats as no signal is present")
 
-    def plot_cluster_images(self, plots_path):
+    def plot_cluster_images(self, plots_path, sort=None, display_info=None):
+        if hasattr(self, "counts_windows_sg"):
+            spectra = self.counts_windows_sum
+            tot_counts = np.sum(spectra, axis=0)
+            bg_counts = np.sum(self.counts_windows_bg, axis=0)
+            sg_counts = np.sum(self.counts_windows_sg, axis=0)
+            sfi = sg_counts/np.sum(sg_counts) / (bg_counts/np.sum(bg_counts))
+            si = sg_counts/np.sum(sg_counts) / np.sqrt((bg_counts)/np.sum(bg_counts)) 
+            if sort is not None:
+                if sort == "sig":
+                    index = np.argsort(sg_counts)[::-1]
+                elif sort == "bg":
+                    index = np.argsort(bg_counts)[::-1]
+                elif sort == "tot":
+                    index = np.argsort(tot_counts)[::-1]
+                elif sort == "SFI":
+                    index = np.argsort(sfi)[::-1]
+                elif sort == "SI":
+                    index = np.argsort(si)[::-1]
+                tot_counts = tot_counts[index]
+                bg_counts = bg_counts[index]
+                sg_counts = sg_counts[index]
+                images = self.kmeans.cluster_centers_[index]
+                sfi = sfi[index]
+                si = si[index]
+            else:
+                images = self.kmeans.cluster_centers_
+                index = np.arange(self.cfg.k)
+
         plt.figure(figsize=(20, 10))
         plt.grid()
         for j in range(self.cfg.k):
@@ -792,13 +835,26 @@ class ClusterScanning:
                 bottom=False,
             )
             plt.imshow(
-                self.kmeans.cluster_centers_[j].reshape(
+                images[j].reshape(
                     (self.cfg.image_size, self.cfg.image_size)
                 ),
                 cmap="turbo",
             )
-            plt.title(f"cluster {j}")
-        plt.savefig(plots_path + "kmeans_images.png", bbox_inches="tight")
+            if display_info=="SI":
+                plt.title(f"SI {si[j]:.2e}")
+            elif display_info=="SFI":
+                plt.title(f"SFI {sfi[j]:.2e}")
+            elif display_info=="SFI_SI":
+                plt.title(f"SFI {sfi[j]:.1e} SI {si[j]:.1e}")
+            elif display_info=="sig":
+                plt.title(f"signal {sg_counts[j]:.2e}")
+            elif display_info=="bg":
+                plt.title(f"background {bg_counts[j]:.2e}")
+            elif display_info=="tot":
+                plt.title(f"total {tot_counts[j]:.2e}")
+            else:
+                plt.title(f"cluster {index[j]}")
+        plt.savefig(plots_path + "kmeans_images"+str(sort)+str(display_info)+".png", bbox_inches="tight")
 
     def plot_cluster_spectra(
         self,
@@ -808,6 +864,7 @@ class ClusterScanning:
         min_allowed_count=100,
         min_min_allowed_count=10,
         normalize=None,
+        stairs=False,
     ):
         plt.figure()
         window_centers = (self.Mjjmin_arr + self.Mjjmax_arr) / 2
@@ -838,8 +895,11 @@ class ClusterScanning:
 
         plt.grid()
         for j in range(self.cfg.k):
-            plt.plot(window_centers, spectra[:, j])
-        plt.xlabel("m_jj")
+            if stairs:
+                plt.step(window_centers, spectra[:, j], where="mid")
+            else:
+                plt.plot(window_centers, spectra[:, j])
+        plt.xlabel("$m_{jj}$")
         if plot_stat_allowed:
             smallest_cluster_count_window = np.min(self.counts_windows_sum, axis=1)
             for i in range(len(window_centers)):

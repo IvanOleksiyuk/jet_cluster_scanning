@@ -14,4 +14,4 @@ title: "$n=0.5,\\sigma=1$, maxdev3 msde CURTAINS ensamble 15 mean"
 density: 0
 
 ensambling_num: 15
-ensambling_type: mean
+ensambling_type: max
