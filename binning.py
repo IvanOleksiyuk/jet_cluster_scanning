@@ -36,8 +36,9 @@ def perform_binning_all(config):
     """
     cs = ClusterScanning(config)
     cs.load_mjj()
-
-    for i, IDstr in enumerate(cs.available_IDstr()):
+    list_sorted = cs.available_IDstr()
+    list_sorted.sort()
+    for i, IDstr in enumerate(list_sorted):
         if i == 0:
             cs.save_binning_array()
         if cs.check_if_binning_exist(IDstr=IDstr):

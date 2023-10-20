@@ -9,7 +9,7 @@ CSEconf: "config/cs_eval/maxdev3_msders.yaml"
 
 xlabel: "MLS"
 
-counts_windows_boot_load: "char/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+counts_windows_boot_load: "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
 title: ""
 density: 0
 

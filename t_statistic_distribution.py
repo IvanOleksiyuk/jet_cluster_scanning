@@ -39,7 +39,7 @@ def load_counts_windows(path):
 
 
 def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
-
+    print("searching binnings in:", counts_windows_boot_load)
     print("found binnings total:", len(os.listdir(counts_windows_boot_load)))
     print("CSE config", cfg.CSEconf)
     files_list = os.listdir(counts_windows_boot_load)
@@ -102,11 +102,13 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
         if hasattr(cfg, "small"):
             if cfg.small:
                 valid_bootstraps = valid_bootstraps[:cfg.small]
-        print(f"len(valid_bootstraps) {sum(valid_bootstraps)}")
+        print(f"Number of available bootstraps {sum(valid_bootstraps)}")
         
+        n_valid_bootstraps = sum(valid_bootstraps)
+
         tstat_files_new = np.full(
             (
-                sum(valid_bootstraps),
+                n_valid_bootstraps,
                 ensampbling,
             ),
             "",
@@ -114,25 +116,24 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
         )
         tstat_array = np.full(
             (
-                sum(valid_bootstraps),
+                n_valid_bootstraps,
                 ensampbling,
             ),
             np.nan,
         )
-        for i, val in enumerate(np.where(valid_bootstraps)[0]):
+        for i, val in enumerate(np.where(valid_bootstraps)[0][:n_valid_bootstraps]):
             tstat_files_new[i] = tstat_files[val][np.logical_not(tstat_files[val]=="")][:ensampbling]
         
-        k=0
-        for i in range(sum(valid_bootstraps)):
+        for i in range(n_valid_bootstraps):
             for j in range(ensampbling):
                 counts_windows_boot.append(load_counts_windows(counts_windows_boot_load + tstat_files_new[i, j]))
                 tstat_array[i, j] = cs_performance_evaluation(
                     counts_windows = counts_windows_boot[-1], 
                     binning=binning,
                     config_file_path=cfg.CSEconf,)
-                k+=1
-                if k % 100 == 0:
-                    print(k)
+            if i % 100 == 0:
+                print(i, "bottstraps processed")
+
         tstat_array = np.array(tstat_array)
 
         if cfg.ensambling_type == "mean":

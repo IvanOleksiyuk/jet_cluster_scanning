@@ -7,6 +7,7 @@ import utils.set_matplotlib_default
 
 # %%
 # Hyperparameters for this run
+data_path = "../../scratch/DATA/LHCO/"
 seed=1
 n_trials=10000
 trials_start=1
@@ -17,7 +18,7 @@ test_stat="MLSnormal_positiv"
 fff = "3_param"
 n_dof=16-4
 method="trf"
-nfev=100000
+nfev=200000
 binning=np.linspace(2700, 4900, 23)
 random_resampling_type="bootstrap_true"
 n_trials_per_seed=100
@@ -74,7 +75,7 @@ def smample_signal(mjj_signal, sig_fraction, binning):
 
 # %%
 #Load the mass spectra
-data_path = "../../DATA/LHCO/"
+
 mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
 mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
 

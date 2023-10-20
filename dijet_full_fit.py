@@ -167,7 +167,6 @@ ax2.set_ylabel('Difference in SD')
 
 plt.tight_layout()
 plt.savefig('plots/gfit/4_param_fit.png', bbox_inches='tight', dpi=300)
-exit()
 
 
 

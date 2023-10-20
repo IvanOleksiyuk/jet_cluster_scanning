@@ -6,7 +6,7 @@
 #
 #
 verbous: False
-data_path: "../../DATA/LHCO/"
+data_path: "/home/users/o/oleksiyu/scratch/DATA/LHCO/"
 save_path: "char/"
 
 # Some general properties of the datasets provided
