@@ -15,6 +15,10 @@ from utils.config_utils import Config
 from utils import set_matplotlib_default
 from preproc.reprocessing import reweighting, gaussian_smearing, sum_1_norm
 import os
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 start_time = time.time()
 if len(sys.argv) == 1:
@@ -23,17 +27,17 @@ else:
 	cfg = Config(["config/path.yaml", sys.argv[1]])
 os.makedirs(cfg.get("plots_directory")+"data/", exist_ok=True)
 
-data_file_path = cfg.get("data_directory")+"jet_images_v2.h5"#cfg.get("jet_images_file")
+data_file_path = cfg.get("data_path")+"jet_images_v2.h5"#cfg.get("jet_images_file")
 data_dataset_name = 'data'
-mjj_file_path = cfg.get("data_directory")+cfg.get("clustered_jets_file")
+mjj_file_path = cfg.get("data_path")+cfg.get("clustered_jets_file")
 mjj_dataset_name = 'm_jj'
-lables_file_path = cfg.get("data_directory")+cfg.get("clustered_jets_file")
+lables_file_path = cfg.get("data_path")+cfg.get("clustered_jets_file")
 lables_dataset_name = 'labels'
 
-output_images_bkg = cfg.get("data_directory") + cfg.get("sorted_bkg_file")
-output_images_sig = cfg.get("data_directory") + cfg.get("sorted_sig_file")
-output_mass_bkg = cfg.get("data_directory") + cfg.get("sorted_bkg_mass_file")
-output_mass_sig = cfg.get("data_directory") + cfg.get("sorted_sig_mass_file")
+output_images_bkg = cfg.get("data_path") + cfg.get("sorted_bkg_file")
+output_images_sig = cfg.get("data_path") + cfg.get("sorted_sig_file")
+output_mass_bkg = cfg.get("data_path") + cfg.get("sorted_bkg_mass_file")
+output_mass_sig = cfg.get("data_path") + cfg.get("sorted_sig_mass_file")
 
 # Plots to save 
 pts = ["inv_mass", "images", "non_zero_pixels", "reprocessing"]
@@ -60,7 +64,7 @@ inf_bkg = inf[labels==0]
 inf_sig = inf[labels==1]
 
 # Plot invariant mass spectrum 
-if "inv_mass" in pts:
+def plot_invariant_mass_spectrum(mjj_bkg, mjj_sig):
 	plt.figure()
 	region=(3000, 4600)#
 	tr_region=(3000, 3100)
@@ -68,7 +72,7 @@ if "inv_mass" in pts:
 	n_Zp = len(mjj_sig[(mjj_sig>region[0]) & (mjj_sig<region[1])])
 	binning = np.linspace(1700, 7000, 53+1)
 	plt.hist(mjj_bkg, bins=binning, label="QCD", histtype="step")
-	plt.hist(mjj_sig, bins=binning, label="Z'", histtype="step")
+	plt.hist(mjj_sig, bins=binning, label="all Z'", histtype="step")
 	print("resonance width: ", np.std(mjj_sig[(mjj_sig>region[0]) & (mjj_sig<region[1])]))
 	plt.hist(np.concatenate([mjj_bkg, np.random.choice(mjj_sig, 5000, replace=False)]), bins=binning, label="1M QCD, 5K Z'", histtype="step")
 	plt.axvline(x=3000, color="black", label=f"Selection, \n {n_QCD} QCD, \n {n_Zp} Z'")
@@ -81,6 +85,9 @@ if "inv_mass" in pts:
 	plt.savefig(cfg.get("plots_directory")+"data/mjj.png", bbox_inches='tight')
 	print("QCD points in the training region: ", len(mjj_bkg[(mjj_bkg>tr_region[0]) & (mjj_bkg<tr_region[1])]))
 	print("Z' points in the training region: ", len(mjj_sig[(mjj_sig>tr_region[0]) & (mjj_sig<tr_region[1])]))
+
+
+
 
 # Visualise effect of reprocessing on a single image
 image = images[-1, 1]
@@ -112,6 +119,7 @@ plt.hist(inf_sig[:, 1, 0].flatten(), bins=100, label="Signal_sublead", histtype=
 #plt.savefig(cfg.get("plots_directory")+"data/jet_masses.png", bbox_inches='tight')
 #plt.show()
 
+### Get and separate jet images:
 print("#####bkg_data")
 images_bkg = images[labels==0]
 
@@ -125,47 +133,53 @@ def images_signal_order_by_mass(images_sig, inf_sig):
     return images_sig
 
 images_sig = images_signal_order_by_mass(images_sig, inf_sig)
-# Plot average backgroound image, average leading singal and average second leading jet
-av_bkg = np.mean(images_bkg, axis=(0, 1))
-av_sig_lead = np.mean(images_sig[:, 0], axis=0)
-av_sig_subl = np.mean(images_sig[:, 1], axis=0)
-vmax = max(np.max(av_bkg), np.max(av_sig_lead), np.max(av_sig_subl))
-vmin = min(np.min(av_bkg[av_bkg!=0]), np.min(av_sig_lead[av_sig_lead!=0]), np.min(av_sig_subl[av_sig_subl!=0]))
 
-fig = plt.figure(figsize=(9, 3))
-gs = fig.add_gridspec(1, 4, width_ratios=[1, 1, 1, 0.05])
+def plot_averages(images_bkg, images_sig, cfg):
+	logger.info("Plotting average images")
+	# Plot average backgroound image, average leading singal and average second leading jet
+	av_bkg = np.mean(images_bkg, axis=(0, 1))
+	av_sig_lead = np.mean(images_sig[:, 0], axis=0)
+	av_sig_subl = np.mean(images_sig[:, 1], axis=0)
+	vmax = max(np.max(av_bkg), np.max(av_sig_lead), np.max(av_sig_subl))
+	vmin = min(np.min(av_bkg[av_bkg!=0]), np.min(av_sig_lead[av_sig_lead!=0]), np.min(av_sig_subl[av_sig_subl!=0]))
 
-# Plot images on subplots
-ax1 = fig.add_subplot(gs[0])
-ax1.imshow(np.mean(images_bkg, axis=(0, 1)), norm=colors.LogNorm(vmax=vmax, vmin=vmin), cmap=cm.turbo)
-ax1.set_title("Average background image")
-ax1.xaxis.set_ticklabels([])
-ax1.xaxis.set_ticks([])
-ax1.yaxis.set_ticklabels([])
-ax1.yaxis.set_ticks([])
+	fig = plt.figure(figsize=(9, 3))
+	gs = fig.add_gridspec(1, 4, width_ratios=[1, 1, 1, 0.05])
 
-ax2 = fig.add_subplot(gs[1])
-ax2.imshow(np.mean(images_sig[:, 0], axis=0), norm=colors.LogNorm(vmax=vmax, vmin=vmin), cmap=cm.turbo)
-ax2.set_title("Average lighter signal jet")
-ax2.xaxis.set_ticklabels([])
-ax2.xaxis.set_ticks([])
-ax2.yaxis.set_ticklabels([])
-ax2.yaxis.set_ticks([])
+	# Plot images on subplots
+	ax1 = fig.add_subplot(gs[0])
+	ax1.imshow(np.mean(images_bkg, axis=(0, 1)), norm=colors.LogNorm(vmax=vmax, vmin=vmin), cmap=cm.turbo)
+	ax1.set_title("Average background image")
+	ax1.xaxis.set_ticklabels([])
+	ax1.xaxis.set_ticks([])
+	ax1.yaxis.set_ticklabels([])
+	ax1.yaxis.set_ticks([])
 
-ax3 = fig.add_subplot(gs[2])
-im = ax3.imshow(np.mean(images_sig[:, 1], axis=0), norm=colors.LogNorm(vmax=vmax, vmin=vmin), cmap=cm.turbo)
-ax3.set_title("Average heavier signal jet")
-ax3.xaxis.set_ticklabels([])
-ax3.xaxis.set_ticks([])
-ax3.yaxis.set_ticklabels([])
-ax3.yaxis.set_ticks([])
+	ax2 = fig.add_subplot(gs[1])
+	ax2.imshow(np.mean(images_sig[:, 0], axis=0), norm=colors.LogNorm(vmax=vmax, vmin=vmin), cmap=cm.turbo)
+	ax2.set_title("Average lighter signal jet")
+	ax2.xaxis.set_ticklabels([])
+	ax2.xaxis.set_ticks([])
+	ax2.yaxis.set_ticklabels([])
+	ax2.yaxis.set_ticks([])
 
-# Add colorbar
-cax = fig.add_subplot(gs[3])
-fig.colorbar(im, cax=cax)
+	ax3 = fig.add_subplot(gs[2])
+	im = ax3.imshow(np.mean(images_sig[:, 1], axis=0), norm=colors.LogNorm(vmax=vmax, vmin=vmin), cmap=cm.turbo)
+	ax3.set_title("Average heavier signal jet")
+	ax3.xaxis.set_ticklabels([])
+	ax3.xaxis.set_ticks([])
+	ax3.yaxis.set_ticklabels([])
+	ax3.yaxis.set_ticks([])
 
-# Adjust padding between subplots
-plt.tight_layout()
+	# Add colorbar
+	cax = fig.add_subplot(gs[3])
+	fig.colorbar(im, cax=cax)
+
+	# Adjust padding between subplots
+	plt.tight_layout()
+
+	# Show the plot
+	plt.savefig(cfg.get("plots_directory")+"data/avarage_images.png", bbox_inches='tight')
 
 def cout_nonzero_pixels(images):
 	n_non_zero = []
@@ -173,20 +187,51 @@ def cout_nonzero_pixels(images):
 		n_non_zero.append(len(image[image!=0]))
 	return n_non_zero
 
-n_non_zero_bkg=cout_nonzero_pixels(images_bkg[:, 0])+cout_nonzero_pixels(images_bkg[:, 1])
-n_non_zero_sig=cout_nonzero_pixels(images_sig[:, 0])+cout_nonzero_pixels(images_sig[:, 1])
+def plot_and_nonzero_pixels(images_bkg, images_sig, cfg):
+	logger.info("Plotting nonzero pixel distribution")
+	n_non_zero_bkg=cout_nonzero_pixels(images_bkg[:, 0])+cout_nonzero_pixels(images_bkg[:, 1])
+	n_non_zero_sig=cout_nonzero_pixels(images_sig[:, 0])+cout_nonzero_pixels(images_sig[:, 1])
+	plt.figure()
+	plt.hist(n_non_zero_bkg, bins=np.linspace(0, 100, 101), label="QCD", density=True, color="black", histtype="step")
+	plt.hist(n_non_zero_sig, bins=np.linspace(0, 100, 101), label="X, Y", density=True, color="red", histtype="step")
+	plt.xlabel("number of non-zero pixels")
+	plt.ylabel("fraction of all images")
+	print(max(n_non_zero_bkg))
+	print(max(n_non_zero_sig))
+	print(np.mean(n_non_zero_bkg))
+	print(np.mean(n_non_zero_sig))
+	plt.legend()
+	plt.savefig(cfg.get("plots_directory")+"data/non_zero_pixels.png", bbox_inches='tight')
 
-# Show the plot
-plt.savefig(cfg.get("plots_directory")+"data/avarage_images.png", bbox_inches='tight')
+def plot_and_save_background_jet_images(images_bkg, cfg, num_rows=2, num_cols=3):
+    logger.info("Plotting 4 background jet images")
+    num_images_to_plot = num_rows * num_cols
+    fig, axs = plt.subplots(num_rows, num_cols, figsize=(num_cols*2, num_rows*2))
+    
+    images_to_plot = images_bkg[100:100+num_images_to_plot]
+    reprocessed_images = []
+    for image in images_to_plot:
+        reprocessed_images.append(sum_1_norm(gaussian_smearing(reweighting(image[0], 0.5), 1, batch=False), batch=False))
+    images_to_plot = reprocessed_images
 
-plt.figure()
-plt.hist(n_non_zero_bkg, bins=np.linspace(0, 100, 101), label="QCD", density=True, color="black", histtype="step")
-plt.hist(n_non_zero_sig, bins=np.linspace(0, 100, 101), label="X, Y", density=True, color="red", histtype="step")
-plt.xlabel("number of non-zero pixels")
-plt.ylabel("fraction of all images")
-print(max(n_non_zero_bkg))
-print(max(n_non_zero_sig))
-print(np.mean(n_non_zero_bkg))
-print(np.mean(n_non_zero_sig))
-plt.legend()
-plt.savefig(cfg.get("plots_directory")+"data/non_zero_pixels.png", bbox_inches='tight')
+    for i in range(num_images_to_plot):
+        row = i // num_cols
+        col = i % num_cols
+        axs[row, col].imshow(images_to_plot[i], cmap=cm.turbo)
+        axs[row, col].set_title(f"Jet {i + 1}")
+        axs[row, col].xaxis.set_ticklabels([])
+        axs[row, col].xaxis.set_ticks([])
+        axs[row, col].yaxis.set_ticklabels([])
+        axs[row, col].yaxis.set_ticks([])
+
+    plt.tight_layout()
+    output_path = cfg.get("plots_directory") + "data/background_jet_images.png"
+    plt.savefig(output_path, bbox_inches='tight')
+
+# Run the functions:
+if "inv_mass" in pts:
+	plot_invariant_mass_spectrum(mjj_bkg, mjj_sig)
+#plot_averages(images_bkg, images_sig, cfg)
+#plot_and_nonzero_pixels(images_bkg, images_sig, cfg)
+plot_and_save_background_jet_images(images_bkg, cfg)
+
