@@ -49,7 +49,7 @@ def two_class_curves(
     labels,
     figsize,
     suffix="",
-    xlabel="bin centre $m_{jj}$ [GeV]",
+    xlabel="Bin centre $m_{jj}$ [GeV]",
     ylabel="",
     save_file="",
     marker="",
@@ -160,7 +160,7 @@ def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1, t
     )
     # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq_ndof)
     # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
-    plt.xlabel("bin centre $m_{jj}$ [GeV]")
+    plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_{jets}$")
     plt.legend()
 
@@ -191,7 +191,7 @@ def plot_all_scalings(
     plt.grid()
     for j in range(k):
         plt.plot(window_centers, counts_windows[j])
-    plt.xlabel("bin centre $m_{jj}$ [GeV]")
+    plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_{i, b}$")
     plt.savefig(save_path + "kmeans_ni_mjj_total.png", bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
@@ -211,7 +211,7 @@ def plot_all_scalings(
     plt.grid()
     for j in range(k):
         plt.plot(window_centers, countmax_windows[j])
-    plt.xlabel("bin centre $m_{jj}$ [GeV]")
+    plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_{i, b}/max(N_{i, b})$")
     plt.savefig(save_path + "kmeans_ni_mjj_max.png", bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
@@ -231,8 +231,8 @@ def plot_all_scalings(
     plt.grid()
     for j in range(k):
         plt.plot(window_centers, countnrm_windows[j])
-    plt.xlabel("bin centre $m_{jj}$ [GeV]")
-    plt.ylabel("$N_{i, b}/sum(N_{i, b})$")
+    plt.xlabel("Bin centre $m_{jj}$ [GeV]")
+    plt.ylabel("$N_{i, b}/\Sigma_b(N_{i, b})$")
     plt.savefig(save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
     for i in range(len(window_centers)):

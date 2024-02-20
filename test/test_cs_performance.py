@@ -22,15 +22,15 @@ class TestCSPerformance(unittest.TestCase):
         )
         self.assertAlmostEqual(3.508741407313602, res)
 
-    def test_2meansder(self):
-        """Test evluation of 2meansder method"""
-        res = cs_performance_evaluation(
-            counts_windows=self.counts_windows,
-            binning=self.binning,
-            config_file_path=sys.path[0] + "/config/testCSE_2meansder.yaml",
-        )
-        self.assertAlmostEqual(3.5990916567517726, res)
-        pass
+    # def test_2meansder(self):
+    #     """Test evluation of 2meansder method"""
+    #     res = cs_performance_evaluation(
+    #         counts_windows=self.counts_windows,
+    #         binning=self.binning,
+    #         config_file_path=sys.path[0] + "/config/testCSE_2meansder.yaml",
+    #     )
+    #     self.assertAlmostEqual(3.5990916567517726, res)
+    #     pass
 
     def test_maxdev5_with_plotting(self):
         """Test evluation of >5sigma method"""

@@ -64,16 +64,19 @@ def one_cs_run(config_cs, config_ev, skip_clustering=False):
 
 
 if __name__ == "__main__":
-	config_cs = [
+    config_cs = [
             "config/path.yaml",
-			"config/v4/s0_0.5_1_MB_i1.yaml",
-			"config/sig_frac/0.05.yaml",
-			"config/multirun/0_0_0.yaml",
-			"config/binning/CURTAINS.yaml",
-			"config/tra_reg/3000_3100.yaml",
-			"config/one_run_experiments.yaml"
-		]
-	config_ev = [
-		"config/cs_eval/maxdev3_msders.yaml",
-		"config/cs_eval/plotting.yaml"]
-	one_cs_run(config_cs, config_ev)
+            "config/v4/s0_0.5_1_MB_i1.yaml",
+            "config/sig_frac/0.05.yaml",
+            "config/multirun/0_0_0.yaml",
+            "config/binning/CURTAINS.yaml",
+            "config/tra_reg/3000_3100.yaml",
+            "config/one_run_experiments.yaml"
+        ]
+    # config_ev = [
+    # 	"config/cs_eval/maxdev3_msders.yaml",
+    # 	"config/cs_eval/plotting.yaml"]
+    config_ev = [
+    "config/cs_eval/maxdev3_msders_3fit.yaml",
+    "config/cs_eval/plotting.yaml"]
+    one_cs_run(config_cs, config_ev)

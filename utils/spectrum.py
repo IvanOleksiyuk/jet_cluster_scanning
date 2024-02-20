@@ -203,41 +203,74 @@ class Spectra:
                 axis=axis,
             )
 
-    def fit(self, function, s=13000):
-        if function == "4_param":
+    def fit_to_all(self, function, s=13000):
+        new_y=np.zeros_like(self.y)
+        for i in range(len(self.y)):
+            rrr, f = self.fit(self.x, self.y[i], self.err[i], function, s)
+            new_y[i] = f(self.x, *rrr[0])
+        return Spectra(self.x, new_y, poisson=self.poisson)
+
+    def subtract_fit(self, function, s=13000):
+        return self.subtract_sp(self.fit_to_all(function, s))
+    
+    def fit(self, x, y, y_err, fff, s=13000, method="trf", nfev=100000):
+        if fff == "5_param":
             f = (
-                lambda x, p1, p2, p3, p4: p1
-                * (1 - x / s) ** p2
-                * (x / s) ** p3
-                * np.exp(p4 * np.log(x / s))
-            )
-            rrr = scipy.optimize.curve_fit(
-            f,
-            self.x,
-            self.y[0],
-            sigma=self.err[0],
-            p0=[1, 0, 0, 0],
-            bounds=(
-                [-0.1, -100, -100, -100],
-                [1000000, 100, 100, 100],
-            ),
-            )
-        if function == "3_param":
-            f = (
-                lambda x, p1, p2, p3: p1
-                * (1 - x / s) ** p2
-                * (x / s) ** p3
-            )
+                    lambda x, p1, p2, p3, p4: p1
+                    * (1 - x / s) ** p2
+                    * (x / s) ** (p3 + p4 * np.log(x / s)+p5*np.log(x / s)**2)
+                )
             rrr = scipy.optimize.curve_fit(
                 f,
-                self.x,
-                self.y[0],
-                sigma=self.err[0],
-                p0=[1, 0, 0],
+                x,
+                y,
+                sigma=y_err,
+                p0=[2.067e7, 1.368, 0, 0, 0],
                 bounds=(
-                    [-0.1, -100, -100],
-                    [1000000, 100, 100],
+                    [0, -1000, -1000, -1000, -1000],
+                    [1000000000, 1000, 1000, 1000, 1000],
                 ),
-                method = "trf"
+                method=method,
+                max_nfev=nfev,
             )
-        return Spectra(self.x, np.array([list(f(self.x, *rrr[0]))]), poisson=False)
+        elif fff == "4_param":
+            f = (
+                    lambda x, p1, p2, p3, p4: p1
+                    * (1 - x / s) ** p2
+                    * (x / s) ** (p3 + p4 * np.log(x / s))
+                )
+            rrr = scipy.optimize.curve_fit(
+                f,
+                x,
+                y,
+                sigma=y_err,
+                p0=[0.1523, 0.8516, -14.178, -3.57],
+                bounds=(
+                    [0, -1000, -20, -20],
+                    [1000000000, 1000, 20, 20],
+                ),
+                method=method,
+                max_nfev=nfev,
+            )
+        elif fff == "3_param":
+            f = (
+                    lambda x, p1, p2, p3: p1
+                    * (1 - x / s) ** p2
+                    * (x / s) ** p3
+                )
+            rrr = scipy.optimize.curve_fit(
+                f,
+                x,
+                y,
+                sigma=y_err,
+                p0=[2.21e7, 1.376, -0.00968],
+                bounds=(
+                    [0, -1000, -1000],
+                    [1000000000, 1000, 1000],
+                ),
+                method=method,
+                max_nfev=nfev,
+            )
+        else:
+            raise Exception("Unknown function "+fff)
+        return rrr, f

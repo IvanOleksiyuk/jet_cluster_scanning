@@ -59,18 +59,18 @@ plt.hist(count_windows_bg.flatten(), bins=bins, density=True, alpha=0.5, label="
 shapiro_p_value, ks_p_value, jarque_bera_p_value = test_sample(count_window_full.flatten())
 plt.hist(count_window_full.flatten(), bins=bins, density=True, alpha=0.5, label="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
 x=np.linspace(-4, 4, 100)
-plt.plot(x, gaussian(x, 1, 0, 1), 'r', label='Unit Gaussian')
+plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='red', histtype='step', linewidth=1, density=True)
 plt.legend()
 #plt.yscale("log")
 plt.ylabel("density")
-plt.xlabel("standaardized normalized counts")
+plt.xlabel("standardized normalized counts")
 plt.savefig("plots/misc/gausianity_check.png", bbox_inches="tight")
 # plt.yscale("log")
 # plt.savefig("experiment3.png")
 
 
 # Generate a sample of 800 numbers (replace this with your data)
-#np.random.seed(42)
+#np.random.seed(42)]
 sample = np.random.normal(loc=0, scale=1, size=80000)
 
 

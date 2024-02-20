@@ -105,7 +105,7 @@ def sliding_cluster_performance_evaluation(
     plt.grid()
     for j in range(k):
         plt.plot(window_centers, counts_windows[:, j])
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
+    plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_i(m_{jj})$")
     plt.savefig(save_path+"kmeans_ni_mjj_total.png")
     smallest_cluster_count_window=np.min(counts_windows, axis=1)
@@ -140,7 +140,7 @@ def sliding_cluster_performance_evaluation(
         plt.plot((Mjjmin_arr+Mjjmax_arr)/2, countmax_windows[:, j])
     
 
-    plt.xlabel("window centre $m_{jj}$ [GeV]")
+    plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_i(m_{jj})/max(N_i(m_{jj}))$")
     plt.savefig(save_path+"kmeans_xi_mjj_maxn.png")
     
@@ -290,7 +290,7 @@ def sliding_cluster_performance_evaluation(
         plt.grid()
         for j in range(k):
             plt.plot(window_centers, counts_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("$N_i(m_{jj})$")
         plt.savefig(save_path + "kmeans_ni_mjj_total.png", bbox_inches="tight")
         smallest_cluster_count_window = np.min(counts_windows, axis=0)
@@ -309,7 +309,7 @@ def sliding_cluster_performance_evaluation(
         plt.grid()
         for j in range(k):
             plt.plot(window_centers, countmax_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("$N_i(m_{jj})/max(N_i(m_{jj}))$")
         plt.savefig(save_path + "kmeans_ni_mjj_max.png", bbox_inches="tight")
         smallest_cluster_count_window = np.min(counts_windows, axis=0)
@@ -328,7 +328,7 @@ def sliding_cluster_performance_evaluation(
         plt.grid()
         for j in range(k):
             plt.plot(window_centers, countnrm_windows[j])
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$")
         plt.savefig(save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
         smallest_cluster_count_window = np.min(counts_windows, axis=0)
@@ -417,7 +417,7 @@ def sliding_cluster_performance_evaluation(
             color="lime",
         )
         plt.legend()
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("$N_i(m_{jj})/sum(N_i(m_{jj}))$-background")
         plt.savefig(save_path + "eval/norm-toatal.png", bbox_inches="tight")
 
@@ -439,7 +439,7 @@ def sliding_cluster_performance_evaluation(
                 lab2 = None
 
         plt.axhline(5, color="red", alpha=0.2)
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("deviation in SD")
         plt.legend()
         plt.savefig(save_path + "eval/norm-toatal-sigmas.png", bbox_inches="tight")
@@ -462,7 +462,7 @@ def sliding_cluster_performance_evaluation(
                     color="blue",
                 )
 
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("deviation in SD")
         plt.savefig(
             save_path + "eval/norm-toatal-sigmas-special.png", bbox_inches="tight"
@@ -486,7 +486,7 @@ def sliding_cluster_performance_evaluation(
                     color="blue",
                 )
 
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("deviation in SD")
         plt.savefig(
             save_path + "eval/norm-toatal-sigmas-squeezed.png", bbox_inches="tight"
@@ -519,7 +519,7 @@ def sliding_cluster_performance_evaluation(
                 plt.plot(window_centers, countnrm_windows_std[j], "b.")
                 ys.append(list(countnrm_windows_std[j]))
 
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("n_clusater/sum(n_cluster)-bg")
         plt.savefig(
             save_path + "eval/norm-toatal-sigmas-points.png", bbox_inches="tight"
@@ -536,7 +536,7 @@ def sliding_cluster_performance_evaluation(
         h, xedges, yedges, image = plt.hist2d(
             xs, ys, bins=(200, 40), cmap="gist_heat_r"
         )
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("deviation in SD")
         plt.colorbar()
         plt.sca(axs[1])
@@ -578,7 +578,7 @@ def sliding_cluster_performance_evaluation(
             alpha=0.4,
             color="lime",
         )
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("n_clusater/max(n_cluster)-bg")
         plt.savefig(save_path + "eval/maxnorm-toatal.png", bbox_inches="tight")
 
@@ -590,7 +590,7 @@ def sliding_cluster_performance_evaluation(
                 plt.plot(window_centers, countmax_windows[j], color="red")
             else:
                 plt.plot(window_centers, countmax_windows[j], color="blue")
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("n_clusater/max(n_cluster)")
         plt.savefig(save_path + "eval/countmax_windows.png", bbox_inches="tight")
 
@@ -616,7 +616,7 @@ def sliding_cluster_performance_evaluation(
                     label=lab2,
                 )
                 lab2 = None
-        plt.xlabel("window centre $m_{jj}$ [GeV] between adjacent windows")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV] between adjacent windows")
         plt.ylabel(r"$\Delta(N_i(m_{jj})/sum(N_i(m_{jj}))$)")
         plt.savefig(save_path + "eval/num_der_counts_windows.png", bbox_inches="tight")
 
@@ -636,7 +636,7 @@ def sliding_cluster_performance_evaluation(
                     num_der_counts_windows[j] - num_der_countmax_sum,
                     color="blue",
                 )
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel(r"$Median filtered \Delta[N_i(m_{jj})/sum(N_i(m_{jj}))]$")
         plt.legend()
         plt.savefig(
@@ -698,7 +698,7 @@ def sliding_cluster_performance_evaluation(
         )
         # r"sum of cluster 1 curves \n $\tilde{\chi}^2/n_d _o _f=$"+"{:.3f}".format(chisq)
         # plt.plot(window_centers, max_norm(count_sum), "--", label="all")
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel("jets in 16.58GeV window")
 
         # curvefit thingy

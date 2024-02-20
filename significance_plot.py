@@ -125,7 +125,10 @@ def significance_plot(plot_idealised = True,
             else:
                 sig_str = np.array(
                     [
-                        i % 10 * 10 ** (hunter.str_min + i // 10)
+                        i % # The above code is a Python comment. Comments in Python start with a hash
+                        # symbol (#) and are used to provide explanations or notes within the
+                        # code. In this case, the comment simply contains the number 1.
+                        10 * 10 ** (hunter.str_min + i // 10)
                         for i in range(len(hunter.sigma_ar) + len(hunter.sigma_ar) // 10 + 1)
                         if i % 10 != 0
                     ]
@@ -207,7 +210,7 @@ def significance_plot(plot_idealised = True,
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Plot
     # Create the figure
-    fig = plt.figure(figsize=(6, 8))
+    fig = plt.figure(figsize=(3.5, 8))
     gs = fig.add_gridspec(2, 1, height_ratios=[2, 1])
     axs=[]
     axs.append(fig.add_subplot(gs[0]))
@@ -240,10 +243,12 @@ def significance_plot(plot_idealised = True,
         print(Zs.shape)
         median_CS, err_low_CS, err_high_CS = get_median_and_quar_err(Zs)
         x_CS = np.round(np.array(results["contaminations"]) * len(mjj_bg))
-        if use_cs_name:
+        if use_cs_name == True:
             label = name.replace("_", " ")
+        elif use_cs_name:
+            label = use_cs_name
         else:
-            label = "Cluster scanning"
+            label = "Cluster Scanning"
         draw_line_yerr(x_CS, median_CS, [err_low_CS, err_high_CS], label=label, style=style, color="blue")
         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
@@ -287,14 +292,14 @@ def significance_plot(plot_idealised = True,
         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
-    if use_cs_name:
+    if use_cs_name == True:
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     else:
         plt.legend(loc="lower right")
     plt.gca().xaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1)) 
     plt.grid(which='both')
     plt.xscale("log")
-    plt.xlim(10**2, 10**4)
+    plt.xlim(5e2, 5e3)
     plt.xlabel("$\epsilon$")
     plt.ylabel("Z $[\sigma]$")
 
@@ -367,6 +372,7 @@ def significance_plot(plot_idealised = True,
 
 if __name__ == "__main__":
     significance_plot(plot_idealised = True, 
-                      plot_realistic = False)
+                      plot_realistic = False,
+                      use_cs_name = "Idealised CS")
     significance_plot(plot_idealised = False,
                         plot_realistic = True)

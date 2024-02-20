@@ -6,7 +6,7 @@ directory = 'plots/fig/'
 
 os.makedirs(directory, exist_ok=True)
 
-steps = ['dist', 'main'] #'data', , 'main', 'SI', 'main', 'one_run', 
+steps = ['main'] #'dist', 'main', 'data', , 'main', 'SI', 'main', 'one_run', 
 
 #data plots
 if 'data' in steps:
@@ -19,6 +19,7 @@ if 'one_run' in steps:
 	os.makedirs(directory+"algo", exist_ok=True)
 	from one_cs_run import one_cs_run
 	config_cs = [
+			"config/path.yaml",
 			"config/v4/s0_0.5_1_MB_i1.yaml",
 			"config/sig_frac/0.05.yaml",
 			"config/multirun/0_0_0.yaml",

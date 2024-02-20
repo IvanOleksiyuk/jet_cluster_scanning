@@ -94,7 +94,7 @@ for j in range(k):
         plt.plot(window_centers, countmax_windows[:, j], color="red")
     else:
         plt.plot(window_centers, countmax_windows[:, j], color="blue")
-plt.xlabel("mjj window centre")
+plt.xlabel("mjj Bin centre")
 plt.ylabel("n_clusater/max(n_cluster)")
 plt.title(f"curves clustered with kmeans with {as_vectors} as vectors")
 plt.savefig(save_path + "eval/countmax_windows.png")
@@ -140,7 +140,7 @@ anomaly_rich = np.sum(counts_windows[:, kmeans.labels_ == 0], axis=1)
 plt.plot(window_centers, max_norm(anomaly_poor), label="sum of cluster 0 curves")
 plt.plot(window_centers, max_norm(anomaly_rich), label="sum of cluster 1 curves")
 plt.plot(window_centers, max_norm(count_sum), "--", label="all")
-plt.xlabel("mjj window centre")
+plt.xlabel("mjj Bin centre")
 plt.legend()
 plt.savefig(save_path + "eval/comb.png")
 

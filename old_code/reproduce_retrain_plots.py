@@ -64,7 +64,7 @@ def sliding_cluster_performance_evaluation(
     ) / 4
     for j in range(k):
         plt.plot(mjj_arr, diffs[:, j])
-    plt.xlabel(r"window centre $m_{jj}$")
+    plt.xlabel(r"Bin centre $m_{jj}$")
     plt.ylabel(r"$|\mu-\mu_0|$")
     plt.savefig(save_path + "kmeans_cluster_abs_init_change.png", bbox_inches="tight")
 

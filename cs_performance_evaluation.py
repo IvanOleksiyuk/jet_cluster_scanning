@@ -109,6 +109,12 @@ class CS_evaluation_process:
                 sum_sp = sp_original.sum_sp()
                 sum_sp_sumn = sum_sp.sum_norm()
                 new = previous.subtract_bg(sum_sp_sumn)
+            elif action == "-fit2jet3par":
+                new = previous.subtract_fit("3_param")
+            elif action == "-fit2jet4par":
+                new = previous.subtract_fit("4_param")
+            elif action == "-fit2jet5par":
+                new = previous.subtract_fit("5_param")
             elif action == "der":
                 new = previous.num_der()
             elif action == "lowpass":
@@ -195,6 +201,17 @@ class CS_evaluation_process:
             labels = kmeans.labels_
             labels = self.flip_labels_if_majority_positive(labels)
 
+        elif labeling == "maxdev3_3fit":
+            sp_sumn_standrob = self.prepare_spectra(["sumn", "-fit2jet3par", "standrob"])
+            logging.debug(str(sp_sumn_standrob.y / sp_sumn_standrob.err))
+            self.threshold = float(labeling[6:7])
+            labels = np.zeros(self.k)
+            for j in range(self.k):
+                if np.any(sp_sumn_standrob.y[j] > self.threshold):
+                    labels[j] = 1
+                else:
+                    labels[j] = 0
+
         elif labeling[:6] == "maxdev":
             sp_sumn_standrob = self.prepare_spectra(["sumn", "-bsumsumn", "standrob"])
             logging.debug(str(sp_sumn_standrob.y / sp_sumn_standrob.err))
@@ -205,7 +222,7 @@ class CS_evaluation_process:
                     labels[j] = 1
                 else:
                     labels[j] = 0
-
+        
         elif labeling == "random":
             labels = np.random.uniform(size=self.k) < 0.5
 
@@ -504,7 +521,7 @@ class CS_evaluation_process:
         )
         if add_line:
             plt.axhline(self.threshold, color="red", alpha=0.2)
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel(ylabel)
         plt.legend()
         plt.savefig(self.eval_path + filename, bbox_inches="tight")
@@ -533,7 +550,7 @@ class CS_evaluation_process:
             fillb=True,
         )
         plt.legend()
-        plt.xlabel("window centre $m_{jj}$ [GeV]")
+        plt.xlabel("Bin centre $m_{jj}$ [GeV]")
         plt.ylabel(y_label)
         plt.savefig(self.eval_path + savefile, bbox_inches="tight")
 
@@ -619,7 +636,7 @@ if __name__ == "__main__":
 #     h, xedges, yedges, image = plt.hist2d(
 #         xs, ys, bins=(200, 40), cmap="gist_heat_r"
 #     )
-#     plt.xlabel("window centre $m_{jj}$ [GeV]")
+#     plt.xlabel("Bin centre $m_{jj}$ [GeV]")
 #     plt.ylabel("deviation in SD")
 #     plt.colorbar()
 #     plt.sca(axs[1])
