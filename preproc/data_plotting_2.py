@@ -192,19 +192,18 @@ def cout_nonzero_pixels(images):
 	n_non_zero = []
 	for image in images:
 		n_non_zero.append(len(image[image!=0]))
-	return n_non_zero
+	return np.array(n_non_zero)
 
 def plot_and_nonzero_pixels(images_bkg, images_sig, cfg):
 	print("Plotting nonzero pixel distribution")
+	print(images_bkg[0, 0])
 	n_non_zero_bkg=cout_nonzero_pixels(images_bkg[:, 0])+cout_nonzero_pixels(images_bkg[:, 1])
 	n_non_zero_sig=cout_nonzero_pixels(images_sig[:, 0])+cout_nonzero_pixels(images_sig[:, 1])
-	n_non_zero_bkg = np.array(n_non_zero_bkg)
-	n_non_zero_sig = np.array(n_non_zero_sig)	
-	n_non_zero_bkg[n_non_zero_bkg>100]=100
-	n_non_zero_sig[n_non_zero_sig>100]=100
+	#n_non_zero_bkg[n_non_zero_bkg>100]=100
+	#n_non_zero_sig[n_non_zero_sig>100]=100
 	plt.figure()
-	plt.hist(n_non_zero_bkg, bins=np.linspace(-0.5, 100.5, 102), label="QCD", density=True, color="black", histtype="step")
-	plt.hist(n_non_zero_sig, bins=np.linspace(-0.5, 100.5, 102), label="X, Y", density=True, color="red", histtype="step")
+	plt.hist(n_non_zero_bkg, bins=np.linspace(-0.5, 100.5, 101), label="QCD", density=True, color="black", histtype="step")
+	plt.hist(n_non_zero_sig, bins=np.linspace(-0.5, 100.5, 101), label="X, Y", density=True, color="red", histtype="step")
 	plt.xlabel("number of non-zero pixels")
 	plt.ylabel("fraction of all images")
 	print(max(n_non_zero_bkg))
@@ -243,9 +242,9 @@ def plot_and_save_background_jet_images(images_bkg, cfg, num_rows=2, num_cols=3)
 # Run the functions:
 if "inv_mass" in pts:
 	plot_invariant_mass_spectrum(mjj_bkg, mjj_sig)
-#plot_averages(images_bkg, images_sig, cfg)
+plot_averages(output_images_bkg, output_images_sig, cfg)
 plot_and_nonzero_pixels(images_bkg, images_sig, cfg)
-#plot_and_save_background_jet_images(images_bkg, cfg)
+plot_and_save_background_jet_images(output_images_bkg, cfg)
 
 print("==========================================")
 print("finish DATA PLOTTING")
