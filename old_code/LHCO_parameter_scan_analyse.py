@@ -82,4 +82,4 @@ for sigma in list_sigma:
             plt.axhline(2000, color="black")
         plt.xlabel("k")
         
-        plt.savefig("plots/param_scanBM/{:}/{:}sig{:}prep{:}minibatch.png".format(metric_name, metric_name, sigma, prep), bbox_inches="tight")
+        plt.savefig("plots/param_scanBM/{:}/{:}sig{:}prep{:}minibatch.pdf".format(metric_name, metric_name, sigma, prep), bbox_inches="tight")

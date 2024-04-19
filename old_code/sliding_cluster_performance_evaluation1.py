@@ -55,14 +55,14 @@ plt.grid()
 plt.hist(np.sum((countmax_windows - countmax_sum) ** 2, axis=0) ** 0.5, bins=20)
 plt.xlabel("distance to bg")
 plt.ylabel("cluster n")
-plt.savefig(save_path + "eval/curve_distance.png")
+plt.savefig(save_path + "eval/curve_distance.pdf")
 
 plt.figure()
 plt.grid()
 plt.hist(np.sum(countmax_windows, axis=0), bins=20)
 plt.xlabel("integral under the curve")
 plt.ylabel("cluster n")
-plt.savefig(save_path + "eval/curves_integrals.png")
+plt.savefig(save_path + "eval/curves_integrals.pdf")
 
 
 num_der_counts_windows = num_der(countmax_windows)
@@ -97,7 +97,7 @@ for j in range(k):
 plt.xlabel("mjj Bin centre")
 plt.ylabel("n_clusater/max(n_cluster)")
 plt.title(f"curves clustered with kmeans with {as_vectors} as vectors")
-plt.savefig(save_path + "eval/countmax_windows.png")
+plt.savefig(save_path + "eval/countmax_windows.pdf")
 
 # all center curve derivatives with found labels
 plt.figure()
@@ -110,7 +110,7 @@ for j in range(k):
 plt.xlabel("mjj")
 plt.ylabel("delta(n_clusater/max(n_cluster))")
 plt.title(f"derivatives clustered with kmeans with {as_vectors} as vectors")
-plt.savefig(save_path + "eval/num_der_counts_windows.png")
+plt.savefig(save_path + "eval/num_der_counts_windows.pdf")
 
 # TSNE
 X_embedded = TSNE().fit_transform(num_der_counts_windows.T)
@@ -130,7 +130,7 @@ plt.plot(
 )
 plt.xlabel("embedding dim 0")
 plt.ylabel("embedding dim 1")
-plt.savefig(save_path + "eval/TSNE.png")
+plt.savefig(save_path + "eval/TSNE.pdf")
 
 # combinations
 plt.figure()
@@ -142,7 +142,7 @@ plt.plot(window_centers, max_norm(anomaly_rich), label="sum of cluster 1 curves"
 plt.plot(window_centers, max_norm(count_sum), "--", label="all")
 plt.xlabel("mjj Bin centre")
 plt.legend()
-plt.savefig(save_path + "eval/comb.png")
+plt.savefig(save_path + "eval/comb.pdf")
 
 # bump-hunting!
 import pyBumpHunter as BH

@@ -71,5 +71,5 @@ fig, ax = plt.subplots(figsize=(8, 6))
 plt.xlabel("$\eta$")
 plt.ylabel("$\phi$")
 ax.imshow(image, cmap=cm.gnuplot2, interpolation='nearest', extent=eta_bonds+phi_bonds, origin='lower')
-plt.savefig("example.png")
+plt.savefig("example.pdf")
 

@@ -34,7 +34,7 @@ for i in range(NC):
     f['data'][i*CS:(i+1)*CS] = images
     print("chunk {:} done:".format(i))
     print("--- %s seconds ---" % (time.time() - start_time))
-  
+
 f.close()
 input_f.close()
 

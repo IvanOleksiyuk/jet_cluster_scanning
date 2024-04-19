@@ -91,7 +91,7 @@ plt.ylabel(r"$N(m_{jj})$ in a 100 GeV window")
 plt.step(window_centers, bg, label=r"$\epsilon = 0$", where="mid")
 plt.step(window_centers, bg + sg, label=r"$\epsilon = 0.005$", where="mid")
 plt.legend()
-plt.savefig(save_path + "bg_withsg.png", bbox_inches="tight")
+plt.savefig(save_path + "bg_withsg.pdf", bbox_inches="tight")
 
 plt.figure()
 plt.plot(
@@ -100,7 +100,7 @@ plt.plot(
     label="chisq/ndim {:}".format(np.mean((sg / np.sqrt(bg + sg)) ** 2)),
 )
 plt.legend()
-plt.savefig(save_path + "significance_of_signal.png")
+plt.savefig(save_path + "significance_of_signal.pdf")
 
 # print(sg)
 print(np.sum((sg / np.sqrt(bg + sg)) ** 2))

@@ -404,7 +404,7 @@ class CS_evaluation_process:
 
         return res
 
-    def plot(self):
+    def plot(self, format=".pdf"):
         os.makedirs(self.cfg.save_path, exist_ok=True)
         self.redo_cs_plots()
         os.makedirs(self.eval_path, exist_ok=True)
@@ -418,39 +418,39 @@ class CS_evaluation_process:
             self.plot_standardisation_step(
                 self.prepare_spectra(["sumn", "-bsumsumn"]),
                 self.labels,
-                y_label="$N_{i,b}/sum(N_{i,b})-N_{orig, b}/sum(N_{orig, b})$",
-                savefile="sumn-toatal.png",
+                y_label="$N_{i,b}/\Sigma_b N_{i,b}-N_{orig, b}/\Sigma_b N_{orig, b}$",
+                savefile="sumn-toatal"+format,
             )
             self.plot_standardisation_step(
                 self.prepare_spectra(["maxn", "-bsummaxn"]),
                 self.labels,
                 y_label="$N_{i,b}/max_b(N_{i,b})-N_{orig, b}/max_b(N_{orig, b})$",
-                savefile="maxm-toatal.png",
+                savefile="maxm-toatal"+format,
             )
             self.plot_labeled_spectra(
                 self.prepare_spectra(["sumn", "-bsumsumn", "standrob"]),
                 self.labels,
                 add_line=True,
                 ylabel="deviation in SD",
-                filename="norm-toatal-sigmas.png",
+                filename="norm-toatal-sigmas"+format,
             )
             self.plot_labeled_spectra(
                 self.prepare_spectra(["sumn"]),
                 self.labels,
                 ylabel="$N_i(m_{jj})/sum(N_i(m_{jj}))$",
-                filename="sumn.png",
+                filename="sumn"+format,
             )
             self.plot_labeled_spectra(
                 self.prepare_spectra(["maxn"]),
                 self.labels,
                 ylabel="$N_i(m_{jj})/max(N_i(m_{jj}))$",
-                filename="maxn.png",
+                filename="maxn"+format,
             )
             self.plot_labeled_spectra(
                 self.prepare_spectra(["maxn", "der", "med7"]),
                 self.labels,
                 ylabel=r"$\Delta(N_i(m_{jj})/max(N_i(m_{jj}))$)",
-                filename="num-der.png",
+                filename="num-der"+format,
             )
             # TSNE
             csp.CS_TSNE(
@@ -474,21 +474,21 @@ class CS_evaluation_process:
             #     self.binning,
             #     self.agg_sp["res"]["tf"],
             # )
-            plt.savefig(self.eval_path + "comb.png", bbox_inches="tight")
+            plt.savefig(self.eval_path + "comb"+format, bbox_inches="tight")
             csp.plot_aggregation(
                 self.agg_sp["poor"].subtract_sp(self.agg_sp["poor"]),
                 self.agg_sp["rich"].subtract_sp(self.agg_sp["poor"]),
                 self.figsize,
                 self.agg_sp["res"],
             )
-            plt.savefig(self.eval_path + "comb_dev.png", bbox_inches="tight")
+            plt.savefig(self.eval_path + "comb_dev"+format, bbox_inches="tight")
         else:
             prepr = ["fix_low_stat_error", "sumn", "-bsumsumn"]
             plt.figure()
             sp = self.prepare_spectra(prepr)
             for i in range(len(sp.y)):
                 plt.plot(sp.x, sp.y[i])
-            plt.savefig(self.eval_path + "spectra_diffs.png", bbox_inches="tight")
+            plt.savefig(self.eval_path + "spectra_diffs"+format, bbox_inches="tight")
 
             plt.figure()
             for i in range(len(sp.y)):
@@ -496,7 +496,7 @@ class CS_evaluation_process:
                     sp.x,
                     sp.y[i] / sp.err[i],
                 )
-            plt.savefig(self.eval_path + "spectra_devs.png", bbox_inches="tight")
+            plt.savefig(self.eval_path + "spectra_devs"+format, bbox_inches="tight")
 
     def redo_cs_plots(self):
         # Duplicate plots from the cluster scanning OBSOLETE
@@ -511,7 +511,7 @@ class CS_evaluation_process:
         )
 
     def plot_labeled_spectra(
-        self, sp, labels, ylabel="y", filename="test.png", add_line=False
+        self, sp, labels, ylabel="y", filename="test.pdf", add_line=False
     ):
         csp.two_class_curves(
             sp.x,
@@ -526,7 +526,7 @@ class CS_evaluation_process:
         plt.legend()
         plt.savefig(self.eval_path + filename, bbox_inches="tight")
 
-    def plot_standardisation_step(self, sp, labels, y_label="y", savefile="test.png"):
+    def plot_standardisation_step(self, sp, labels, y_label="y", savefile="test.pdf"):
 
         csp.two_class_curves(
             sp.x,
@@ -586,7 +586,7 @@ if __name__ == "__main__":
 #         labels,
 #         figsize,
 #         ylabel="deviation in SD",
-#         save_file=eval_path + "norm-toatal-sigmas-special.png",
+#         save_file=eval_path + "norm-toatal-sigmas-special.pdf",
 #     )
 
 #     # all curves standardized squeezed
@@ -597,7 +597,7 @@ if __name__ == "__main__":
 #         labels,
 #         figsize,
 #         ylabel="deviation in SD",
-#         save_file=eval_path + "norm-toatal-sigmas-squeezed.png",
+#         save_file=eval_path + "norm-toatal-sigmas-squeezed.pdf",
 #     )
 
 #     # distribution of total MSE after standartisation
@@ -607,7 +607,7 @@ if __name__ == "__main__":
 #         labels,
 #         figsize,
 #         ylabel="deviation in SD",
-#         save_file=eval_path + "norm-toatal-sigmas-special.png",
+#         save_file=eval_path + "norm-toatal-sigmas-special.pdf",
 #         marker=".",
 #         linestyle="",
 #     )
@@ -619,7 +619,7 @@ if __name__ == "__main__":
 #         labels,
 #         figsize,
 #         ylabel="deviation in SD",
-#         save_file=eval_path + "norm-toatal-sigmas-special.png",
+#         save_file=eval_path + "norm-toatal-sigmas-special.pdf",
 #     )
 
 #     # all curves standardized distribution
@@ -645,4 +645,4 @@ if __name__ == "__main__":
 #     plt.step(yy, np.mean(h, axis=0), where="mid", color="darkorange")
 #     plt.xlabel("deviations in SD")
 #     plt.ylabel("avarage curve points per bin")
-#     plt.savefig(eval_path + "2d_hist.png", bbox_inches="tight")
+#     plt.savefig(eval_path + "2d_hist.pdf", bbox_inches="tight")

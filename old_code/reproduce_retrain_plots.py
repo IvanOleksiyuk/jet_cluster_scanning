@@ -66,7 +66,7 @@ def sliding_cluster_performance_evaluation(
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel(r"Bin centre $m_{jj}$")
     plt.ylabel(r"$|\mu-\mu_0|$")
-    plt.savefig(save_path + "kmeans_cluster_abs_init_change.png", bbox_inches="tight")
+    plt.savefig(save_path + "kmeans_cluster_abs_init_change.pdf", bbox_inches="tight")
 
     diffs = []
     for i in range(steps - 1):
@@ -88,7 +88,7 @@ def sliding_cluster_performance_evaluation(
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel(r"$m_{jj}$")
     plt.ylabel(r"$|d \mu/d m_{jj}|$")
-    plt.savefig(save_path + "kmeans_cluster_abs_deriv.png", bbox_inches="tight")
+    plt.savefig(save_path + "kmeans_cluster_abs_deriv.pdf", bbox_inches="tight")
 
     diffs = []
     for i in range(steps - 2):
@@ -112,7 +112,7 @@ def sliding_cluster_performance_evaluation(
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel(r"$m_{jj}$")
     plt.ylabel(r"$|d^2 \mu/d m_{jj}^2|$")
-    plt.savefig(save_path + "kmeans_cluster_abs_2deriv.png", bbox_inches="tight")
+    plt.savefig(save_path + "kmeans_cluster_abs_2deriv.pdf", bbox_inches="tight")
 
 
 sliding_cluster_performance_evaluation()

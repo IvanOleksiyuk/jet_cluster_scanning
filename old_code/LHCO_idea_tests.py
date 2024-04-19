@@ -106,7 +106,7 @@ if not retrain:
     
     plt.figure()
     plt.imshow(np.reshape(kmeans.cluster_centers_[0],(40, 40)))
-    plt.savefig("plots/test/cluster_0.png")
+    plt.savefig("plots/test/cluster_0.pdf")
 
 counts_windows=[]
 if retrain:
@@ -142,7 +142,7 @@ for j in range(k):
     plt.plot(window_centers, counts_windows[:, j])
 plt.xlabel("m_jj")
 plt.ylabel("n points from window")
-plt.savefig(save_path+"kmeans_ni_mjj_total.png")
+plt.savefig(save_path+"kmeans_ni_mjj_total.pdf")
 smallest_cluster_count_window=np.min(counts_windows, axis=1)
 for i in range(len(window_centers)):
     if smallest_cluster_count_window[i]<min_allowed_count:
@@ -151,7 +151,7 @@ for i in range(len(window_centers)):
         else:
             plt.axvline(window_centers[i], color="black", alpha=0.3)
         
-plt.savefig(save_path+"kmeans_ni_mjj_total_statAllowed.png")
+plt.savefig(save_path+"kmeans_ni_mjj_total_statAllowed.pdf")
     
 partials_windows=np.zeros(counts_windows.shape)
 for i in range(len(Mjjmin_arr)):
@@ -163,7 +163,7 @@ for j in range(k):
     plt.plot((Mjjmin_arr+Mjjmax_arr)/2, partials_windows[:, j])
 plt.xlabel("m_jj")
 plt.ylabel("fraction of points in window")
-plt.savefig(save_path+"kmeans_xi_mjj_total.png")
+plt.savefig(save_path+"kmeans_xi_mjj_total.pdf")
 
 countmax_windows=np.zeros(counts_windows.shape)
 for i in range(k):
@@ -185,7 +185,7 @@ conts=conts_bg+conts_sg
 plt.plot((Mjjmin_arr+Mjjmax_arr)/2, conts/np.max(conts), "--")
 plt.xlabel("m_jj")
 plt.ylabel("n points from window/max(...)")
-plt.savefig(save_path+"kmeans_xi_mjj_maxn.png")
+plt.savefig(save_path+"kmeans_xi_mjj_maxn.pdf")
 
 for i in range(len(window_centers)):
     if smallest_cluster_count_window[i]<min_allowed_count:
@@ -194,7 +194,7 @@ for i in range(len(window_centers)):
         else:
             plt.axvline(window_centers[i], color="black", alpha=0.3)
         
-plt.savefig(save_path+"kmeans_xi_mjj_maxn_statAllowed.png")
+plt.savefig(save_path+"kmeans_xi_mjj_maxn_statAllowed.pdf")
 
 res={}
 res["counts_windows"]=counts_windows
@@ -225,7 +225,7 @@ if retrain:
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|mean-mean_0|")
-    plt.savefig(save_path+"kmeans_cluster_abs_init_change.png")
+    plt.savefig(save_path+"kmeans_cluster_abs_init_change.pdf")
 
 if retrain:
     diffs=[]
@@ -239,7 +239,7 @@ if retrain:
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|d mean/d mjj|")
-    plt.savefig(save_path+"kmeans_cluster_abs_deriv.png")
+    plt.savefig(save_path+"kmeans_cluster_abs_deriv.pdf")
 
 if retrain:
     diffs=[]
@@ -253,6 +253,6 @@ if retrain:
         plt.plot(mjj_arr, diffs[:, j])
     plt.xlabel("m_jj")
     plt.ylabel("|d^2 mean/d mjj^2|")
-    plt.savefig(save_path+"kmeans_cluster_abs_2deriv.png")
+    plt.savefig(save_path+"kmeans_cluster_abs_2deriv.pdf")
 
 

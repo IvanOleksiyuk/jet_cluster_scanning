@@ -47,7 +47,7 @@ plt.grid()
 for count_window in count_windows_bg:
     plt.plot(count_window, color="blue")
 
-#plt.savefig("experiment.png")
+#plt.savefig("experiment.pdf")
 
 def gaussian(x, A, mu, sigma):
     return A * np.exp(-(x - mu)**2 / (2 * sigma**2))/np.sqrt(2*np.pi*sigma**2)
@@ -62,11 +62,11 @@ x=np.linspace(-4, 4, 100)
 plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='red', histtype='step', linewidth=1, density=True)
 plt.legend()
 #plt.yscale("log")
-plt.ylabel("density")
-plt.xlabel("standardized normalized counts")
-plt.savefig("plots/misc/gausianity_check.png", bbox_inches="tight")
+plt.ylabel("Density")
+plt.xlabel("Standardized normalized counts")
+plt.savefig("plots/misc/gausianity_check.png", bbox_inches="tight", dpi=250)
 # plt.yscale("log")
-# plt.savefig("experiment3.png")
+# plt.savefig("experiment3.pdf")
 
 
 # Generate a sample of 800 numbers (replace this with your data)

@@ -18,17 +18,17 @@ images = input_f['data']
 plt.figure()
 plt.imshow(images[0][1])
 plt.colorbar()
-plt.savefig("plots/test/data_test1.png")
+plt.savefig("plots/test/data_test1.pdf")
 
 plt.figure()
 plt.imshow(images[0][0])
 plt.colorbar()
-plt.savefig("plots/test/data_test2.png")
+plt.savefig("plots/test/data_test2.pdf")
 
 plt.figure()
 plt.imshow(images[1][1])
 plt.colorbar()
-plt.savefig("plots/test/data_test3.png")
+plt.savefig("plots/test/data_test3.pdf")
 
 
 mjj_bkg=np.load("../../../hpcwork/rwth0934/LHCO_dataset/processed_mh/anomaly_detection_v2_bkg.npy")
