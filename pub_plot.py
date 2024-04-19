@@ -4,6 +4,12 @@ import shutil
 from t_statistic_distribution import t_statistic_distribution
 import logging
 
+#This script is used to create all the plots for the publication
+#The script hs two main parts: the run of the CS and other stuff and the creation of the plots
+
+#The steps are:
+#1. Create the data plots
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 

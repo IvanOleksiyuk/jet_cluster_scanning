@@ -6,7 +6,7 @@
 #
 #
 verbose: False
-data_path: "test/test_materials/"
+data_path: "../../DATA/LHCO/"
 save_path: "char/test/"
 
 # Some general properties of the datasets provided
@@ -41,7 +41,6 @@ steps: 10 #Number of bins
 eval_interval: #Histogram window
   - 0
   - 10000
-separate_binning: False #binn background and signal separately
 
 #Retraining option not yet implemented - requires binning to be specified
 retrain: 0

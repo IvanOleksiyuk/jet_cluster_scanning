@@ -144,19 +144,19 @@ class ClusterScanning:
             sys.exit()
 
     def stack_event(self, x):
-        print("NOT IMPLEMENTED YET")  # TODO
+        logging.error("NOT IMPLEMENTED YET")  # TODO
         return
 
     def flatten_event(self, x):
-        print("NOT IMPLEMENTED YET")  # TODO
+        logging.error("NOT IMPLEMENTED YET")  # TODO
         return x.reshape()
 
     def flatten_image(self):
-        print("NOT IMPLEMENTED YET")  # TODO
+        logging.error("NOT IMPLEMENTED YET")  # TODO
         pass
 
     def de_flatten_image(self):
-        print("NOT IMPLEMENTED YET")  # TODO
+        logging.error("NOT IMPLEMENTED YET")  # TODO
         pass
 
     def load_data(self, show_example=True):
@@ -166,7 +166,7 @@ class ClusterScanning:
         self.im_bg = im_bg_file["data"]
         self.im_sg = im_sg_file["data"]
         if self.cfg.memory_intensive:
-            print("Using memory intensive mode")
+            logging.info("Using memory intensive mode")
             # if self.load_record and os.path.exists("data_record"+self.cfg.reproc_arg_string+".npy"
             self.im_bg = self.reproc(
                 im_bg_file["data"][:].reshape((-1, self.cfg.image_w, self.cfg.image_h))
@@ -198,12 +198,13 @@ class ClusterScanning:
                         (-1, self.cfg.image_size, self.cfg.image_size)
                     )[0]
                 )
-            print("There are ", np.sum(np.isnan(self.im_bg)), "nan in bg data")
-            print("There are ", np.sum(np.isnan(self.im_sg)), "nan in sg data")
-            print(self.im_bg.shape)
-            print(self.im_bg[0])
+            if np.any(np.isnan(self.im_bg)) or np.any(np.isnan(self.im_sg)):
+                logging.warning("There are "+str(np.sum(np.isnan(self.im_bg)))+" nan in bg data")
+                logging.warning("There are "+str(np.sum(np.isnan(self.im_sg)))+" nan in sg data")
+            logging.debug("Shape of background image array: "+str(self.im_bg.shape))
+            logging.debug(f"First background image: {self.im_bg[0]}")
         else:
-            print("Using memory saving mode")
+            logging.info("Using memory saving mode")
         self.bootstrap_bg = None
         logging.info("loading data complete")
 
@@ -458,7 +459,7 @@ class ClusterScanning:
                 k=len(bg) * 2,
             )
             bg = np.array(bg)
-
+ 
         if allowed is not None:
             sg = np.repeat(
                 self.sg_lab[indexing_sg[0] : indexing_sg[-1]],
@@ -466,23 +467,15 @@ class ClusterScanning:
                 axis=0,
             )
 
-            if self.cfg.separate_binning:
-                return [
-                    np.array([np.sum(bg == j) for j in range(self.cfg.k)]),
-                    np.array([np.sum(sg == j) for j in range(self.cfg.k)]),
-                ]
-            else:
-                all_lab = np.concatenate((bg, sg))
-                return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
+            return [
+                np.array([np.sum(bg == j) for j in range(self.cfg.k)]),
+                np.array([np.sum(sg == j) for j in range(self.cfg.k)]),
+            ]
         else:
-            all_lab = bg
-            if self.cfg.separate_binning:
-                return [
-                    np.array([np.sum(all_lab == j) for j in range(self.cfg.k)]),
-                    np.zeros(self.cfg.k),
-                ]
-            else:
-                return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
+            return [
+                np.array([np.sum(bg == j) for j in range(self.cfg.k)]),
+                np.zeros(self.cfg.k),
+            ]
 
     def perform_binning(self):
         counts_windows = []
@@ -522,14 +515,11 @@ class ClusterScanning:
                     )
                 )
 
-        if self.cfg.separate_binning:
-            self.counts_windows_bg = np.stack([x[0] for x in counts_windows])
-            self.counts_windows_sg = np.stack([x[1] for x in counts_windows])
-            self.counts_windows = [self.counts_windows_bg, self.counts_windows_sg]
-            self.counts_windows_sum = sum(self.counts_windows)
-        else:
-            self.counts_windows = [np.stack(counts_windows)]
-            self.counts_windows_sum = np.stack(counts_windows)
+        self.counts_windows_bg = np.stack([x[0] for x in counts_windows])
+        self.counts_windows_sg = np.stack([x[1] for x in counts_windows])
+        self.counts_windows = [self.counts_windows_bg, self.counts_windows_sg]
+        self.counts_windows_sum = sum(self.counts_windows)
+
         return self.counts_windows
 
     def run(self):
@@ -771,12 +761,13 @@ class ClusterScanning:
         self.plot_global_stats(plots_path, "total_stats_sigsort.pdf", sort="sig")
         self.plot_global_stats(plots_path, "total_stats_bgsort.pdf", sort="bg")
         self.plot_global_stats(plots_path, "total_stats_totsort.pdf", sort="tot")
-        self.plot_cluster_images(plots_path)
-        self.plot_cluster_images(plots_path, sort="sig", display_info="sig")
-        self.plot_cluster_images(plots_path, sort="bg", display_info="bg")
-        self.plot_cluster_images(plots_path, sort="tot", display_info="tot")
-        self.plot_cluster_images(plots_path, sort="SFI", display_info="SFI_SI")
-        self.plot_cluster_images(plots_path, sort="SI", display_info="SFI_SI")
+        if hasattr(self, "counts_windows_sg"):
+            self.plot_cluster_images(plots_path)
+            self.plot_cluster_images(plots_path, sort="bg", display_info="bg")
+            self.plot_cluster_images(plots_path, sort="tot", display_info="tot")
+            self.plot_cluster_images(plots_path, sort="sig", display_info="sig")
+            self.plot_cluster_images(plots_path, sort="SFI", display_info="SFI_SI")
+            self.plot_cluster_images(plots_path, sort="SI", display_info="SFI_SI")
 
     def plot_global_stats(self, plots_path, plot_name, sort=None):
         if hasattr(self, "counts_windows_sg"):
@@ -806,33 +797,33 @@ class ClusterScanning:
             print("skip global stats as no signal is present")
 
     def plot_cluster_images(self, plots_path, sort=None, display_info=None):
+        spectra = self.counts_windows_sum
+        tot_counts = np.sum(spectra, axis=0)
+        bg_counts = np.sum(self.counts_windows_bg, axis=0)
         if hasattr(self, "counts_windows_sg"):
-            spectra = self.counts_windows_sum
-            tot_counts = np.sum(spectra, axis=0)
-            bg_counts = np.sum(self.counts_windows_bg, axis=0)
             sg_counts = np.sum(self.counts_windows_sg, axis=0)
             sfi = sg_counts/np.sum(sg_counts) / (bg_counts/np.sum(bg_counts))
             si = sg_counts/np.sum(sg_counts) / np.sqrt((bg_counts)/np.sum(bg_counts)) 
-            if sort is not None:
-                if sort == "sig":
-                    index = np.argsort(sg_counts)[::-1]
-                elif sort == "bg":
-                    index = np.argsort(bg_counts)[::-1]
-                elif sort == "tot":
-                    index = np.argsort(tot_counts)[::-1]
-                elif sort == "SFI":
-                    index = np.argsort(sfi)[::-1]
-                elif sort == "SI":
-                    index = np.argsort(si)[::-1]
-                tot_counts = tot_counts[index]
-                bg_counts = bg_counts[index]
-                sg_counts = sg_counts[index]
-                images = self.kmeans.cluster_centers_[index]
-                sfi = sfi[index]
-                si = si[index]
-            else:
-                images = self.kmeans.cluster_centers_
-                index = np.arange(self.cfg.k)
+        if sort is not None:
+            if sort == "sig":
+                index = np.argsort(sg_counts)[::-1]
+            elif sort == "bg":
+                index = np.argsort(bg_counts)[::-1]
+            elif sort == "tot":
+                index = np.argsort(tot_counts)[::-1]
+            elif sort == "SFI":
+                index = np.argsort(sfi)[::-1]
+            elif sort == "SI":
+                index = np.argsort(si)[::-1]
+            tot_counts = tot_counts[index]
+            bg_counts = bg_counts[index]
+            sg_counts = sg_counts[index]
+            images = self.kmeans.cluster_centers_[index]
+            sfi = sfi[index]
+            si = si[index]
+        else:
+            images = self.kmeans.cluster_centers_
+            index = np.arange(self.cfg.k)
 
         plt.figure(figsize=(20, 10))
         plt.grid()

@@ -9,6 +9,8 @@ verbose: False
 data_path: "../../DATA/LHCO/"
 save_path: "char/test/"
 
+do_plotting: False
+
 # Some general properties of the datasets provided
 jet_per_event: 2
 image_size: 40
@@ -41,7 +43,6 @@ steps: 4 #Number of bins
 eval_interval: #Histogram window
   - 2000
   - 6000
-separate_binning: False #binn background and signal separately
 
 #Retraining option not yet implemented - requires binning to be specified
 retrain: 0

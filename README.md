@@ -7,7 +7,15 @@ ivan.oleksiyuk@gmail.com
 Cluster Scanning method of the anomaly detection using k-means to separate space of data instances into bins for bump hunting.
 
 ### Recommendation
-To use the project I recommend to creat a conda env with requiremnts from requirements.txt
+To use the project I recommend to create a conda env with requiremnts from requirements.txt
+
+conda create -n cluster python=3.8
+conda activate cluster
+python -m pip install matplotlib==3.3.3
+python -m pip install scikit-learn=0.23.2
+python -m pip install numpy==1.21.5
+python -m pip install pytest
+
 all scripts in the root directory are intended to be executed from it 
 all scripts in the job directory are intended to be executed from it
 all tests are intended to be run via "pytest" command in the root directory
