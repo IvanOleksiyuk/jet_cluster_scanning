@@ -167,6 +167,7 @@ class ClusterScanning:
         self.im_bg = im_bg_file["data"]
         self.im_sg = im_sg_file["data"]
         if self.cfg.memory_intensive:
+            print("Using memory intensive mode")
             # if self.load_record and os.path.exists("data_record"+self.cfg.reproc_arg_string+".npy"
             self.im_bg = self.reproc(
                 im_bg_file["data"][:].reshape((-1, self.cfg.image_w, self.cfg.image_h))
@@ -198,6 +199,12 @@ class ClusterScanning:
                         (-1, self.cfg.image_size, self.cfg.image_size)
                     )[0]
                 )
+            print("There are ", np.sum(np.isnan(self.im_bg)), "nan in bg data")
+            print("There are ", np.sum(np.isnan(self.im_sg)), "nan in sg data")
+            print(self.im_bg.shape)
+            print(self.im_bg[0])
+        else:
+            print("Using memory saving mode")
         self.bootstrap_bg = None
         logging.info("loading data complete")
 
@@ -361,8 +368,8 @@ class ClusterScanning:
             self.bg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_bg) / batch_size))):
-                logging.debug("evaluating chunk: " +
-                    str(i * batch_size, min((i + 1) * batch_size, len(self.im_bg)))
+                logging.debug("evaluating chunk background: " +
+                    str(i * batch_size) +":"+ str(min((i + 1) * batch_size, len(self.im_bg)))
                 )
                 self.bg_lab.append(
                     self.kmeans.predict(
@@ -381,9 +388,8 @@ class ClusterScanning:
             self.sg_lab = []
             batch_size = 10000
             for i in range(int(np.ceil(len(self.im_sg) / batch_size))):
-                logging.debug(
-                    i * batch_size,
-                    min((i + 1) * batch_size, len(self.im_bg)),
+                logging.debug("evaluating chunk signal: " +
+                    str(i * batch_size) +":"+ str(min((i + 1) * batch_size, len(self.im_bg)))
                 )
                 self.sg_lab.append(
                     self.kmeans.predict(
@@ -471,7 +477,13 @@ class ClusterScanning:
                 return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
         else:
             all_lab = bg
-            return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
+            if self.cfg.separate_binning:
+                return [
+                    np.array([np.sum(all_lab == j) for j in range(self.cfg.k)]),
+                    np.zeros(self.cfg.k),
+                ]
+            else:
+                return np.array([np.sum(all_lab == j) for j in range(self.cfg.k)])
 
     def perform_binning(self):
         counts_windows = []
@@ -735,7 +747,7 @@ class ClusterScanning:
             plt.plot(self.mjj_bg, self.bg_lab[:, j], ".", alpha=0.1)
         plt.xlabel("$m_{jj}$")
         plt.ylabel("cluster label")
-        plt.savefig(plots_path + "kmeans_ni_mjj_total.png")
+        plt.savefig(plots_path + "kmeans_ni_mjj_total.pdf")
 
     def make_plots(self):
         # Some plotting
@@ -743,23 +755,23 @@ class ClusterScanning:
         plots_path = self.save_path + f"plots{self.get_IDstr()}/"
         os.makedirs(plots_path, exist_ok=True)
 
-        self.plot_cluster_spectra(plots_path, "kmeans_ni_mjj_total.png")
+        self.plot_cluster_spectra(plots_path, "kmeans_ni_mjj_total.pdf")
         self.plot_cluster_spectra(
-            plots_path, "kmeans_ni_mjj_total_statAllowed.png", plot_stat_allowed=True
+            plots_path, "kmeans_ni_mjj_total_statAllowed.pdf", plot_stat_allowed=True
         )
         self.plot_cluster_spectra(
-            plots_path, "kmeans_ni_mjj_maxnuorm.png", normalize="max"
+            plots_path, "kmeans_ni_mjj_maxnuorm.pdf", normalize="max"
         )
         self.plot_cluster_spectra(
-            plots_path, "kmeans_ni_mjj_sumnorm.png", normalize="sum"
+            plots_path, "kmeans_ni_mjj_sumnorm.pdf", normalize="sum"
         )
         self.plot_cluster_spectra(
-            plots_path, "kmeans_ni_mjj_perbin.png", normalize="per_bin"
+            plots_path, "kmeans_ni_mjj_perbin.pdf", normalize="per_bin"
         )
-        self.plot_global_stats(plots_path, "total_stats.png")
-        self.plot_global_stats(plots_path, "total_stats_sigsort.png", sort="sig")
-        self.plot_global_stats(plots_path, "total_stats_bgsort.png", sort="bg")
-        self.plot_global_stats(plots_path, "total_stats_totsort.png", sort="tot")
+        self.plot_global_stats(plots_path, "total_stats.pdf")
+        self.plot_global_stats(plots_path, "total_stats_sigsort.pdf", sort="sig")
+        self.plot_global_stats(plots_path, "total_stats_bgsort.pdf", sort="bg")
+        self.plot_global_stats(plots_path, "total_stats_totsort.pdf", sort="tot")
         self.plot_cluster_images(plots_path)
         self.plot_cluster_images(plots_path, sort="sig", display_info="sig")
         self.plot_cluster_images(plots_path, sort="bg", display_info="bg")
@@ -854,7 +866,7 @@ class ClusterScanning:
                 plt.title(f"total {tot_counts[j]:.2e}")
             else:
                 plt.title(f"cluster {index[j]}")
-        plt.savefig(plots_path + "kmeans_images"+str(sort)+str(display_info)+".png", bbox_inches="tight")
+        plt.savefig(plots_path + "kmeans_images"+str(sort)+str(display_info)+".pdf", bbox_inches="tight")
 
     def plot_cluster_spectra(
         self,
@@ -881,7 +893,7 @@ class ClusterScanning:
             plt.ylabel("n points from window/max(...)")
         elif normalize == "sum":
             spectra = np.zeros(self.counts_windows_sum.shape)
-            for i in range(len(self.Mjjmin_arr)):
+            for i in range(self.cfg.k):
                 spectra[:, i] = self.counts_windows_sum[:, i] / np.sum(
                     self.counts_windows_sum[:, i]
                 )
