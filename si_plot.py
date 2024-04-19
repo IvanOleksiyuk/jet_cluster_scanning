@@ -192,7 +192,7 @@ def t_statistic_distribution(config_file_path):
     plt.ylabel("$e_s$")
     plt.grid()
     plt.legend()
-    plt.savefig("plots/SI/ROC.png")
+    plt.savefig("plots/SI/ROC.pdf")
 
     plt.figure(2)
     plt.xlabel("$1/e_b$")
@@ -202,7 +202,7 @@ def t_statistic_distribution(config_file_path):
     plt.xlim(1, 1e3)
     plt.grid()
     plt.legend()
-    plt.savefig("plots/SI/SIC.png")
+    plt.savefig("plots/SI/SIC.pdf")
 
     plt.figure(3)
     plt.yscale("log")
@@ -212,7 +212,7 @@ def t_statistic_distribution(config_file_path):
     plt.ylim(1, 1e4)
     plt.grid()
     plt.legend()
-    plt.savefig("plots/SI/ROC2.png")
+    plt.savefig("plots/SI/ROC2.pdf")
 
     plt.figure(4)
     plt.xscale("log")
@@ -222,19 +222,19 @@ def t_statistic_distribution(config_file_path):
     #plt.ylim(1, 1e4)
     plt.grid()
     plt.legend()
-    plt.savefig("plots/SI/SEC.png")
+    plt.savefig("plots/SI/SEC.pdf")
 
     plt.figure(5)
     #print(cfg.contaminations*100000)
     #print(SI_avg)
     plt.errorbar(conts, SI_avg, yerr=SI_std, fmt="o")
-    plt.savefig("plots/SI/SI_cont.png")
+    plt.savefig("plots/SI/SI_cont.pdf")
 
     plt.figure(6)
     #print(cfg.contaminations*100000)
     #print(SFI_avg)
     plt.errorbar(conts, SFI_avg, yerr=SFI_std, fmt="o")
-    plt.savefig("plots/SI/SfI_cont.png")
+    plt.savefig("plots/SI/SfI_cont.pdf")
 
 
 

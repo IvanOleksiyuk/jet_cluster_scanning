@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import utils.set_matplotlib_default
-folder="char/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+folder="/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
 files_list = os.listdir(folder)
 bres_files = [file for file in files_list if file.startswith("bres")]
 
@@ -29,4 +29,4 @@ plt.axvline(x=np.median(min_count), color="red", label=f"Median: {np.median(min_
 plt.legend()
 plt.ylabel("Pseudo-experiments")
 plt.xlabel(r"$min_{i,b}(N_{i,b})$")
-plt.savefig("plots/misc/min_count.png")
+plt.savefig("plots/misc/min_count.pdf",  interpolation='nearest')

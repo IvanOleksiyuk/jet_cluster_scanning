@@ -105,7 +105,7 @@ def significance_plot(plot_idealised = True,
     # Load the data block + define some parameters
 
     # load the mass spectra
-    data_path = "../../scratch/DATA/LHCO/"
+    data_path = "../../DATA/LHCO/"
     mjj_bg = np.load(data_path + "mjj_bkg_sort.npy")
     mjj_sg = np.load(data_path + "mjj_sig_sort.npy")
     print(np.std(mjj_sg))
@@ -362,11 +362,11 @@ def significance_plot(plot_idealised = True,
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Save the plot
     if plot_idealised and not plot_realistic:
-        plt.savefig("plots/main/significances_idealised.png", bbox_inches="tight", dpi=300)
+        plt.savefig("plots/main/significances_idealised.pdf", bbox_inches="tight", dpi=300)
     elif plot_realistic and not plot_idealised:
-        plt.savefig("plots/main/significances_realistic.png", bbox_inches="tight", dpi=300)
+        plt.savefig("plots/main/significances_realistic.pdf", bbox_inches="tight", dpi=300)
     else:
-        plt.savefig("plots/main/significances.png", bbox_inches="tight", dpi=300)
+        plt.savefig("plots/main/significances.pdf", bbox_inches="tight", dpi=300)
 
 
 

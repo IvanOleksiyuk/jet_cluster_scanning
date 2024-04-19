@@ -225,13 +225,13 @@ def draw_contamination(
 		if add_p:
 			label += r", $p_{med} <$"+"{:.2e}".format(p_min)
 		if add_Z:
-			label += r", $Z_{med} >$"+"{:2f}".format(Z_max)
+			label += r", $Z_{med} >$"+"{:.2f}".format(Z_max)
 		upper_bound_mps = True
 	else:
 		if add_p:
 			label += r", $p_{med} =$"+"{:.2e}".format(p_median)	
 		if add_Z:
-			label += r", $Z_{med} =$"+"{:2f}".format(Z_median)	
+			label += r", $Z_{med} =$"+"{:.2f}".format(Z_median)	
 		upper_bound_mps = False
 
 	# if mean_ps < p_min:
@@ -323,7 +323,10 @@ def draw_contamination(
 	return results
 
 
-def t_statistic_distribution(config_file_path):
+def t_statistic_distribution(config_file_path, from_results=True):
+    print("==================================")
+    print("T statistic distribution")
+    print("==================================")
     config = Config(config_file_path)
     cfg = config.get_dotmap()
 
@@ -334,6 +337,8 @@ def t_statistic_distribution(config_file_path):
     # Replace all these where needed
     output_path = cfg.output_path
 
+    print("output_path", output_path)
+    
     # initialise the main figure:
     plt.close("all")
     if cfg.contamination_style[0] == "U":
@@ -344,15 +349,20 @@ def t_statistic_distribution(config_file_path):
     else:
         fig = plt.figure(figsize=(8, 3))
 
-    # load the restarts
-    if isinstance(cfg.counts_windows_boot_load, str):
-        # if one location is given
-        TS_list = score_sample(cfg, cfg.counts_windows_boot_load)
+    if from_results:
+        print("Skipping background evaluation by loading it from checkpoint")
+        results_loaded = pickle.load(open(output_path + cfg.plot_name + "_results.pickle", "rb"))
+        TS_list = results_loaded["TS_list"]
     else:
-        # if multiple locations are given
-        TS_list = []
-        for counts_windows_boot_load in cfg.counts_windows_boot_load:
-            TS_list += [score_sample(cfg, counts_windows_boot_load)]
+        # load the restarts
+        if isinstance(cfg.counts_windows_boot_load, str):
+            # if one location is given
+            TS_list = score_sample(cfg, cfg.counts_windows_boot_load)
+        else:
+            # if multiple locations are given
+            TS_list = []
+            for counts_windows_boot_load in cfg.counts_windows_boot_load:
+                TS_list += [score_sample(cfg, counts_windows_boot_load)]
 
     # plot the TS distribution
     # plt.figure(fig)
@@ -389,8 +399,9 @@ def t_statistic_distribution(config_file_path):
 
     if cfg.contamination_style[0] == "U":
         plt.sca(ax2)
-
     results = {}
+    
+
     if "contaminations" in config.get_dict().keys():
         for c, path, col, postfix in zip(
             cfg.contaminations, cfg.cont_paths, cfg.colors, cfg.postfix
@@ -422,17 +433,22 @@ def t_statistic_distribution(config_file_path):
         min(TS_list) - 0.1 * (max(TS_list) - min(TS_list)),
         max(TS_list) + 0.1 * (max(TS_list) - min(TS_list)),
     )
-    # plt.xlim((0, 30))
     plt.savefig(
-        output_path + cfg.plot_name,
-        dpi=300,
+        output_path + cfg.plot_name+".pdf",
+        dpi=250,
         bbox_inches="tight",
     )
-    # plt.show()
-
-    # Dump some results
-    results["TS_list"] = TS_list
-    pickle.dump(results, open(output_path + cfg.plot_name + "_results.pickle", "wb"))
+    plt.savefig(
+        output_path + cfg.plot_name+".png",
+        dpi=250,
+        bbox_inches="tight",
+    )
+    print("saved "+output_path + cfg.plot_name)
+    
+    if not from_results:
+        results["TS_list"] = TS_list
+        pickle.dump(results, open(output_path + cfg.plot_name + "_results.pickle", "wb"))
+    print("saved "+ output_path + cfg.plot_name + "_results.pickle")
 
 
 if __name__ == "__main__":

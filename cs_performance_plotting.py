@@ -5,7 +5,7 @@ import utils.set_matplotlib_default as smd
 from utils.robust_estimators import std_ignore_outliers, mean_ignore_outliers
 
 
-def CS_TSNE(num_der_counts_windows, labels, eval_path):
+def CS_TSNE(num_der_counts_windows, labels, eval_path, format=".pdf"):
     X_embedded = TSNE().fit_transform(num_der_counts_windows)
     plt.figure()
     plt.grid()
@@ -23,10 +23,10 @@ def CS_TSNE(num_der_counts_windows, labels, eval_path):
     )
     plt.xlabel("embedding dim 0")
     plt.ylabel("embedding dim 1")
-    plt.savefig(eval_path + "TSNE.png")
+    plt.savefig(eval_path + "TSNE"+format)
 
 
-def plot_sum_over_bins_dist(counts, bin_widths, labels, eval_path):
+def plot_sum_over_bins_dist(counts, bin_widths, labels, eval_path, format=".pdf"):
     plt.figure()
     plt.grid()
     plt.hist(
@@ -40,7 +40,7 @@ def plot_sum_over_bins_dist(counts, bin_widths, labels, eval_path):
     )
     plt.xlabel("integral under the curve")
     plt.ylabel("cluster n")
-    plt.savefig(eval_path + "curves_integrals.png", bbox_inches="tight")
+    plt.savefig(eval_path + "curves_integrals"+format, bbox_inches="tight")
 
 
 def two_class_curves(
@@ -57,8 +57,8 @@ def two_class_curves(
 ):
     plt.figure(figsize=figsize)
     plt.grid()
-    lab1 = "anomalous clusters" + suffix
-    lab2 = "non-anomalous clusters" + suffix
+    lab1 = "signal-rich clusters" + suffix
+    lab2 = "signal-poor clusters" + suffix
     for j in range(len(counts)):
         if labels[j]:
             plt.plot(
@@ -146,11 +146,11 @@ def plot_aggregation(anomaly_poor_sp, anomaly_rich_sp, figsize, res, sigmas=1, t
     )
     # plt.plot(window_centers, anomaly_rich_sp.y[0], label="sum of cluster 1 curves \n $\chi^2/n_{dof}$={:.3f}\n sigmas={:.3f}".format(chisq_ndof, (chisq_ndof-1)*n_dof/np.sqrt(2*n_dof)), color="red")
     if ts=="chisq_ndof":
-        label=r"$N_{sig}$ sum of anomaly rich clusters $\tilde{\chi}^2/n_{dof}=$" + "{:.3f}".format(res["chisq_ndof"])
+        label=r"$N_{sig}$ sum of signal-rich clusters $\tilde{\chi}^2/n_{dof}=$" + "{:.3f}".format(res["chisq_ndof"])
     elif ts=="max-sumnorm-dev-sr":
-        label=r"$N_{sig}$ sum of anomaly rich clusters MLS=" + "{:.3f}".format(res["max-sumnorm-dev-rs"])
+        label=r"$N_{sig}$ sum of signal-rich clusters MLS=" + "{:.3f}".format(res["max-sumnorm-dev-rs"])
     else:
-        label=r"$N_{sig}$ sum of anomaly rich clusters TS=" + "{:.3f}".format(res[ts])
+        label=r"$N_{sig}$ sum of signal-rich clusters TS=" + "{:.3f}".format(res[ts])
 
     plt.plot(
         window_centers,
@@ -181,6 +181,7 @@ def plot_all_scalings(
     countnrm_windows,
     save_path,
     figsize,
+    format=".pdf",
 ):
     # Does the same thing as the ClusterScanning.plot() method but with given spectra (used only to test if cs_performance is dojing the right thing)
     k = counts_windows.shape[0]
@@ -193,7 +194,7 @@ def plot_all_scalings(
         plt.plot(window_centers, counts_windows[j])
     plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_{i, b}$")
-    plt.savefig(save_path + "kmeans_ni_mjj_total.png", bbox_inches="tight")
+    plt.savefig(save_path + "kmeans_ni_mjj_total"+format, bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
     for i in range(len(window_centers)):
         if smallest_cluster_count_window[i] < min_allowed_count:
@@ -203,7 +204,7 @@ def plot_all_scalings(
                 plt.axvline(window_centers[i], color="black", alpha=0.3)
 
     plt.savefig(
-        save_path + "kmeans_ni_mjj_total_statAllowed.png",
+        save_path + "kmeans_ni_mjj_total_statAllowed"+format,
         bbox_inches="tight",
     )
 
@@ -213,7 +214,7 @@ def plot_all_scalings(
         plt.plot(window_centers, countmax_windows[j])
     plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_{i, b}/max(N_{i, b})$")
-    plt.savefig(save_path + "kmeans_ni_mjj_max.png", bbox_inches="tight")
+    plt.savefig(save_path + "kmeans_ni_mjj_max"+format, bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
     for i in range(len(window_centers)):
         if smallest_cluster_count_window[i] < min_allowed_count:
@@ -223,7 +224,7 @@ def plot_all_scalings(
                 plt.axvline(window_centers[i], color="black", alpha=0.3)
 
     plt.savefig(
-        save_path + "kmeans_ni_mjj_max_statAllowed.png",
+        save_path + "kmeans_ni_mjj_max_statAllowed"+format,
         bbox_inches="tight",
     )
 
@@ -233,7 +234,7 @@ def plot_all_scalings(
         plt.plot(window_centers, countnrm_windows[j])
     plt.xlabel("Bin centre $m_{jj}$ [GeV]")
     plt.ylabel("$N_{i, b}/\Sigma_b(N_{i, b})$")
-    plt.savefig(save_path + "kmeans_ni_mjj_norm.png", bbox_inches="tight")
+    plt.savefig(save_path + "kmeans_ni_mjj_norm"+format, bbox_inches="tight")
     smallest_cluster_count_window = np.min(counts_windows, axis=0)
     for i in range(len(window_centers)):
         if smallest_cluster_count_window[i] < min_allowed_count:
@@ -243,6 +244,6 @@ def plot_all_scalings(
                 plt.axvline(window_centers[i], color="black", alpha=0.3)
 
     plt.savefig(
-        save_path + "kmeans_ni_mjj_norm_statAllowed.png",
+        save_path + "kmeans_ni_mjj_norm_statAllowed"+format,
         bbox_inches="tight",
     )

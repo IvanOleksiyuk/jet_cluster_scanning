@@ -40,5 +40,5 @@ for i, ax in enumerate(axs.flatten()):
 	plt.ylim([-4, 4])
 
 plt.tight_layout()
-plt.savefig("voronoi.png", bbox_inches='tight')
+plt.savefig("voronoi.pdf", bbox_inches='tight')
 plt.show()
