@@ -22,4 +22,4 @@ cont_paths:
 colors:
   - "orange"
 postfix:
-  - "MB"
+  - ""

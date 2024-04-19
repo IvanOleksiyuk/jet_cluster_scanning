@@ -28,6 +28,6 @@ colors:
   - "green"
   - "blue"
 postfix:
-  - "MB"
+  - ""
   - "MB10i"
   - "MB50i"

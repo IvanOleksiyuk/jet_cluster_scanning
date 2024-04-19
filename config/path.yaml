@@ -1,5 +1,5 @@
 # Input data directory
-data_path: "/home/users/o/oleksiyu/scratch/DATA/LHCO/"
+data_path: "/srv/beegfs/scratch/users/o/oleksiyu/DATA/LHCO/"
 initial_file: "events_anomalydetection_v2.h5"
 clustered_jets_file: "clustered_jets.h5"
 jet_images_file: "jet_images_v2.h5"
@@ -10,4 +10,4 @@ sorted_sig_mass_file: "mjj_sig_sort.npy"
 
 # Output directories
 plots_directory: "plots/"
-save_path: "/home/users/o/oleksiyu/scratch/CS/v4/"
+save_path: "/home/users/o/oleksiyu/CS/v4/"

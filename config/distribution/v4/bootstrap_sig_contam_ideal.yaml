@@ -1,92 +1,47 @@
 contaminations:
   - 0.01
   - 0.005
-  - 0.003
   - 0.0025
-  - 0.0024
-  - 0.0023
-  - 0.0022
-  - 0.0021
   - 0.002
-  - 0.0019
-  - 0.0018
-  - 0.0017
-  - 0.0016
   - 0.0015
-  - 0.0014
-  - 0.0013
-  - 0.0012
-  - 0.0011
   - 0.001
-  - 0.0009
-  - 0.0008
   - 0.0005
 cont_paths:
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.1W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.05W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.03W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.025W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.024W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.023W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.022W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.021W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.02W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.019W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.018W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.017W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.016W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.015W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.014W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.013W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.012W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.011W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.01W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.009W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.008W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
-  - "/home/users/o/oleksiyu/scratch/CS/v4/k50MB2048_1iret0con0.005W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.1W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.05W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.025W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.02W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.015W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.01W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.005W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
 colors:
   - "red"
   - "orange"
-  - "none"
   - "gold"
-  - "none"
-  - "none"
-  - "none"
-  - "none"
   - "yellowgreen"
-  - "none"
-  - "none"
-  - "none"
-  - "none"
   - "green"
-  - "none"
-  - "none"
-  - "none"
-  - "none"
   - "cyan"
-  - "none"
-  - "none"
   - "steelblue"
 postfix:
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
-  - "MB"
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
+  - ""
