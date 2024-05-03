@@ -4,25 +4,22 @@ import shutil
 from itertools import groupby
 
 # list of config files:
-multirun_config_dir = "../config/multirun/background_only"
-print("Looking for config files in: " + multirun_config_dir)
-config_files = []  # List to store absolute paths of files
-# Walk through directory
-for root, dirs, files in os.walk(multirun_config_dir):
-    for file in files:
-        # Construct absolute path
-        file_path = os.path.join(root, file)
-        abs_path = os.path.abspath(file_path)
-        config_files.append(abs_path)
-        print("Found config file: " + abs_path)
-        
-jnames = [os.path.basename(path).split("_")[0] for path in config_files]
+config_files = [
+    "config/sig_frac/0.05.yaml",
+    "config/sig_frac/0.03.yaml",
+    "config/sig_frac/0.02.yaml",
+    "config/sig_frac/0.015.yaml",
+    "config/sig_frac/0.01.yaml",
+]
+jnames = ["0.05", "0.03", "0.02", "0.015", "0.01"]
 
+# copy a job template to scripted folder
 if "-p" in sys.argv[1:]:
     listt = sys.argv[1:]
-    switch = listt.index("-p")
-    list_suf = listt[:switch]
-    list_postfix = listt[switch + 1 :]
+    listt2 = [list(group) for k, group in groupby(listt, lambda x: x == "-p") if not k]
+    print(listt2)
+    list_suf = listt2[0]
+    list_postfix = listt2[1]
 else:
     list_suf = sys.argv[1:]
     list_postfix = [""]

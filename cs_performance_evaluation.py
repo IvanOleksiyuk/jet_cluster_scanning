@@ -16,6 +16,7 @@ from curvefit_eval import curvefit_eval
 from utils.binning_utils import default_binning
 from utils.config_utils import Config
 import logging
+from scipy import stats
 
 logging.basicConfig(level=logging.INFO)
 # mpl.rcParams.update(mpl.rcParamsDefault)
@@ -121,6 +122,8 @@ class CS_evaluation_process:
                 new = previous.butter_lowpas()
             elif action == "standrob":
                 new = previous.standardize_rob()
+            elif action == "standardize":
+                new = previous.standardize()
             elif action[:3] == "med":
                 if action[3:] == "":
                     filter_size = 7
@@ -482,6 +485,7 @@ class CS_evaluation_process:
                 self.agg_sp["res"],
             )
             plt.savefig(self.eval_path + "comb_dev"+format, bbox_inches="tight")
+            self.plot_gaussianity_checks(self.prepare_spectra(["sumn", "standardize"]), self.labels)
         else:
             prepr = ["fix_low_stat_error", "sumn", "-bsumsumn"]
             plt.figure()
@@ -554,6 +558,39 @@ class CS_evaluation_process:
         plt.ylabel(y_label)
         plt.savefig(self.eval_path + savefile, bbox_inches="tight")
 
+    def plot_gaussianity_checks(self, sp, labels):
+        mass_bins = np.array([3000 + i*100 for i in range(17)])
+        bg_spectra = sp.y[labels == 0]
+        sg_spectra = sp.y[labels == 1]
+            
+        for bin in range(len(sp.x)):
+            plt.figure()
+            bins = np.linspace(-4, 4, 20+1)
+            shapiro_p_value, ks_p_value, jarque_bera_p_value = self.test_sample_gausiianity(sp.y[:, bin])
+            plt.hist([bg_spectra[:, bin], sg_spectra[:, bin]], bins=bins, density=True, stacked=True, alpha=0.5, label="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
+            x=np.linspace(-4, 4, 100)
+            plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='red', histtype='step', linewidth=1, density=True)
+            plt.legend()
+            #plt.yscale("log")
+            plt.ylabel("Density")
+            plt.title(f"bin {mass_bins[bin]}"+"$<m_{jj}<$"+f"{mass_bins[bin]}")
+            plt.xlabel("Standardized normalized counts")
+            plt.savefig(self.eval_path +f"gausianity_check_bin{bin}.png", bbox_inches="tight", dpi=250)
+
+    @staticmethod
+    def test_sample_gausiianity(sample):
+        # Shapiro-Wilk Test
+        shapiro_statistic, shapiro_p_value = stats.shapiro(sample)
+        print(f"Shapiro-Wilk Test - Statistic: {shapiro_statistic}, p-value: {shapiro_p_value}")
+
+        # Kolmogorov-Smirnov Test
+        ks_statistic, ks_p_value = stats.kstest(sample, 'norm')
+        print(f"Kolmogorov-Smirnov Test - Statistic: {ks_statistic}, p-value: {ks_p_value}")
+
+        # Jarque-Bera Test
+        jarque_bera_statistic, jarque_bera_p_value = stats.jarque_bera(sample)
+        print(f"Jarque-Bera Test - Statistic: {jarque_bera_statistic}, p-value: {jarque_bera_p_value}")
+        return shapiro_p_value, ks_p_value, jarque_bera_p_value
 
 def cs_performance_evaluation(*args, **kwargs):
     CSE = CS_evaluation_process(*args, **kwargs)

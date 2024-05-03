@@ -49,7 +49,7 @@ def perform_binning_all(config):
         cs.bootstrap_resample()
         cs.perform_binning()
         cs.save_counts_windows()
-        # print("done: ", cs.counts_windows_path())
+        #print("done: ", cs.counts_windows_path())
     # TODO: make into verobose mode
 
 
@@ -62,7 +62,7 @@ def perform_binning_directory(directory, override_config=None):
     HINT: if you want to override some of the parameters in the config file, you can pass a list of config files each overriding the previous one.
     """
     for subfolder in os.listdir(directory):
-        logging.info(f"doing binning in {subfolder}")
+        logging.info(f"doing binning in {str(os.path.join(directory, subfolder))}")
         if os.path.isdir(os.path.join(directory, subfolder)):
             if os.path.isfile(os.path.join(directory, subfolder, "confsum.yaml")):
                 if override_config is None:

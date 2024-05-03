@@ -36,6 +36,7 @@ def preprocess(count_window):
     count_window -= np.mean(count_window, axis=0)
     count_window /= np.std(count_window, axis=0)
     return count_window
+
 count_windows_bg = count_window_list[0][0].astype(dtype=np.float64)
 count_windows_bg = preprocess(count_windows_bg)
 count_window_full = count_window_list[0][0].astype(dtype=np.float64) + count_window_list[0][1].astype(dtype=np.float64)
@@ -71,7 +72,22 @@ plt.savefig("plots/misc/gausianity_check.png", bbox_inches="tight", dpi=250)
 
 # Generate a sample of 800 numbers (replace this with your data)
 #np.random.seed(42)]
-sample = np.random.normal(loc=0, scale=1, size=80000)
+# sample = np.random.normal(loc=0, scale=1, size=80000)
+# mass_bins = np.array([3000 + i*100 for i in range(17)])
+# cluster_labels = np.digitize(count_window_list[0][2], mass_bins)
 
-
-
+# for bin in range(len(count_windows_bg[0])):
+#     plt.figure()
+#     bins = np.linspace(-4, 4, 20+1)
+#     shapiro_p_value, ks_p_value, jarque_bera_p_value = test_sample(count_windows_bg[:, bin])
+#     plt.hist(count_windows_bg[:, bin], bins=bins, density=True, alpha=0.5, label="Background $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
+#     shapiro_p_value, ks_p_value, jarque_bera_p_value = test_sample(count_window_full[:, bin])
+#     plt.hist(count_window_full[:, bin], bins=bins, density=True, alpha=0.5, label="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
+#     x=np.linspace(-4, 4, 100)
+#     plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='red', histtype='step', linewidth=1, density=True)
+#     plt.legend()
+#     #plt.yscale("log")
+#     plt.ylabel("Density")
+#     plt.title(f"bin {mass_bins[bin]}$<m_{jj}<${mass_bins[bin]}")
+#     plt.xlabel("Standardized normalized counts")
+#     plt.savefig(f"plots/misc/gausianity_check_bin{bin}.png", bbox_inches="tight", dpi=250)

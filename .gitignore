@@ -25,3 +25,6 @@ look_pickle.py
 **.h5
 
 config/path**
+ 
+#yaml are the normal config files but yml are created automatically and thus should be ignored
+**.yml

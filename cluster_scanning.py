@@ -62,6 +62,11 @@ class ClusterScanning:
         self.reproc = reprocessing.Reprocessing(self.cfg.reproc_arg_string)
         self.cfg.reproc_name = self.reproc.name
 
+        if not "ignore_signal_in_training" in self.cofdict:
+            self.ignore_signal_in_training = False
+        else:
+            self.ignore_signal_in_training = self.cofdict["ignore_signal_in_training"]
+        
         if self.cfg.MiniBatch:
             MB_str = f"MB{self.cfg.batch_size}"
         else:
@@ -208,8 +213,8 @@ class ClusterScanning:
         self.bootstrap_bg = None
         logging.info("loading data complete")
 
-    def data_mjj_slise(self, Mjjmin, Mjjmax):
-        """Returns the background an signal jets in a given Mjj window
+    def data_mjj_slise(self, Mjjmin, Mjjmax, ignore_signal=False):
+        """Returns the background and signal jets in a given Mjj window
 
         Args:
             Mjjmin (float): lower Mjj interval limit
@@ -242,13 +247,14 @@ class ClusterScanning:
                 axis=0,
             )
 
-        if self.allowed is not None:
-            sg = np.repeat(
-                self.im_sg[indexing_sg[0] : indexing_sg[-1]],
-                self.allowed[indexing_sg[0] : indexing_sg[-1]],
-                axis=0,
-            )
-            logging.info(f"only {len(sg)} sg events taken")
+        if not ignore_signal:
+            if self.allowed is not None:
+                sg = np.repeat(
+                    self.im_sg[indexing_sg[0] : indexing_sg[-1]],
+                    self.allowed[indexing_sg[0] : indexing_sg[-1]],
+                    axis=0,
+                )
+                logging.info(f"only {len(sg)} sg events taken")
         # test if chnaging to this spares some time
         # sg=im_sg[indexing_sg[0]:indexing_sg[-1]]
         # sg=sg[allowed[indexing_sg[0]:indexing_sg[-1]]]
@@ -257,7 +263,10 @@ class ClusterScanning:
         start_time = time.time()
 
         if self.allowed is not None:
-            data = np.concatenate((bg, sg))
+            if not ignore_signal:
+                data = np.concatenate((bg, sg))
+            else:
+                data = bg
         else:
             data = bg
 
@@ -291,8 +300,9 @@ class ClusterScanning:
             self.kmeans = KMeans(self.cfg.k, n_init=self.cfg.n_init, init="k-means++")
 
         # Train k-means in the training window
+        
         data = self.data_mjj_slise(
-            self.cfg.train_interval[0], self.cfg.train_interval[1]
+            self.cfg.train_interval[0], self.cfg.train_interval[1], ignore_signal=self.ignore_signal_in_training
         )
         self.kmeans.fit(data)
         logging.info("training --- %s seconds ---" % (time.time() - start_time))
