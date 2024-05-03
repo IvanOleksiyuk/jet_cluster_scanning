@@ -5,7 +5,7 @@ contamination_style: "mean_std"
 evaluate_the_worst_cases: False
 do_plotting_in_contamination_evaluation: False
 # parametetrs for cs_eval
-CSEconf: "config/cs_eval/maxdev3_msde.yaml"
+CSEconf: "test/config/maxdev3_msde.yaml"
 
 xlabel: "MLS"
 

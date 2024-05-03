@@ -12,10 +12,6 @@ import time
 from matplotlib.ticker import MaxNLocator
 import cluster_scanning
 import utils.set_matplotlib_default as smd
-from load_old_bootstrap_experiments import (
-    load_old_bootstrap_experiments05_1,
-    load_old_bootstrap_experiments00,
-)
 from utils.config_utils import Config
 from utils.binning_utils import default_binning
 from utils.utils import (
@@ -28,6 +24,7 @@ from cluster_scanning import ClusterScanning
 
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
+
 
 
 def load_counts_windows(path):
@@ -141,9 +138,7 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
         elif cfg.ensambling_type == "median":
             tstat_ensembled=np.median(tstat_array, axis=1)
         elif cfg.ensambling_type == "max":
-            print("tstat_array", tstat_array)
             tstat_ensembled=np.nanmax(tstat_array, axis=1)
-            print("tstat_ensembled", tstat_ensembled)
         elif cfg.ensambling_type == "min":
             tstat_ensembled=np.nanmin(tstat_array, axis=1)
 
@@ -323,7 +318,8 @@ def draw_contamination(
 	return results
 
 
-def t_statistic_distribution(config_file_path, from_results=True):
+def t_statistic_distribution(config_file_path, from_results=False):
+    """ script that calculates and plots the test statistic distribution for CS"""
     print("==================================")
     print("T statistic distribution")
     print("==================================")
@@ -449,20 +445,27 @@ def t_statistic_distribution(config_file_path, from_results=True):
         results["TS_list"] = TS_list
         pickle.dump(results, open(output_path + cfg.plot_name + "_results.pickle", "wb"))
     print("saved "+ output_path + cfg.plot_name + "_results.pickle")
+    return results 
 
 
 if __name__ == "__main__":
+    
+    
+        
+    t_statistic_distribution(
+        ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
+         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml",
+         "config/distribution/v4/plot_path2.yaml",
+         "config/distribution/v4/small.yaml"]
+    )
+
+    
     # t_statistic_distribution(
     #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot_compare.yaml"
     # )
     # t_statistic_distribution(
     #     "config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_desamble_fake_boot.yaml"
     # )
-    t_statistic_distribution(
-        ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_15mean_ideal.yaml",
-         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml",
-         "config/distribution/v4/plot_path.yaml"]
-    )
 
     # main plots v4 avriated signal ===============================================
     # Generate plots for all methods:

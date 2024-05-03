@@ -1,0 +1,8 @@
+contaminations:
+  - 0.002
+cont_paths:
+  - "/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/k50MB2048_1iret0con0.02W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600ideal/"
+colors:
+  - "yellowgreen"
+postfix:
+  - ""
