@@ -4,5 +4,4 @@ train_interval:
 
 k: 50 #number of clusters to train
 batch_size: 2048
-n_init: 20
 ID: 11

@@ -80,13 +80,13 @@ def perform_binning_directory(directory, override_config=None):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        #perform_binning_directory("char/v4/")
-        perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/CURTAINS.yaml"])
-        perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/CURTAINS.yaml", "config/idealised.yaml"])
-        perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/32bins.yaml", "config/idealised.yaml"])
-        perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/32bins.yaml"])
-        perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/64bins.yaml", "config/idealised.yaml"])
-        perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/64bins.yaml"])
+        perform_binning_directory("/home/users/o/oleksiyu/scratch/CS/response/")
+        #perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/CURTAINS.yaml"])
+        #perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/CURTAINS.yaml", "config/idealised.yaml"])
+        #perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/32bins.yaml", "config/idealised.yaml"])
+        #perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/32bins.yaml"])
+        #perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/64bins.yaml", "config/idealised.yaml"])
+        #perform_binning_directory("/srv/beegfs/scratch/users/o/oleksiyu/CS/v4/", ["config/binning/64bins.yaml"])
 
     else:
         if sys.argv[1] == "-d":
@@ -96,3 +96,4 @@ if __name__ == "__main__":
                 perform_binning_directory(sys.argv[2])
         else:
             perform_binning_all(sys.argv[1:])
+    print("done")

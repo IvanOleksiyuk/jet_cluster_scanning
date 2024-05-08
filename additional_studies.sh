@@ -35,7 +35,7 @@ python one_cs_run.py sig_reg
 	cd ..
 
 #%% Run the binning job to get the spectra
-	python binning.py -d /home/users/o/oleksiyu/scratch/CS/responce/
+	python binning.py -d /home/users/o/oleksiyu/scratch/CS/response/
 
 
 ############################################

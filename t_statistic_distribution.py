@@ -9,6 +9,7 @@ from cs_performance_evaluation import cs_performance_evaluation, CS_evaluation_p
 import numpy as np
 import random
 import time
+from pathlib import Path
 from matplotlib.ticker import MaxNLocator
 import cluster_scanning
 import utils.set_matplotlib_default as smd
@@ -23,8 +24,81 @@ from utils.utils import (
 from cluster_scanning import ClusterScanning
 
 logger = logging.getLogger()
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
+
+def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, binning, checkpoint_name=None, config_file_path=None, start_boot=0,  end_boot=None, checkpoint=None):
+    # Handle the config file path
+    if cfg is None:
+        cfg = Config(config_file_path).get_dotmap()
+    
+    checkpoint = None
+    if checkpoint_name is not None:
+        if os.path.exists(counts_windows_boot_load+checkpoint_name+".npy"):
+            logging.warning(f"Loading checkpoint from {counts_windows_boot_load+checkpoint_name}.npy")
+            checkpoint = np.load(counts_windows_boot_load+checkpoint_name+".npy")
+            logging.warning(f"checkpoint has {np.sum(np.logical_not(np.isnan(checkpoint)))} processed binnings")
+        else:
+            logging.warning(f"CHECKPOINT NOT FOUND {counts_windows_boot_load+checkpoint_name}")
+    
+    n_bootstraps = binning_files_aray.shape[0]
+    n_ensambling = binning_files_aray.shape[1]
+    tstat_array = np.full(
+        (
+            n_bootstraps,
+            n_ensambling,
+        ),
+        np.nan,
+    )
+    if checkpoint is not None:
+        tstat_array = update_values(checkpoint, tstat_array)
+    if end_boot is None:
+        end_boot = n_bootstraps
+    for i in range(start_boot, end_boot):
+        changes_made=0
+        for j in range(n_ensambling):
+            if not np.isnan(tstat_array[i, j]):
+                continue
+            if binning_files_aray[i, j]=="":
+                continue
+            if os.path.exists(counts_windows_boot_load+checkpoint_name):
+                ID = binning_files_aray[i, j]
+                ID = ID[5:]
+                ID = ID[:-7]
+                if os.path.exists(counts_windows_boot_load+checkpoint_name+f"/t_stat{ID}.npy"):
+                    tstat_array[i, j] = float(np.load(counts_windows_boot_load+checkpoint_name+f"/t_stat{ID}.npy"))
+            logger.debug(f"loading {counts_windows_boot_load + binning_files_aray[i, j]}")
+            counts_windows = load_counts_windows(counts_windows_boot_load + binning_files_aray[i, j])
+            tstat_array[i, j] = cs_performance_evaluation(
+                counts_windows = counts_windows, 
+                binning=binning,
+                config_file_path=cfg.CSEconf,)
+            changes_made+=1
+        if i % 100 == 0:
+            logger.info(f"{i} bottstraps processed")
+            if checkpoint_name is not None:
+                if changes_made>0:
+                    np.save(counts_windows_boot_load+checkpoint_name, tstat_array)
+                    logging.warning(f"checkpoint updated {counts_windows_boot_load+checkpoint_name}")
+
+    if checkpoint_name is not None:
+        np.save(counts_windows_boot_load+checkpoint_name, tstat_array)
+        logging.warning(f"checkpoint saved {counts_windows_boot_load+checkpoint_name}")
+
+    tstat_array = np.array(tstat_array)
+    return tstat_array
+
+def update_values(smaller_array, larger_array):
+    # Get the shape of the smaller array
+    smaller_shape = smaller_array.shape
+    
+    # Get the slices to select corresponding elements from the larger array
+    slices = tuple(slice(0, dim) for dim in smaller_shape)
+    
+    # Update values in the larger array with corresponding values from the smaller array
+    larger_array[slices] = smaller_array
+    
+    return larger_array
 
 
 def load_counts_windows(path):
@@ -35,35 +109,40 @@ def load_counts_windows(path):
         return res["counts_windows"]
 
 
+
+def get_filename_without_extension(file_path):
+    filename_with_extension = os.path.basename(file_path)
+    filename_without_extension = os.path.splitext(filename_with_extension)[0]
+    return filename_without_extension
+
 def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
     print("searching binnings in:", counts_windows_boot_load)
     print("found binnings total:", len(os.listdir(counts_windows_boot_load)))
     print("CSE config", cfg.CSEconf)
     files_list = os.listdir(counts_windows_boot_load)
     bres_files = [file for file in files_list if file.startswith("bres")]
-    ensampbling = cfg.ensambling_num
-    print("doing ensambling", ensampbling)
+    ensambling = cfg.ensambling_num
+    print("doing ensambling", ensambling)
 
+    # Get the IDs of the files as a list
     counts_windows_boot = []
     IDs_array = []
     for file in bres_files:
         IDs = ClusterScanning.IDstr_to_IDs(os.path.basename(file))
         IDs_array.append([IDs[0], IDs[2]])  # ignore the signal ID here
     IDs_array = np.stack(IDs_array)
-    print(
-        f"bootstrap indices go from {np.min(IDs_array[:,0])} to {np.max(IDs_array[:,0])}"
-    )
-    print(
-        f"initialisation indices go from {np.min(IDs_array[:,1])} to {np.max(IDs_array[:,1])}"
-    )
+
+    # Find the span of the indices
+    print(f"bootstrap indices go from {np.min(IDs_array[:,0])} to {np.max(IDs_array[:,0])}")
+    print(f"initialisation indices go from {np.min(IDs_array[:,1])} to {np.max(IDs_array[:,1])}")
 
     binning = pickle.load(open(counts_windows_boot_load + "binning.pickle", "rb"))
     
-    
-    if ensampbling == "desamble":
+    if ensambling == "desamble":
         tstat_array = []
         for i, file in enumerate(bres_files):
-            # counts_windows = np.array(counts_windows) #DELETE THIS
+            print(f"loading {file}")
+            logger.info(f"loading {file}")
             counts_windows_boot.append(load_counts_windows(counts_windows_boot_load + file))
             tstat_array.append(
                 cs_performance_evaluation(
@@ -83,7 +162,7 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
         print("There are ", sum(tstat_ensembled == 0), " 0 stats")
         print("There are ", sum(tstat_ensembled > 0), " >0 stats")
     else:
-
+        # create a 2D table of files and fill it with the file names
         tstat_files = np.full(
             (
                 np.max(IDs_array[:, 0]) + 1,
@@ -92,55 +171,55 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
             "",
             dtype='<U100',
         )
-        for i, indices in enumerate(IDs_array):
-            tstat_files[indices[0], indices[1]] = bres_files[i]
-        
-        valid_bootstraps = np.sum(np.logical_not(tstat_files==""), axis=1) >= ensampbling
+        for bres_file, indices in zip(bres_files, IDs_array):
+            tstat_files[indices[0], indices[1]] = bres_file
+
+        # Find the bootstraps that have a sufficient number of initialisations
         if hasattr(cfg, "small"):
             if cfg.small:
-                valid_bootstraps = valid_bootstraps[:cfg.small]
+                tstat_files = tstat_files[:cfg.small]
+
+        valid_bootstraps = np.sum(np.logical_not(tstat_files==""), axis=1) >= ensambling
+
         print(f"Number of available bootstraps {sum(valid_bootstraps)}")
         
         n_valid_bootstraps = sum(valid_bootstraps)
 
-        tstat_files_new = np.full(
-            (
-                n_valid_bootstraps,
-                ensampbling,
-            ),
-            "",
-            dtype='<U100',
-        )
-        tstat_array = np.full(
-            (
-                n_valid_bootstraps,
-                ensampbling,
-            ),
-            np.nan,
-        )
-        for i, val in enumerate(np.where(valid_bootstraps)[0][:n_valid_bootstraps]):
-            tstat_files_new[i] = tstat_files[val][np.logical_not(tstat_files[val]=="")][:ensampbling]
+        if hasattr(cfg, "select_then_process"):
+            # First select the bootstraps and then process them
+            tstat_files_new = np.full(
+                (
+                    n_valid_bootstraps,
+                    ensambling,
+                ),
+                "",
+                dtype='<U100',
+            )
+            for i, val in enumerate(np.where(valid_bootstraps)[0][:n_valid_bootstraps]):
+                tstat_files_new[i] = tstat_files[val][np.logical_not(tstat_files[val]=="")][:ensambling]
+            tstat_array_select = process_binning_files(cfg, tstat_files_new, counts_windows_boot_load, binning, checkpoint_name=None)
+        else:
+            # Load tstat_array if it exists
+            tstat_array_name = get_filename_without_extension(cfg.CSEconf)
+            tstat_array = process_binning_files(cfg, tstat_files, counts_windows_boot_load, binning, checkpoint_name=tstat_array_name)
+            tstat_array_select = np.full(
+                (
+                    n_valid_bootstraps,
+                    ensambling,
+                ),
+                np.nan,
+            )
+            for i, val in enumerate(np.where(valid_bootstraps)[0]):
+                tstat_array_select[i] = tstat_array[val][np.logical_not(tstat_files[val]=="")][:ensambling]
         
-        for i in range(n_valid_bootstraps):
-            for j in range(ensampbling):
-                counts_windows_boot.append(load_counts_windows(counts_windows_boot_load + tstat_files_new[i, j]))
-                tstat_array[i, j] = cs_performance_evaluation(
-                    counts_windows = counts_windows_boot[-1], 
-                    binning=binning,
-                    config_file_path=cfg.CSEconf,)
-            if i % 100 == 0:
-                print(i, "bottstraps processed")
-
-        tstat_array = np.array(tstat_array)
-
         if cfg.ensambling_type == "mean":
-            tstat_ensembled= np.mean(tstat_array, axis=1)                
+            tstat_ensembled= np.mean(tstat_array_select, axis=1)                
         elif cfg.ensambling_type == "median":
-            tstat_ensembled=np.median(tstat_array, axis=1)
+            tstat_ensembled=np.median(tstat_array_select, axis=1)
         elif cfg.ensambling_type == "max":
-            tstat_ensembled=np.nanmax(tstat_array, axis=1)
+            tstat_ensembled=np.nanmax(tstat_array_select, axis=1)
         elif cfg.ensambling_type == "min":
-            tstat_ensembled=np.nanmin(tstat_array, axis=1)
+            tstat_ensembled=np.nanmin(tstat_array_select, axis=1)
 
     if np.any(np.isnan(tstat_ensembled)):
         raise ValueError("There are NaNs in the tstat_ensembled")
@@ -320,9 +399,9 @@ def draw_contamination(
 
 def t_statistic_distribution(config_file_path, from_results=False):
     """ script that calculates and plots the test statistic distribution for CS"""
-    print("==================================")
-    print("T statistic distribution")
-    print("==================================")
+    logging.info("==================================")
+    logging.info("T statistic distribution")
+    logging.info("==================================")
     config = Config(config_file_path)
     cfg = config.get_dotmap()
 
@@ -333,7 +412,7 @@ def t_statistic_distribution(config_file_path, from_results=False):
     # Replace all these where needed
     output_path = cfg.output_path
 
-    print("output_path", output_path)
+    logging.info(f"output_path {output_path}")
     
     # initialise the main figure:
     plt.close("all")
@@ -346,7 +425,7 @@ def t_statistic_distribution(config_file_path, from_results=False):
         fig = plt.figure(figsize=(8, 3))
 
     if from_results:
-        print("Skipping background evaluation by loading it from checkpoint")
+        logging.info("Skipping background evaluation by loading it from checkpoint")
         results_loaded = pickle.load(open(output_path + cfg.plot_name + "_results.pickle", "rb"))
         TS_list = results_loaded["TS_list"]
     else:
@@ -414,7 +493,9 @@ def t_statistic_distribution(config_file_path, from_results=False):
             )
             results_1con["contaminations"] = [c]
             results = add_lists_in_dicts(results, results_1con)
-
+    else:
+        logging.info("NO CONTAMINATIONS FOUND TO PROCESS")
+            
     if cfg.contamination_style[0] == "U":
         handles, labels = ax2.get_legend_handles_labels()
         plt.sca(ax1)
@@ -450,14 +531,39 @@ def t_statistic_distribution(config_file_path, from_results=False):
 
 if __name__ == "__main__":
     
-    
-        
+    # t_statistic_distribution(
+	# 		["test/config/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
+	# 		"test/config/bootstrap_sig_contam_ideal.yaml",
+	# 		"test/config/plot_path2.yaml",
+	# 		"test/config/small.yaml"]
+	# 	)	
+
     t_statistic_distribution(
-        ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
-         "config/distribution/v4/bootstrap_sig_contam_ideal.yaml",
-         "config/distribution/v4/plot_path2.yaml",
-         "config/distribution/v4/small.yaml"]
-    )
+			["config/distribution/responce/prep05_1_maxdev3_msders+3fitCURTAINS_15mean.yaml",
+			"config/distribution/v4/bootstrap_sig_contam_old.yaml",
+			"test/config/plot_path2.yaml"]
+		)
+
+    # t_statistic_distribution(
+	# 		["config/distribution/responce/prep05_1_maxdev3_msdersCURTAINS_15mean_sig_reg.yaml",
+	# 		"config/distribution/responce/bootstrap_sig_contam_all_sig_reg.yaml",
+	# 		"test/config/plot_path2.yaml"]
+	# 	)
+ 
+
+    # t_statistic_distribution(
+	# 		["config/distribution/responce/prep05_1_maxdev3_msdersCURTAINS_15mean_ignore_signal.yaml",
+	# 		"config/distribution/v4/bootstrap_sig_contam_ignore_signal.yaml",
+	# 		"test/config/plot_path2.yaml"]
+	# 	)
+    
+    
+    # t_statistic_distribution(
+    #     ["config/distribution/v4/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
+    #      "config/distribution/v4/bootstrap_sig_contam_ideal.yaml",
+    #      "config/distribution/v4/plot_path2.yaml",
+    #      "config/distribution/v4/small.yaml"]
+    # )
 
     
     # t_statistic_distribution(

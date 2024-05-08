@@ -597,23 +597,56 @@ def cs_performance_evaluation(*args, **kwargs):
     res = CSE.run()
     return res
 
+def load_counts_windows(path):
+    res = pickle.load(open(path, "rb"))
+    if isinstance(res, list) or isinstance(res, np.ndarray):
+        return res
+    else:
+        return res["counts_windows"]
 
-if __name__ == "__main__":
-    config_path = ["config/cs_eval/maxdev5.yaml", "config/cs_eval/plotting.yaml"]
-    jj = 0
-    path = "char/sig_reg/k50Trueret0con0.05W3450_3650_w0.5s1Nrest/"
-    # path1 = path + "binnedW100s200ei26006000/"
-    path1 = path + "binnedW100s16ei30004600/"
-    counts_windows = pickle.load(open(path1 + f"bres{jj}.pickle", "rb"))
+def cs_performance_evaluation_single(experiment_path, binning_folder, bres_id, config_path, tstat_name):
+    path1 = experiment_path + binning_folder
+    if os.path.exists(path1 + f"{tstat_name}/t_stat{bres_id}.npy"):
+        print("already exists")
+        return 
+    if os.path.exists(path1 + f"bres_{bres_id}.pickle"):
+        counts_windows = load_counts_windows(path1 + f"bres_{bres_id}.pickle")
+    else:
+        print(f"{path1}bres_{bres_id}.pickle file not found")
+        return
     binning = pickle.load(open(path1 + "binning.pickle", "rb"))
-    cs_performance_evaluation(
+    t_stat = cs_performance_evaluation(
         counts_windows=counts_windows,
         binning=binning,
-        path=path1,
-        ID=jj,
-        config_file_path=config_path,
+        config_file_path=[config_path],
     )
-    print("Executed when invoked directly")
+    os.makedirs(path1 + f"{tstat_name}/", exist_ok=True)
+    np.save(path1 + f"{tstat_name}/t_stat{bres_id}.npy", t_stat)
+
+
+
+if __name__ == "__main__":
+    cs_performance_evaluation_single(experiment_path="char/one_run_experiments/k50MB2048_1iret0con0.05W3000_3100_w0.5s1Nboot__/", 
+                                     binning_folder="binnedW100s16ei30004600/", 
+                                     bres_id="b0_s0_i0", 
+                                     config_paths="config/cs_eval/maxdev5.yaml",
+                                     tstat_name="maxdev5")
+    
+    # config_path = ["config/cs_eval/maxdev5.yaml", "config/cs_eval/plotting.yaml"]
+    # jj = 0
+    # path = "char/sig_reg/k50Trueret0con0.05W3450_3650_w0.5s1Nrest/"
+    # # path1 = path + "binnedW100s200ei26006000/"
+    # path1 = path + "binnedW100s16ei30004600/"
+    # counts_windows = pickle.load(open(path1 + f"bres{jj}.pickle", "rb"))
+    # binning = pickle.load(open(path1 + "binning.pickle", "rb"))
+    # cs_performance_evaluation(
+    #     counts_windows=counts_windows,
+    #     binning=binning,
+    #     path=path1,
+    #     ID=jj,
+    #     config_file_path=config_path,
+    # )
+    # print("Executed when invoked directly")
 
 # Concepts
 #     # all curves standardized
