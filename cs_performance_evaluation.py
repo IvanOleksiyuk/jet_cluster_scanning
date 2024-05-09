@@ -15,6 +15,7 @@ import matplotlib as mpl
 from curvefit_eval import curvefit_eval
 from utils.binning_utils import default_binning
 from utils.config_utils import Config
+from utils.gaussian_hist import plot_analytic_gaussian_hist
 import logging
 from scipy import stats
 
@@ -437,6 +438,14 @@ class CS_evaluation_process:
                 ylabel="deviation in SD",
                 filename="norm-toatal-sigmas"+format,
             )
+            if self.cfg.labeling == "maxdev3_3fit":
+                self.plot_labeled_spectra(
+                    self.prepare_spectra(["sumn", "-fit2jet3par", "standrob"]),
+                    self.labels,
+                    add_line=True,
+                    ylabel="deviation in SD",
+                    filename="norm-toatal-sigmas-3par"+format,
+                )
             self.plot_labeled_spectra(
                 self.prepare_spectra(["sumn"]),
                 self.labels,
@@ -485,7 +494,7 @@ class CS_evaluation_process:
                 self.agg_sp["res"],
             )
             plt.savefig(self.eval_path + "comb_dev"+format, bbox_inches="tight")
-            self.plot_gaussianity_checks(self.prepare_spectra(["sumn", "standardize"]), self.labels)
+            self.plot_gaussianity_checks(self.prepare_spectra(["sumn", "-bsumsumn", "standrob"]), self.labels)
         else:
             prepr = ["fix_low_stat_error", "sumn", "-bsumsumn"]
             plt.figure()
@@ -558,7 +567,7 @@ class CS_evaluation_process:
         plt.ylabel(y_label)
         plt.savefig(self.eval_path + savefile, bbox_inches="tight")
 
-    def plot_gaussianity_checks(self, sp, labels):
+    def plot_gaussianity_checks1(self, sp, labels):
         mass_bins = np.array([3000 + i*100 for i in range(17)])
         bg_spectra = sp.y[labels == 0]
         sg_spectra = sp.y[labels == 1]
@@ -567,16 +576,67 @@ class CS_evaluation_process:
             plt.figure()
             bins = np.linspace(-4, 4, 20+1)
             shapiro_p_value, ks_p_value, jarque_bera_p_value = self.test_sample_gausiianity(sp.y[:, bin])
-            plt.hist([bg_spectra[:, bin], sg_spectra[:, bin]], bins=bins, density=True, stacked=True, alpha=0.5, label="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
+            plt.hist([bg_spectra[:, bin], sg_spectra[:, bin]], bins=bins, density=True,  stacked=True, alpha=0.5, label=["signal-poor clusters", "signal-rich clusters"])
+            a="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}"
             x=np.linspace(-4, 4, 100)
-            plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='red', histtype='step', linewidth=1, density=True)
+            #plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='magenta', histtype='step', linewidth=1, density=True)
+            plot_analytic_gaussian_hist()
             plt.legend()
             #plt.yscale("log")
             plt.ylabel("Density")
-            plt.title(f"bin {mass_bins[bin]}"+"$<m_{jj}<$"+f"{mass_bins[bin]}")
+            plt.title(f"bin {mass_bins[bin]}"+"$<m_{jj}<$"+f"{mass_bins[bin+1]}")
             plt.xlabel("Standardized normalized counts")
             plt.savefig(self.eval_path +f"gausianity_check_bin{bin}.png", bbox_inches="tight", dpi=250)
 
+    def plot_gaussianity_checks(self, sp, labels):
+        mass_bins = np.array([3000 + i*100 for i in range(17)])
+        bg_spectra = sp.y[labels == 0]
+        sg_spectra = sp.y[labels == 1]
+        
+        fig, axs = plt.subplots(4, 4, figsize=(10, 8), sharex='col', sharey='row')
+        fig.subplots_adjust(hspace=0, wspace=0)
+        i=0
+        for bin, ax in zip(range(len(sp.x)), axs.flat):
+            plt.sca(ax)
+            bins = np.linspace(-6.5, 6.5, 26+1)
+            #shapiro_p_value, ks_p_value, jarque_bera_p_value = self.test_sample_gausiianity(sp.y[:, bin])
+            #a="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}"
+            if i==0:
+                label = ["signal-poor clusters", "signal-rich clusters"]
+                label2 = 'Unit Gaussian'
+            else:
+                label = None
+                label2 = None
+            plt.hist([bg_spectra[:, bin], sg_spectra[:, bin]], bins=bins, density=False, alpha=0.7, stacked=True, label=label, color=["blue", "red"])
+            ax.text(0.95, 0.95, f"{mass_bins[bin]}GeV"+"$<m_{jj}<$"+f"{mass_bins[bin+1]}GeV", ha='right', va='top', transform=ax.transAxes)
+            #plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='magenta', histtype='step', linewidth=1, density=True)
+            plot_analytic_gaussian_hist(bins=bins, sum_bins=50, label=label2)
+            plt.ylim(0, 14)
+            #plt.legend()
+            #plt.yscale("log")
+            #plt.ylabel("Density")
+            #plt.title(f"{mass_bins[bin]}"+"$<m_{jj}<$"+f"{mass_bins[bin+1]}")
+            i+=1
+        
+        fig.legend(loc='upper right')
+        fig.text(0.5, 0.07, 'Standardized normalized bin counts', ha='center')
+        fig.text(0.08, 0.5, 'Number of clusters', va='center', rotation='vertical')
+        plt.savefig(self.eval_path +f"gausianity_check_all_bins.pdf", bbox_inches="tight", dpi=250)
+
+        shapiro_p_value, ks_p_value, jarque_bera_p_value = self.test_sample_gausiianity(bg_spectra.flatten())
+        bkg="Without signal-rich:\n $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}"
+        shapiro_p_value, ks_p_value, jarque_bera_p_value = self.test_sample_gausiianity(sp.y.flatten())
+        bkgsig="With signal-rich:\n $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}"
+        
+        bins = np.linspace(-6.5, 6.5, 26*3+1)
+        plt.figure(figsize=(6.4, 3.5))
+        plt.hist([bg_spectra.flatten(), sg_spectra.flatten()], bins=bins, density=False,  stacked=True, label=[f"signal-poor clusters\n{bkg}", f"signal-rich clusters\n{bkgsig}"], color=["blue", "red"], alpha=0.7)
+        plot_analytic_gaussian_hist(bins=bins, sum_bins=800-16*4, label="Unit gaussian sum=736")
+        plt.ylabel('Number of clusters')
+        plt.xlabel('Standardized normalized bin counts')
+        plt.legend()
+        plt.savefig(self.eval_path +f"gausianity_marginal.pdf", bbox_inches="tight", dpi=250)
+        
     @staticmethod
     def test_sample_gausiianity(sample):
         # Shapiro-Wilk Test

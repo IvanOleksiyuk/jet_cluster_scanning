@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import utils.set_matplotlib_default
 from scipy import stats
-folder="char/one_run_experiments/k50MB2048_1iret0con0.05W3000_3100_w0.5s1Nboot/binnedW100s16ei30004600/"
+folder="/home/users/o/oleksiyu/WORK/jet_cluster_scanning/char/one_run_experiments/k50MB2048_1iret0con0.05W3000_3100_w0.5s1Nboot__REFERENCE/binnedW100s16ei30004600/"
 files_list = os.listdir(folder)
 bres_files = [file for file in files_list if file.startswith("bres")]
 
@@ -60,12 +60,12 @@ plt.hist(count_windows_bg.flatten(), bins=bins, density=True, alpha=0.5, label="
 shapiro_p_value, ks_p_value, jarque_bera_p_value = test_sample(count_window_full.flatten())
 plt.hist(count_window_full.flatten(), bins=bins, density=True, alpha=0.5, label="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
 x=np.linspace(-4, 4, 100)
-plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='red', histtype='step', linewidth=1, density=True)
+from utils.gaussian_hist import plot_analytic_gaussian_hist
 plt.legend()
 #plt.yscale("log")
 plt.ylabel("Density")
 plt.xlabel("Standardized normalized counts")
-plt.savefig("plots/misc/gausianity_check.png", bbox_inches="tight", dpi=250)
+plt.savefig("plots/misc/gausianity_check2.png", bbox_inches="tight", dpi=250)
 # plt.yscale("log")
 # plt.savefig("experiment3.pdf")
 
@@ -74,20 +74,19 @@ plt.savefig("plots/misc/gausianity_check.png", bbox_inches="tight", dpi=250)
 #np.random.seed(42)]
 # sample = np.random.normal(loc=0, scale=1, size=80000)
 # mass_bins = np.array([3000 + i*100 for i in range(17)])
-# cluster_labels = np.digitize(count_window_list[0][2], mass_bins)
 
 # for bin in range(len(count_windows_bg[0])):
 #     plt.figure()
 #     bins = np.linspace(-4, 4, 20+1)
 #     shapiro_p_value, ks_p_value, jarque_bera_p_value = test_sample(count_windows_bg[:, bin])
-#     plt.hist(count_windows_bg[:, bin], bins=bins, density=True, alpha=0.5, label="Background $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
+#     plt.hist(count_windows_bg[:, bin], bins=bins, density=True, alpha=0.5, color="blue", label="Background $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
 #     shapiro_p_value, ks_p_value, jarque_bera_p_value = test_sample(count_window_full[:, bin])
-#     plt.hist(count_window_full[:, bin], bins=bins, density=True, alpha=0.5, label="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
+#     plt.hist(count_window_full[:, bin], bins=bins, density=True, alpha=0.5, color="red", label="Bkg+sig $p_{SW}$"+f"={shapiro_p_value:.2f}\n"+" $p_{KS}$"+f"={ks_p_value:.2f}"+" $p_{JB}$"+f"={jarque_bera_p_value:.2f}")
 #     x=np.linspace(-4, 4, 100)
 #     plt.hist(np.random.normal(loc=0, scale=1, size=10_000_000), bins=bins, label='Unit Gaussian', color='red', histtype='step', linewidth=1, density=True)
 #     plt.legend()
 #     #plt.yscale("log")
 #     plt.ylabel("Density")
-#     plt.title(f"bin {mass_bins[bin]}$<m_{jj}<${mass_bins[bin]}")
+#     plt.title(f"bin {mass_bins[bin]}"+"$<m_{jj}<$"+f"{mass_bins[bin]}")
 #     plt.xlabel("Standardized normalized counts")
 #     plt.savefig(f"plots/misc/gausianity_check_bin{bin}.png", bbox_inches="tight", dpi=250)

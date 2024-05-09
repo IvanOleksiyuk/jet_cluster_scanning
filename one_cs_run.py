@@ -5,7 +5,7 @@ import pickle
 import time
 import sys
 
-def one_cs_run(config_cs, config_ev, skip_clustering=False):
+def one_cs_run(config_cs, config_ev, skip_clustering=True):
     # Cluster scanning part
     cs = ClusterScanning(config_cs)
 
@@ -127,9 +127,11 @@ def named_settings(setting):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: one_cs_run.py <setting>")
-        sys.exit(1)
-    setting = sys.argv[1]
+        setting = "default"
+        #print("Usage: one_cs_run.py <setting>")
+        #sys.exit(1)
+    else:
+        setting = sys.argv[1]
     config_cs, config_ev = named_settings(setting)
     one_cs_run(config_cs, config_ev)
 

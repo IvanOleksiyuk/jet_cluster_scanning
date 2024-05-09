@@ -22,12 +22,13 @@ from utils.utils import (
     p_value,
 )
 from cluster_scanning import ClusterScanning
+import sys
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, binning, checkpoint_name=None, config_file_path=None, start_boot=0,  end_boot=None, checkpoint=None):
+def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, binning, checkpoint_name=None, config_file_path=None, start_boot=0,  end_boot=None, checkpoint=None, update_every_eval=True, update_frequency_binnings=100):
     # Handle the config file path
     if cfg is None:
         cfg = Config(config_file_path).get_dotmap()
@@ -40,7 +41,7 @@ def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, bin
             logging.warning(f"checkpoint has {np.sum(np.logical_not(np.isnan(checkpoint)))} processed binnings")
         else:
             logging.warning(f"CHECKPOINT NOT FOUND {counts_windows_boot_load+checkpoint_name}")
-    
+        checkpoint_folder_exists = os.path.exists(counts_windows_boot_load+checkpoint_name)
     n_bootstraps = binning_files_aray.shape[0]
     n_ensambling = binning_files_aray.shape[1]
     tstat_array = np.full(
@@ -61,12 +62,18 @@ def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, bin
                 continue
             if binning_files_aray[i, j]=="":
                 continue
-            if os.path.exists(counts_windows_boot_load+checkpoint_name):
+            # case when the evaluation was done separately in paallel (for evaluations that take a lot of time)
+            if checkpoint_folder_exists:
                 ID = binning_files_aray[i, j]
                 ID = ID[5:]
                 ID = ID[:-7]
-                if os.path.exists(counts_windows_boot_load+checkpoint_name+f"/t_stat{ID}.npy"):
+                try:
                     tstat_array[i, j] = float(np.load(counts_windows_boot_load+checkpoint_name+f"/t_stat{ID}.npy"))
+                    print(f"{ID} found")
+                    continue
+                except:
+                    pass
+                print(f"{ID} not found")
             logger.debug(f"loading {counts_windows_boot_load + binning_files_aray[i, j]}")
             counts_windows = load_counts_windows(counts_windows_boot_load + binning_files_aray[i, j])
             tstat_array[i, j] = cs_performance_evaluation(
@@ -74,12 +81,20 @@ def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, bin
                 binning=binning,
                 config_file_path=cfg.CSEconf,)
             changes_made+=1
-        if i % 100 == 0:
-            logger.info(f"{i} bottstraps processed")
-            if checkpoint_name is not None:
+            if update_every_eval:
                 if changes_made>0:
-                    np.save(counts_windows_boot_load+checkpoint_name, tstat_array)
-                    logging.warning(f"checkpoint updated {counts_windows_boot_load+checkpoint_name}")
+                    if checkpoint_name is not None:
+                        np.save(counts_windows_boot_load+checkpoint_name, tstat_array)
+                        logging.warning(f"checkpoint updated {counts_windows_boot_load+checkpoint_name}")
+        if isinstance(update_frequency_binnings, int):
+            if i % 1 == update_frequency_binnings:
+                logger.info(f"{i} bottstraps processed")
+                if changes_made>0:
+                    if checkpoint_name is not None:
+                        np.save(counts_windows_boot_load+checkpoint_name, tstat_array)
+                        logging.warning(f"checkpoint updated {counts_windows_boot_load+checkpoint_name}")
+                        np.save(counts_windows_boot_load+checkpoint_name+"reserve", tstat_array)
+                        logging.warning(f"checkpoint updated {counts_windows_boot_load+checkpoint_name}")
 
     if checkpoint_name is not None:
         np.save(counts_windows_boot_load+checkpoint_name, tstat_array)
@@ -530,7 +545,11 @@ def t_statistic_distribution(config_file_path, from_results=False):
 
 
 if __name__ == "__main__":
-    
+    if len(sys.argv) > 1:
+        config_file_path = sys.argv[1:]
+        t_statistic_distribution(config_file_path)
+        exit()
+        
     # t_statistic_distribution(
 	# 		["test/config/prep05_1_maxdev3_msdeCURTAINS_1mean.yaml",
 	# 		"test/config/bootstrap_sig_contam_ideal.yaml",

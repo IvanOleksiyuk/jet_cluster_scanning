@@ -20,6 +20,7 @@ class Spectra:
         self.y = y  # Has to be two dimensional where axis=0 loopes through all spectra
         if err is None:
             self.err = np.sqrt(y)  # take poisson error
+            self.err[self.err == 0] = 1 #take a large error for empty bins there should be nearly none of those
         else:
             self.err = err
         self.poisson = poisson
@@ -214,6 +215,7 @@ class Spectra:
         return self.subtract_sp(self.fit_to_all(function, s))
     
     def fit(self, x, y, y_err, fff, s=13000, method="trf", nfev=100000):
+        #y_err[y_err == 0] = 1e-6  # to avoid division by zero
         if fff == "5_param":
             f = (
                     lambda x, p1, p2, p3, p4: p1
@@ -263,7 +265,7 @@ class Spectra:
                 x,
                 y,
                 sigma=y_err,
-                p0=[2.21e7, 1.376, -0.00968],
+                p0=[22100000.0, 1.376, -0.00968],
                 bounds=(
                     [0, -1000, -1000],
                     [1000000000, 1000, 1000],
@@ -271,6 +273,9 @@ class Spectra:
                 method=method,
                 max_nfev=nfev,
             )
+            #print(y_err)
+            #print("initial parameters", [22100000.0, 1.376, -0.00968])
+            #print("optimal parameters", rrr[0])
         else:
             raise Exception("Unknown function "+fff)
         return rrr, f
