@@ -28,7 +28,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, binning, checkpoint_name=None, config_file_path=None, start_boot=0,  end_boot=None, checkpoint=None, update_every_eval=True, update_frequency_binnings=100):
+def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, binning, checkpoint_name=None, config_file_path=None, start_boot=0,  end_boot=None, checkpoint=None, update_every_eval=False, update_frequency_binnings=100):
     # Handle the config file path
     if cfg is None:
         cfg = Config(config_file_path).get_dotmap()
@@ -64,16 +64,13 @@ def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, bin
                 continue
             # case when the evaluation was done separately in paallel (for evaluations that take a lot of time)
             if checkpoint_folder_exists:
-                ID = binning_files_aray[i, j]
-                ID = ID[5:]
-                ID = ID[:-7]
                 try:
                     tstat_array[i, j] = float(np.load(counts_windows_boot_load+checkpoint_name+f"/t_stat{ID}.npy"))
                     print(f"{ID} found")
                     continue
                 except:
                     pass
-                print(f"{ID} not found")
+            print(f"evaluation for {binning_files_aray[i, j]} not found")
             logger.debug(f"loading {counts_windows_boot_load + binning_files_aray[i, j]}")
             counts_windows = load_counts_windows(counts_windows_boot_load + binning_files_aray[i, j])
             tstat_array[i, j] = cs_performance_evaluation(
@@ -87,7 +84,7 @@ def process_binning_files(cfg, binning_files_aray, counts_windows_boot_load, bin
                         np.save(counts_windows_boot_load+checkpoint_name, tstat_array)
                         logging.warning(f"checkpoint updated {counts_windows_boot_load+checkpoint_name}")
         if isinstance(update_frequency_binnings, int):
-            if i % 1 == update_frequency_binnings:
+            if i % 1 == update_frequency_binnings or i == end_boot-1:
                 logger.info(f"{i} bottstraps processed")
                 if changes_made>0:
                     if checkpoint_name is not None:
@@ -122,8 +119,6 @@ def load_counts_windows(path):
         return res
     else:
         return res["counts_windows"]
-
-
 
 def get_filename_without_extension(file_path):
     filename_with_extension = os.path.basename(file_path)
@@ -272,7 +267,6 @@ def score_sample(cfg, counts_windows_boot_load, do_wors_cases=True):
 
     return tstat_ensembled
 
-
 def draw_contamination(
     cfg,
     c,
@@ -411,7 +405,6 @@ def draw_contamination(
 		results[key] = [results[key]]
 	return results
 
-
 def t_statistic_distribution(config_file_path, from_results=False):
     """ script that calculates and plots the test statistic distribution for CS"""
     logging.info("==================================")
@@ -543,7 +536,6 @@ def t_statistic_distribution(config_file_path, from_results=False):
     print("saved "+ output_path + cfg.plot_name + "_results.pickle")
     return results 
 
-
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         config_file_path = sys.argv[1:]
@@ -557,17 +549,17 @@ if __name__ == "__main__":
 	# 		"test/config/small.yaml"]
 	# 	)	
 
-    t_statistic_distribution(
-			["config/distribution/responce/prep05_1_maxdev3_msders+3fitCURTAINS_15mean.yaml",
-			"config/distribution/v4/bootstrap_sig_contam_old.yaml",
-			"test/config/plot_path2.yaml"]
-		)
-
     # t_statistic_distribution(
-	# 		["config/distribution/responce/prep05_1_maxdev3_msdersCURTAINS_15mean_sig_reg.yaml",
-	# 		"config/distribution/responce/bootstrap_sig_contam_all_sig_reg.yaml",
+	# 		["config/distribution/responce/prep05_1_maxdev3_msders+3fitCURTAINS_15mean.yaml",
+	# 		"config/distribution/v4/bootstrap_sig_contam_old.yaml",
 	# 		"test/config/plot_path2.yaml"]
 	# 	)
+
+    t_statistic_distribution(
+			["config/distribution/responce/prep05_1_maxdev3_msdersCURTAINS_15mean_sig_reg.yaml",
+			"config/distribution/responce/bootstrap_sig_contam_all_sig_reg.yaml",
+			"test/config/plot_path2.yaml"],
+		)
  
 
     # t_statistic_distribution(

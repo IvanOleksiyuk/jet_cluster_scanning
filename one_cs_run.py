@@ -5,7 +5,7 @@ import pickle
 import time
 import sys
 
-def one_cs_run(config_cs, config_ev, skip_clustering=True):
+def one_cs_run(config_cs, config_ev, skip_clustering=False):
     # Cluster scanning part
     cs = ClusterScanning(config_cs)
 
@@ -123,11 +123,25 @@ def named_settings(setting):
         config_ev = [
         "config/cs_eval/maxdev3_msders.yaml",
         "config/cs_eval/plotting.yaml"]
+    elif setting == "default+fit+nosig":
+        # ###""""""""""""""""""""""""""""""""""""""""""""
+        # ### No signal inclusion in training region despite using in evaluation
+        config_cs = [
+                "config/path.yaml",
+                "config/v4/s0_0.5_1_MB_i1.yaml",
+                #"config/sig_frac/0.05.yaml",
+                "config/multirun/0_0_0.yaml",
+                "config/binning/CURTAINS.yaml",
+                "config/tra_reg/3000_3100.yaml",
+                "config/one_run_experiments.yaml"]
+        config_ev = [
+        "config/cs_eval/maxdev3_msders_3fit.yaml",
+        "config/cs_eval/plotting.yaml"]
     return config_cs, config_ev
 
 def main():
     if len(sys.argv) < 2:
-        setting = "default"
+        setting = "default+fit+nosig"
         #print("Usage: one_cs_run.py <setting>")
         #sys.exit(1)
     else:

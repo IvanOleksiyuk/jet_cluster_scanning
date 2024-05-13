@@ -18,7 +18,7 @@ directory = 'plots/fig/'
 
 os.makedirs(directory, exist_ok=True)
 
-steps = ['one_run'] #'dist', 'main', 'data', , 'main', 'SI', 'main', 'one_run', 
+steps = ['main'] #'dist', 'main', 'data', , 'main', 'SI', 'main', 'one_run', 
 
 #data plots
 if 'data' in steps:
